@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAppSelector } from '../store/hooks';
+import { useAuthStore } from '../context/authStore';
 import { User } from '../types/auth';
 
 interface ProtectedRouteProps {
@@ -77,7 +77,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredRoles = [],
   redirectTo = '/login',
 }) => {
-  const { isAuthenticated, user, isLoading } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user, isLoading } = useAuthStore();
   const location = useLocation();
 
   console.log('🛡️ ProtectedRoute - Auth state:', { isAuthenticated, user: !!user, isLoading });

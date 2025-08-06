@@ -17,6 +17,7 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({
   onSuccess
 }) => {
   const [formData, setFormData] = useState<CreateOrganizationData>({
+    company_name: '',
     name: '',
     description: ''
   });
@@ -25,7 +26,7 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim()) {
+    if (!(formData.name ?? '').trim()) {
       toast.error('Organization name is required');
       return;
     }
@@ -36,7 +37,7 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({
       toast.success('Organization created successfully');
       onSuccess();
       onClose();
-      setFormData({ name: '', description: '' });
+      setFormData({ company_name: '', name: '', description: '' });
     } catch (error) {
       console.error('Error creating organization:', error);
       toast.error('Failed to create organization');

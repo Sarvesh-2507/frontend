@@ -18,7 +18,6 @@ import Logo from "../../components/ui/Logo";
 import { useAuthStore } from "../../context/authStore";
 import Assets from "../../features/assets/Assets";
 import Attendance from "../../features/attendance/Attendance";
-import Dashboard from "../../features/dashboard/Dashboard";
 import EmployeeProfile from "../../features/employee/EmployeeProfile";
 import HelpDesk from "../../features/help-desk/HelpDesk";
 import Leave from "../../features/leave/Leave";
@@ -63,7 +62,7 @@ const Dashboard: React.FC = () => {
     },
     {
       id: "organizations",
-      name: "Organizations",
+      name: "Organization",
       icon: Building2,
       path: "/organizations",
       submodules: [
@@ -75,15 +74,9 @@ const Dashboard: React.FC = () => {
         },
         {
           id: "org-list",
-          name: "All Organizations",
+          name: "All Companies",
           icon: Building2,
           path: "/organizations",
-        },
-        {
-          id: "companies",
-          name: "Companies",
-          icon: Building2,
-          path: "/organizations/companies",
         },
         {
           id: "domains",
@@ -258,7 +251,16 @@ const Dashboard: React.FC = () => {
       {/* Main Content */}
       <main className="flex-1 p-8 overflow-y-auto">
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={
+            <div className="text-center py-12">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                Welcome to MH Cognition HR Dashboard
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Select a module from the sidebar to get started.
+              </p>
+            </div>
+          } />
           <Route
             path="/organizations/overview"
             element={<OrganizationOverview />}

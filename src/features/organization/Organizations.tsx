@@ -7,23 +7,77 @@ import {
   Plus,
   Search,
   Users,
+  Edit,
+  Trash2,
+  Filter,
+  Download,
+  BarChart3,
+  Settings,
+  Globe,
+  Building,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Routes, Route } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import Logo from "../../components/ui/Logo";
-// import CreateOrganizationModal from '../components/modals/CreateOrganizationModal';
 import { organizationAPI } from "../../services/organizationApi";
 import { Organization } from "../types/organization";
+
+// Import submodule components
+import OrganizationOverview from "./OrganizationOverview";
+import Companies from "./Companies";
+import Domains from "./Domains";
+import CreateOrganization from "./CreateOrganization";
+
+interface SubModule {
+  id: string;
+  name: string;
+  icon: React.ComponentType<any>;
+  path: string;
+  description: string;
+}
 
 const Organizations: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeSubModule, setActiveSubModule] = useState("list");
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const navigate = useNavigate();
+
+  const subModules: SubModule[] = [
+    {
+      id: "overview",
+      name: "Overview",
+      icon: BarChart3,
+      path: "/organizations",
+      description: "View all organizations"
+    },
+    {
+      id: "list",
+      name: "All Companies",
+      icon: Building2,
+      path: "/organizations",
+      description: "Manage all companies"
+    },
+    {
+      id: "domains",
+      name: "Domains",
+      icon: Globe,
+      path: "/organizations/domains",
+      description: "Domain and subdomain management"
+    },
+    {
+      id: "create",
+      name: "Create Organization",
+      icon: Plus,
+      path: "/organizations/create",
+      description: "Add new organization"
+    }
+  ];
 
   useEffect(() => {
     fetchOrganizations();
@@ -34,12 +88,37 @@ const Organizations: React.FC = () => {
       setLoading(true);
       const response = await organizationAPI.getOrganizations();
       setOrganizations(response.data);
+      toast.success(`Loaded ${response.data.length} organizations`);
     } catch (error) {
       console.error("Error fetching organizations:", error);
       toast.error("Failed to fetch organizations");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDeleteOrganization = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this organization?")) {
+      return;
+    }
+
+    try {
+      await organizationAPI.deleteOrganization(id);
+      setOrganizations(prev => prev.filter(org => org.id !== id));
+      toast.success("Organization deleted successfully");
+    } catch (error) {
+      console.error("Error deleting organization:", error);
+      toast.error("Failed to delete organization");
+    }
+  };
+
+  const handleCreateOrganization = () => {
+    navigate("/organizations/create");
+  };
+
+  const handleSubModuleClick = (subModule: SubModule) => {
+    setActiveSubModule(subModule.id);
+    navigate(subModule.path);
   };
 
   const filteredOrganizations = organizations.filter((org) =>
@@ -86,16 +165,52 @@ const Organizations: React.FC = () => {
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => navigate("/organizations/create")}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Organization</span>
-            </button>
+            <div className="flex items-center space-x-3">
+              <button
+                type="button"
+                onClick={() => navigate("/organizations/create")}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Organization</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                <span>Export</span>
+              </button>
+            </div>
           </div>
         </header>
+
+        {/* Submodule Navigation */}
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          <div className="px-6 py-3">
+            <div className="flex space-x-1 overflow-x-auto">
+              {subModules.map((subModule) => {
+                const Icon = subModule.icon;
+                const isActive = activeSubModule === subModule.id;
+                return (
+                  <button
+                    key={subModule.id}
+                    onClick={() => handleSubModuleClick(subModule)}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                      isActive
+                        ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{subModule.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
         {/* Content */}
         <main className="flex-1 overflow-auto p-6">

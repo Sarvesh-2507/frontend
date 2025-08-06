@@ -16,8 +16,8 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "../components/Sidebar";
-import Logo from "../components/ui/Logo";
+import Sidebar from "../../components/Sidebar";
+import Logo from "../../components/ui/Logo";
 
 interface Article {
   id: string;

@@ -9,9 +9,23 @@ import {
   Filter,
   Plus,
   XCircle,
+  ArrowLeft,
+  Search,
+  Users,
+  BarChart3,
+  FileText,
+  History,
+  CreditCard,
+  UserCheck,
+  TrendingUp,
+  CalendarDays,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import Sidebar from "../../components/Sidebar";
+import Logo from "../../components/ui/Logo";
+import { dashboardAPI } from "../../services/api";
 
 interface LeaveRequest {
   id: string;
@@ -25,11 +39,147 @@ interface LeaveRequest {
   status: "pending" | "approved" | "rejected";
   appliedDate: string;
   approver?: string;
+  department?: string;
+  priority?: "low" | "medium" | "high";
+}
+
+interface SubModule {
+  id: string;
+  name: string;
+  icon: React.ComponentType<any>;
+  path: string;
+  description: string;
+  count?: number;
+}
+
+interface LeaveStats {
+  totalRequests: number;
+  pendingRequests: number;
+  approvedRequests: number;
+  rejectedRequests: number;
+  totalLeaveDays: number;
+  averageLeavePerEmployee: number;
+}
+
+interface LeaveBalance {
+  employeeId: string;
+  employeeName: string;
+  annualLeave: number;
+  sickLeave: number;
+  casualLeave: number;
+  maternityLeave?: number;
+  usedAnnual: number;
+  usedSick: number;
+  usedCasual: number;
 }
 
 const Leave: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("requests");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [activeSubModule, setActiveSubModule] = useState("application");
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState<LeaveStats>({
+    totalRequests: 0,
+    pendingRequests: 0,
+    approvedRequests: 0,
+    rejectedRequests: 0,
+    totalLeaveDays: 0,
+    averageLeavePerEmployee: 0,
+  });
+  const navigate = useNavigate();
+
+  const subModules: SubModule[] = [
+    {
+      id: "application",
+      name: "Leave Application",
+      icon: FileText,
+      path: "/leave/application",
+      description: "Apply for leave",
+    },
+    {
+      id: "history",
+      name: "Application History",
+      icon: History,
+      path: "/leave/history",
+      description: "View leave application history",
+      count: stats.totalRequests,
+    },
+    {
+      id: "balance",
+      name: "Leave Balance",
+      icon: CreditCard,
+      path: "/leave/balance",
+      description: "Check current leave balance",
+    },
+    {
+      id: "approval",
+      name: "Leave Approval",
+      icon: UserCheck,
+      path: "/leave/approval",
+      description: "Approve/reject leave requests",
+      count: stats.pendingRequests,
+    },
+    {
+      id: "requests",
+      name: "View Requests",
+      icon: Eye,
+      path: "/leave/requests",
+      description: "View all leave requests",
+    },
+    {
+      id: "summary",
+      name: "Leave Summary",
+      icon: BarChart3,
+      path: "/leave/summary",
+      description: "Generate leave reports",
+    },
+  ];
+
+  useEffect(() => {
+    fetchLeaveData();
+  }, []);
+
+  const fetchLeaveData = async () => {
+    try {
+      setLoading(true);
+      const response = await dashboardAPI.getStats();
+      if (response.data) {
+        setStats({
+          totalRequests: response.data.data?.totalLeaveRequests || leaveRequests.length,
+          pendingRequests: response.data.data?.pendingLeaveRequests || leaveRequests.filter(r => r.status === 'pending').length,
+          approvedRequests: response.data.data?.approvedLeaveRequests || leaveRequests.filter(r => r.status === 'approved').length,
+          rejectedRequests: response.data.data?.rejectedLeaveRequests || leaveRequests.filter(r => r.status === 'rejected').length,
+          totalLeaveDays: response.data.data?.totalLeaveDays || leaveRequests.reduce((sum, r) => sum + r.days, 0),
+          averageLeavePerEmployee: response.data.data?.averageLeavePerEmployee || 12.5,
+        });
+      }
+      toast.success("Leave data loaded successfully");
+    } catch (error) {
+      console.error("Error fetching leave data:", error);
+      setStats({
+        totalRequests: leaveRequests.length,
+        pendingRequests: leaveRequests.filter(r => r.status === 'pending').length,
+        approvedRequests: leaveRequests.filter(r => r.status === 'approved').length,
+        rejectedRequests: leaveRequests.filter(r => r.status === 'rejected').length,
+        totalLeaveDays: leaveRequests.reduce((sum, r) => sum + r.days, 0),
+        averageLeavePerEmployee: 12.5,
+      });
+      toast.error("Using offline data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubModuleClick = (subModule: SubModule) => {
+    setActiveSubModule(subModule.id);
+    navigate(subModule.path);
+  };
+
+  const handleApplyLeave = () => {
+    navigate("/leave/application");
+  };
 
   const leaveRequests: LeaveRequest[] = [
     {

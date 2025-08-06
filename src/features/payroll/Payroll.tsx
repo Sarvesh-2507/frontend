@@ -10,9 +10,23 @@ import {
   Search,
   TrendingUp,
   Users,
+  ArrowLeft,
+  BarChart3,
+  FileText,
+  CreditCard,
+  Calculator,
+  Calendar,
+  Settings,
+  Shield,
+  Clock,
+  Building,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import Sidebar from "../../components/Sidebar";
+import Logo from "../../components/ui/Logo";
+import { dashboardAPI } from "../../services/api";
 
 interface PayrollRecord {
   id: string;
@@ -26,12 +40,173 @@ interface PayrollRecord {
   netPay: number;
   payPeriod: string;
   status: "pending" | "processed" | "paid";
+  taxDeductions?: number;
+  providentFund?: number;
+  insurance?: number;
+}
+
+interface SubModule {
+  id: string;
+  name: string;
+  icon: React.ComponentType<any>;
+  path: string;
+  description: string;
+  count?: number;
+}
+
+interface PayrollStats {
+  totalEmployees: number;
+  totalPayroll: number;
+  pendingPayroll: number;
+  processedPayroll: number;
+  averageSalary: number;
+  totalTaxDeductions: number;
+}
+
+interface SalaryStructure {
+  employeeId: string;
+  employeeName: string;
+  basicSalary: number;
+  hra: number;
+  da: number;
+  allowances: number;
+  pf: number;
+  tax: number;
+  insurance: number;
+  grossSalary: number;
+  netSalary: number;
 }
 
 const Payroll: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [activeSubModule, setActiveSubModule] = useState("salary-structure");
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState<PayrollStats>({
+    totalEmployees: 0,
+    totalPayroll: 0,
+    pendingPayroll: 0,
+    processedPayroll: 0,
+    averageSalary: 0,
+    totalTaxDeductions: 0,
+  });
+  const navigate = useNavigate();
+
+  const subModules: SubModule[] = [
+    {
+      id: "salary-structure",
+      name: "Salary Structure",
+      icon: Calculator,
+      path: "/payroll/salary-structure",
+      description: "Setup employee salary structures",
+    },
+    {
+      id: "attendance-integration",
+      name: "Attendance Integration",
+      icon: Clock,
+      path: "/payroll/attendance-integration",
+      description: "Integrate attendance with payroll",
+    },
+    {
+      id: "payroll-run",
+      name: "Payroll Run",
+      icon: DollarSign,
+      path: "/payroll/run",
+      description: "Process monthly/quarterly payroll",
+      count: stats.pendingPayroll,
+    },
+    {
+      id: "payslip",
+      name: "Payslip Generation",
+      icon: FileText,
+      path: "/payroll/payslip",
+      description: "Generate and distribute payslips",
+    },
+    {
+      id: "tax-management",
+      name: "Tax Management",
+      icon: Shield,
+      path: "/payroll/tax-management",
+      description: "Manage income tax and TDS",
+    },
+    {
+      id: "bank-payment",
+      name: "Bank Processing",
+      icon: Building,
+      path: "/payroll/bank-payment",
+      description: "Process bank payments",
+    },
+    {
+      id: "compliance",
+      name: "Statutory Compliance",
+      icon: Shield,
+      path: "/payroll/compliance",
+      description: "Ensure statutory compliance",
+    },
+    {
+      id: "reports",
+      name: "Payroll Reports",
+      icon: BarChart3,
+      path: "/payroll/reports",
+      description: "Generate payroll analytics",
+    },
+    {
+      id: "audit",
+      name: "Audit & Access Control",
+      icon: Eye,
+      path: "/payroll/audit",
+      description: "Audit trails and access control",
+    },
+    {
+      id: "self-service",
+      name: "Self-Service Portal",
+      icon: Users,
+      path: "/payroll/self-service",
+      description: "Employee self-service portal",
+    },
+  ];
+
+  useEffect(() => {
+    fetchPayrollData();
+  }, []);
+
+  const fetchPayrollData = async () => {
+    try {
+      setLoading(true);
+      const response = await dashboardAPI.getStats();
+      if (response.data) {
+        setStats({
+          totalEmployees: response.data.data?.totalEmployees || payrollRecords.length,
+          totalPayroll: response.data.data?.totalPayroll || payrollRecords.reduce((sum, r) => sum + r.netPay, 0),
+          pendingPayroll: response.data.data?.pendingPayroll || payrollRecords.filter(r => r.status === 'pending').length,
+          processedPayroll: response.data.data?.processedPayroll || payrollRecords.filter(r => r.status === 'processed').length,
+          averageSalary: response.data.data?.averageSalary || 75000,
+          totalTaxDeductions: response.data.data?.totalTaxDeductions || 125000,
+        });
+      }
+      toast.success("Payroll data loaded successfully");
+    } catch (error) {
+      console.error("Error fetching payroll data:", error);
+      setStats({
+        totalEmployees: payrollRecords.length,
+        totalPayroll: payrollRecords.reduce((sum, r) => sum + r.netPay, 0),
+        pendingPayroll: payrollRecords.filter(r => r.status === 'pending').length,
+        processedPayroll: payrollRecords.filter(r => r.status === 'processed').length,
+        averageSalary: 75000,
+        totalTaxDeductions: 125000,
+      });
+      toast.error("Using offline data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubModuleClick = (subModule: SubModule) => {
+    setActiveSubModule(subModule.id);
+    navigate(subModule.path);
+  };
 
   const payrollRecords: PayrollRecord[] = [
     {

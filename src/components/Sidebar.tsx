@@ -10,11 +10,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  ChevronUp,
-  UserCheck,
   BarChart3,
   Clock,
-  Building,
   Building2,
   Globe,
   Bell,
@@ -45,12 +42,13 @@ import {
   MessageSquare,
   Star,
   Download,
-  BookOpen
+  BookOpen,
+  Palette,
+  AlertCircle
 } from 'lucide-react';
-import { useAppSelector, useAppDispatch } from '../store/hooks';
-import { logoutUser } from '../store/slices/authSlice';
 import Logo from './ui/Logo';
 import { useThemeStore } from '../context/themeStore';
+import { useAuthStore } from '../modules/auth/store/authStore';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -72,21 +70,26 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   {
+    id: 'home',
+    label: 'Home',
+    icon: Home,
+    path: '/home',
+  },
+  {
     id: 'dashboard',
     label: 'Dashboard',
-    icon: Home,
+    icon: BarChart3,
     path: '/dashboard',
   },
   {
     id: 'organizations',
-    label: 'Organizations',
+    label: 'Organization',
     icon: Building2,
     path: '/organizations',
     hasSubmenu: true,
     children: [
       { id: 'org-overview', label: 'Overview', icon: BarChart3, path: '/organizations/overview' },
-      { id: 'org-list', label: 'All Organizations', icon: Building2, path: '/organizations' },
-      { id: 'companies', label: 'Companies', icon: Building, path: '/organizations/companies' },
+      { id: 'org-list', label: 'All Companies', icon: Building2, path: '/organizations' },
       { id: 'domains', label: 'Domains', icon: Globe, path: '/organizations/domains' },
     ]
   },
@@ -127,16 +130,18 @@ const menuItems: MenuItem[] = [
   },
   {
     id: 'employee',
-    label: 'Employee',
+    label: 'Employee Management',
     icon: Users,
-    path: '/employee',
+    path: '/employee-profile',
     hasSubmenu: true,
     children: [
-      { id: 'employee-profiles', label: 'Employee Profiles', icon: Users, path: '/employee/profiles' },
+      { id: 'employee-profiles', label: 'Employee Profiles', icon: Users, path: '/employee-profile' },
+      { id: 'employee-directory', label: 'Employee Directory', icon: Users, path: '/employee/directory' },
       { id: 'profile-management', label: 'Profile Management', icon: User, path: '/employee/profile-management' },
       { id: 'document-management', label: 'Document Management', icon: FileText, path: '/employee/documents' },
       { id: 'access-control', label: 'Access Control', icon: Shield, path: '/employee/access-control' },
       { id: 'audit-logs', label: 'Audit Logs', icon: ClipboardList, path: '/employee/audit-logs' },
+      { id: 'employee-reports', label: 'Employee Reports', icon: BarChart3, path: '/employee/reports' },
     ]
   },
   {
@@ -256,12 +261,101 @@ const menuItems: MenuItem[] = [
       { id: 'faq', label: 'Frequently Asked Questions', icon: HelpCircle, path: '/help-desk/faq' },
       { id: 'feedback-engagement', label: 'Feedback & Engagement', icon: MessageSquare, path: '/help-desk/feedback' },
     ]
+  },
+  {
+    id: 'benefits',
+    label: 'Benefits & Compensation',
+    icon: Award,
+    path: '/benefits',
+    hasSubmenu: true,
+    roles: ['admin', 'hr'],
+    children: [
+      { id: 'benefits-enrollment', label: 'Benefits Enrollment', icon: Plus, path: '/benefits/enrollment' },
+      { id: 'health-insurance', label: 'Health Insurance', icon: Shield, path: '/benefits/health-insurance' },
+      { id: 'retirement-plans', label: 'Retirement Plans', icon: DollarSign, path: '/benefits/retirement' },
+      { id: 'compensation-analysis', label: 'Compensation Analysis', icon: BarChart3, path: '/benefits/compensation' },
+      { id: 'benefits-administration', label: 'Benefits Administration', icon: Settings, path: '/benefits/administration' },
+    ]
+  },
+  {
+    id: 'training',
+    label: 'Training & Development',
+    icon: BookOpen,
+    path: '/training',
+    hasSubmenu: true,
+    roles: ['admin', 'hr'],
+    children: [
+      { id: 'training-programs', label: 'Training Programs', icon: BookOpen, path: '/training/programs' },
+      { id: 'skill-assessment', label: 'Skill Assessment', icon: Target, path: '/training/skill-assessment' },
+      { id: 'certification-tracking', label: 'Certification Tracking', icon: Award, path: '/training/certifications' },
+      { id: 'learning-paths', label: 'Learning Paths', icon: TrendingUp, path: '/training/learning-paths' },
+      { id: 'training-calendar', label: 'Training Calendar', icon: Calendar, path: '/training/calendar' },
+      { id: 'training-feedback', label: 'Training Feedback', icon: MessageSquare, path: '/training/feedback' },
+    ]
+  },
+  {
+    id: 'reports',
+    label: 'Reports & Analytics',
+    icon: BarChart3,
+    path: '/reports',
+    hasSubmenu: true,
+    roles: ['admin', 'hr'],
+    children: [
+      { id: 'employee-reports', label: 'Employee Reports', icon: Users, path: '/reports/employees' },
+      { id: 'attendance-reports', label: 'Attendance Reports', icon: Clock, path: '/reports/attendance' },
+      { id: 'payroll-reports', label: 'Payroll Reports', icon: DollarSign, path: '/reports/payroll' },
+      { id: 'performance-reports', label: 'Performance Reports', icon: TrendingUp, path: '/reports/performance' },
+      { id: 'recruitment-reports', label: 'Recruitment Reports', icon: Search, path: '/reports/recruitment' },
+      { id: 'custom-reports', label: 'Custom Reports', icon: FileText, path: '/reports/custom' },
+      { id: 'dashboard-analytics', label: 'Dashboard Analytics', icon: BarChart3, path: '/reports/analytics' },
+    ]
+  },
+  {
+    id: 'compliance',
+    label: 'Compliance & Legal',
+    icon: Shield,
+    path: '/compliance',
+    hasSubmenu: true,
+    roles: ['admin', 'hr'],
+    children: [
+      { id: 'policy-management', label: 'Policy Management', icon: FileText, path: '/compliance/policies' },
+      { id: 'audit-trails', label: 'Audit Trails', icon: Search, path: '/compliance/audit-trails' },
+      { id: 'legal-documents', label: 'Legal Documents', icon: FileText, path: '/compliance/legal-documents' },
+      { id: 'compliance-tracking', label: 'Compliance Tracking', icon: CheckCircle, path: '/compliance/tracking' },
+      { id: 'risk-management', label: 'Risk Management', icon: AlertCircle, path: '/compliance/risk-management' },
+    ]
+  },
+  {
+    id: 'communication',
+    label: 'Communication',
+    icon: MessageSquare,
+    path: '/communication',
+    hasSubmenu: true,
+    children: [
+      { id: 'announcements', label: 'Announcements', icon: Bell, path: '/communication/announcements' },
+      { id: 'internal-messaging', label: 'Internal Messaging', icon: MessageSquare, path: '/communication/messaging' },
+      { id: 'company-news', label: 'Company News', icon: FileText, path: '/communication/news' },
+      { id: 'employee-directory', label: 'Employee Directory', icon: Users, path: '/communication/directory' },
+      { id: 'team-collaboration', label: 'Team Collaboration', icon: Users, path: '/communication/collaboration' },
+    ]
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: Settings,
+    path: '/settings',
+    hasSubmenu: true,
+    children: [
+      { id: 'general-settings', label: 'General Settings', icon: Settings, path: '/settings/general' },
+      { id: 'theme-settings', label: 'Theme & Appearance', icon: Palette, path: '/settings/theme' },
+      { id: 'notification-settings', label: 'Notifications', icon: Bell, path: '/settings/notifications' },
+      { id: 'security-settings', label: 'Security & Privacy', icon: Shield, path: '/settings/security' },
+    ]
   }
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
-  const user = useAppSelector((state) => state.auth.user);
-  const dispatch = useAppDispatch();
+  const { user, logout } = useAuthStore();
   const { isDark, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -272,21 +366,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
   const handleLogout = async () => {
     try {
       console.log('🚪 Sidebar - Starting logout process...');
-      const result = await dispatch(logoutUser());
-
-      if (logoutUser.fulfilled.match(result)) {
-        console.log('✅ Sidebar - Logout successful');
-        toast.success('Logged out successfully');
-        navigate('/login');
-      } else {
-        console.log('❌ Sidebar - Logout failed, but clearing local state');
-        toast.success('Logged out successfully');
-        navigate('/login');
-      }
-    } catch (error) {
-      console.error('❌ Sidebar - Logout error:', error);
+      await logout();
+      console.log('✅ Sidebar - Logout successful');
       toast.success('Logged out successfully');
       navigate('/login');
+    } catch (error) {
+      console.error('❌ Sidebar - Logout error:', error);
+      toast.error('An error occurred during logout');
     }
   };
 

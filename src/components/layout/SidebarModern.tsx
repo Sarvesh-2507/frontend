@@ -13,7 +13,6 @@ import {
   TrendingUp,
   UserMinus,
   Package,
-  Building,
   Building2,
   Globe,
   HelpCircle,
@@ -25,8 +24,6 @@ import {
   X,
   Sun,
   Moon,
-  Bell,
-  Search,
 } from 'lucide-react';
 
 // Redux
@@ -58,11 +55,10 @@ const menuItems: MenuItem[] = [
   },
   {
     id: 'organizations',
-    label: 'Organizations',
+    label: 'Organization',
     icon: Building2,
     children: [
-      { id: 'org-list', label: 'All Organizations', icon: Building2, path: '/organizations' },
-      { id: 'companies', label: 'Companies', icon: Building, path: '/organizations/companies' },
+      { id: 'org-list', label: 'All Companies', icon: Building2, path: '/organizations' },
       { id: 'domains', label: 'Domains', icon: Globe, path: '/organizations/domains' },
     ],
   },

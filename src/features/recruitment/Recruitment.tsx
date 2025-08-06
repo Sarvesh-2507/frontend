@@ -14,9 +14,21 @@ import {
   Search,
   Users,
   XCircle,
+  FileText,
+  UserPlus,
+  BarChart3,
+  TrendingUp,
+  Clock,
+  Star,
+  MessageSquare,
+  ArrowLeft,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Routes, Route } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import Sidebar from "../../components/Sidebar";
+import Logo from "../../components/ui/Logo";
+import { dashboardAPI } from "../../services/api";
 
 interface JobPosting {
   id: string;
@@ -28,6 +40,9 @@ interface JobPosting {
   postedDate: string;
   applications: number;
   status: "active" | "closed" | "draft";
+  description?: string;
+  requirements?: string[];
+  benefits?: string[];
 }
 
 interface Candidate {
@@ -45,12 +60,156 @@ interface Candidate {
     | "rejected";
   appliedDate: string;
   resume: string;
+  phone?: string;
+  skills?: string[];
+  rating?: number;
+}
+
+interface SubModule {
+  id: string;
+  name: string;
+  icon: React.ComponentType<any>;
+  path: string;
+  description: string;
+  count?: number;
+}
+
+interface RecruitmentStats {
+  totalJobs: number;
+  activeJobs: number;
+  totalCandidates: number;
+  interviewsScheduled: number;
+  offersExtended: number;
+  hiredThisMonth: number;
 }
 
 const Recruitment: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("jobs");
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeSubModule, setActiveSubModule] = useState("dashboard");
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState<RecruitmentStats>({
+    totalJobs: 0,
+    activeJobs: 0,
+    totalCandidates: 0,
+    interviewsScheduled: 0,
+    offersExtended: 0,
+    hiredThisMonth: 0,
+  });
+  const navigate = useNavigate();
+
+  const subModules: SubModule[] = [
+    {
+      id: "dashboard",
+      name: "Dashboard",
+      icon: BarChart3,
+      path: "/recruitment",
+      description: "Recruitment overview and analytics",
+      count: stats.totalJobs,
+    },
+    {
+      id: "job-requisition",
+      name: "Job Requisition",
+      icon: FileText,
+      path: "/recruitment/job-requisition",
+      description: "Manage job requisitions and approval workflows",
+    },
+    {
+      id: "job-posting",
+      name: "Job Posting",
+      icon: Plus,
+      path: "/recruitment/job-posting",
+      description: "Post jobs on multiple platforms",
+    },
+    {
+      id: "ats",
+      name: "Application Tracking",
+      icon: Search,
+      path: "/recruitment/ats",
+      description: "Track candidate applications",
+      count: stats.totalCandidates,
+    },
+    {
+      id: "interviews",
+      name: "Interview Management",
+      icon: Calendar,
+      path: "/recruitment/interviews",
+      description: "Schedule and manage interviews",
+      count: stats.interviewsScheduled,
+    },
+    {
+      id: "candidates",
+      name: "Candidate Registration",
+      icon: UserPlus,
+      path: "/recruitment/candidates",
+      description: "Manage candidate records",
+    },
+    {
+      id: "analytics",
+      name: "Hiring Analytics",
+      icon: TrendingUp,
+      path: "/recruitment/analytics",
+      description: "View recruitment metrics and insights",
+    },
+    {
+      id: "budget",
+      name: "Budget Tracker",
+      icon: DollarSign,
+      path: "/recruitment/budget",
+      description: "Track recruitment expenses",
+    },
+  ];
+
+  useEffect(() => {
+    fetchRecruitmentData();
+  }, []);
+
+  const fetchRecruitmentData = async () => {
+    try {
+      setLoading(true);
+      // Fetch recruitment statistics from backend
+      const response = await dashboardAPI.getStats();
+      if (response.data) {
+        setStats({
+          totalJobs: response.data.totalJobs || jobPostings.length,
+          activeJobs: response.data.activeJobs || jobPostings.filter(job => job.status === 'active').length,
+          totalCandidates: response.data.totalCandidates || candidates.length,
+          interviewsScheduled: response.data.interviewsScheduled || candidates.filter(c => c.status === 'interview').length,
+          offersExtended: response.data.offersExtended || candidates.filter(c => c.status === 'offer').length,
+          hiredThisMonth: response.data.hiredThisMonth || candidates.filter(c => c.status === 'hired').length,
+        });
+      }
+      toast.success("Recruitment data loaded successfully");
+    } catch (error) {
+      console.error("Error fetching recruitment data:", error);
+      // Use mock data as fallback
+      setStats({
+        totalJobs: jobPostings.length,
+        activeJobs: jobPostings.filter(job => job.status === 'active').length,
+        totalCandidates: candidates.length,
+        interviewsScheduled: candidates.filter(c => c.status === 'interview').length,
+        offersExtended: candidates.filter(c => c.status === 'offer').length,
+        hiredThisMonth: candidates.filter(c => c.status === 'hired').length,
+      });
+      toast.error("Using offline data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubModuleClick = (subModule: SubModule) => {
+    setActiveSubModule(subModule.id);
+    navigate(subModule.path);
+  };
+
+  const handleCreateJob = () => {
+    navigate("/recruitment/job-posting");
+  };
+
+  const handleViewCandidate = (candidateId: string) => {
+    navigate(`/recruitment/candidates/${candidateId}`);
+  };
 
   const jobPostings: JobPosting[] = [
     {
@@ -234,6 +393,41 @@ const Recruitment: React.FC = () => {
             </div>
           </div>
         </header>
+
+        {/* Submodule Navigation */}
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          <div className="px-6 py-3">
+            <div className="flex space-x-1 overflow-x-auto">
+              {subModules.map((subModule) => {
+                const Icon = subModule.icon;
+                const isActive = activeSubModule === subModule.id;
+                return (
+                  <button
+                    key={subModule.id}
+                    onClick={() => handleSubModuleClick(subModule)}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                      isActive
+                        ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{subModule.name}</span>
+                    {subModule.count !== undefined && (
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        isActive
+                          ? "bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200"
+                          : "bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                      }`}>
+                        {subModule.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto p-6">

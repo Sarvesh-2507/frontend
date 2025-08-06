@@ -11,10 +11,21 @@ import {
   Plus,
   Users,
   XCircle,
+  BarChart3,
+  Upload,
+  Edit,
+  CalendarDays,
+  TrendingUp,
+  FileSpreadsheet,
+  Settings,
+  MapPin,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import Sidebar from "../../components/Sidebar";
+import Logo from "../../components/ui/Logo";
+import { dashboardAPI } from "../../services/api";
 
 interface AttendanceRecord {
   id: string;
@@ -26,6 +37,27 @@ interface AttendanceRecord {
   hoursWorked: number;
   status: "present" | "late" | "absent" | "half-day" | "overtime";
   location: string;
+  department?: string;
+  breakTime?: number;
+  overtime?: number;
+}
+
+interface SubModule {
+  id: string;
+  name: string;
+  icon: React.ComponentType<any>;
+  path: string;
+  description: string;
+  count?: number;
+}
+
+interface AttendanceStats {
+  totalEmployees: number;
+  presentToday: number;
+  absentToday: number;
+  lateToday: number;
+  averageHours: number;
+  overtimeHours: number;
 }
 
 const Attendance: React.FC = () => {
@@ -33,7 +65,148 @@ const Attendance: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
+  const [activeSubModule, setActiveSubModule] = useState("daily");
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState<AttendanceStats>({
+    totalEmployees: 0,
+    presentToday: 0,
+    absentToday: 0,
+    lateToday: 0,
+    averageHours: 0,
+    overtimeHours: 0,
+  });
   const navigate = useNavigate();
+
+  const subModules: SubModule[] = [
+    {
+      id: "daily",
+      name: "Daily View",
+      icon: Calendar,
+      path: "/attendance/daily",
+      description: "View daily attendance records",
+      count: stats.presentToday,
+    },
+    {
+      id: "monthly",
+      name: "Monthly Calendar",
+      icon: CalendarDays,
+      path: "/attendance/monthly",
+      description: "Monthly attendance overview",
+    },
+    {
+      id: "summary",
+      name: "Summary Report",
+      icon: BarChart3,
+      path: "/attendance/summary",
+      description: "Generate attendance reports",
+    },
+    {
+      id: "manual-update",
+      name: "Manual Update",
+      icon: Edit,
+      path: "/attendance/manual-update",
+      description: "Update attendance manually",
+    },
+    {
+      id: "import",
+      name: "Import Data",
+      icon: Upload,
+      path: "/attendance/import",
+      description: "Import attendance from Excel/CSV",
+    },
+    {
+      id: "holidays",
+      name: "Holiday Calendar",
+      icon: Calendar,
+      path: "/attendance/holidays",
+      description: "Manage holiday calendar",
+    },
+    {
+      id: "metrics",
+      name: "Metrics Dashboard",
+      icon: TrendingUp,
+      path: "/attendance/metrics",
+      description: "View attendance analytics",
+    },
+  ];
+
+  useEffect(() => {
+    fetchAttendanceData();
+  }, [selectedDate]);
+
+  const fetchAttendanceData = async () => {
+    try {
+      setLoading(true);
+      // Fetch attendance data from backend
+      const response = await dashboardAPI.getStats();
+      if (response.data) {
+        setStats({
+          totalEmployees: response.data.totalEmployees || attendanceRecords.length,
+          presentToday: response.data.presentToday || attendanceRecords.filter(r => r.status === 'present').length,
+          absentToday: response.data.absentToday || attendanceRecords.filter(r => r.status === 'absent').length,
+          lateToday: response.data.lateToday || attendanceRecords.filter(r => r.status === 'late').length,
+          averageHours: response.data.averageHours || 8.2,
+          overtimeHours: response.data.overtimeHours || attendanceRecords.filter(r => r.status === 'overtime').length,
+        });
+      }
+      toast.success("Attendance data loaded successfully");
+    } catch (error) {
+      console.error("Error fetching attendance data:", error);
+      // Use mock data as fallback
+      setStats({
+        totalEmployees: attendanceRecords.length,
+        presentToday: attendanceRecords.filter(r => r.status === 'present').length,
+        absentToday: attendanceRecords.filter(r => r.status === 'absent').length,
+        lateToday: attendanceRecords.filter(r => r.status === 'late').length,
+        averageHours: 8.2,
+        overtimeHours: attendanceRecords.filter(r => r.status === 'overtime').length,
+      });
+      toast.error("Using offline data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubModuleClick = (subModule: SubModule) => {
+    setActiveSubModule(subModule.id);
+    navigate(subModule.path);
+  };
+
+  const handleManualEntry = () => {
+    navigate("/attendance/manual-update");
+  };
+
+  const handleImportData = () => {
+    navigate("/attendance/import");
+  };
+
+  const handleExportData = () => {
+    // Export attendance data to CSV
+    const csvData = attendanceRecords.map(record => ({
+      'Employee ID': record.employeeId,
+      'Employee Name': record.employeeName,
+      'Date': record.date,
+      'Check In': record.checkIn,
+      'Check Out': record.checkOut,
+      'Hours Worked': record.hoursWorked,
+      'Status': record.status,
+      'Location': record.location,
+    }));
+
+    const csvContent = "data:text/csv;charset=utf-8,"
+      + Object.keys(csvData[0]).join(",") + "\n"
+      + csvData.map(row => Object.values(row).join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `attendance_${selectedDate}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success("Attendance data exported successfully");
+  };
 
   const attendanceRecords: AttendanceRecord[] = [
     {
@@ -214,6 +387,41 @@ const Attendance: React.FC = () => {
             </div>
           </div>
         </header>
+
+        {/* Submodule Navigation */}
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          <div className="px-6 py-3">
+            <div className="flex space-x-1 overflow-x-auto">
+              {subModules.map((subModule) => {
+                const Icon = subModule.icon;
+                const isActive = activeSubModule === subModule.id;
+                return (
+                  <button
+                    key={subModule.id}
+                    onClick={() => handleSubModuleClick(subModule)}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                      isActive
+                        ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{subModule.name}</span>
+                    {subModule.count !== undefined && (
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        isActive
+                          ? "bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200"
+                          : "bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                      }`}>
+                        {subModule.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto p-6">
