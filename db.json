@@ -1,0 +1,197 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "email": "admin@mh-hr.com",
+      "username": "admin",
+      "password": "admin123",
+      "role": "admin",
+      "firstName": "Admin",
+      "lastName": "User",
+      "department": "IT",
+      "position": "System Administrator",
+      "avatar": "",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "2",
+      "email": "hr@mh-hr.com",
+      "username": "hrmanager",
+      "password": "hr123",
+      "role": "hr",
+      "firstName": "HR",
+      "lastName": "Manager",
+      "department": "Human Resources",
+      "position": "HR Manager",
+      "avatar": "",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "3",
+      "email": "employee@mh-hr.com",
+      "username": "employee",
+      "password": "emp123",
+      "role": "employee",
+      "firstName": "John",
+      "lastName": "Doe",
+      "department": "Marketing",
+      "position": "Marketing Specialist",
+      "avatar": "",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "employees": [
+    {
+      "id": "1",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john.doe@mh-hr.com",
+      "department": "Marketing",
+      "position": "Marketing Specialist",
+      "status": "active",
+      "joinDate": "2023-06-15",
+      "avatar": ""
+    },
+    {
+      "id": "2",
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "email": "jane.smith@mh-hr.com",
+      "department": "Engineering",
+      "position": "Software Engineer",
+      "status": "active",
+      "joinDate": "2023-03-10",
+      "avatar": ""
+    },
+    {
+      "id": "3",
+      "firstName": "Mike",
+      "lastName": "Johnson",
+      "email": "mike.johnson@mh-hr.com",
+      "department": "Sales",
+      "position": "Sales Representative",
+      "status": "on-leave",
+      "joinDate": "2023-01-20",
+      "avatar": ""
+    }
+  ],
+  "leaveRequests": [
+    {
+      "id": "1",
+      "employeeId": "1",
+      "employeeName": "John Doe",
+      "type": "vacation",
+      "startDate": "2024-08-15",
+      "endDate": "2024-08-20",
+      "days": 5,
+      "status": "pending",
+      "reason": "Family vacation",
+      "submittedAt": "2024-07-25T10:00:00Z"
+    },
+    {
+      "id": "2",
+      "employeeId": "2",
+      "employeeName": "Jane Smith",
+      "type": "sick",
+      "startDate": "2024-07-30",
+      "endDate": "2024-07-31",
+      "days": 2,
+      "status": "approved",
+      "reason": "Medical appointment",
+      "submittedAt": "2024-07-28T14:30:00Z"
+    }
+  ],
+  "holidays": [
+    {
+      "id": "1",
+      "name": "New Year's Day",
+      "date": "2024-01-01",
+      "type": "public",
+      "description": "New Year celebration"
+    },
+    {
+      "id": "2",
+      "name": "Independence Day",
+      "date": "2024-07-04",
+      "type": "public",
+      "description": "National Independence Day"
+    },
+    {
+      "id": "3",
+      "name": "Christmas Day",
+      "date": "2024-12-25",
+      "type": "public",
+      "description": "Christmas celebration"
+    }
+  ],
+  "departments": [
+    {
+      "id": "1",
+      "name": "Engineering",
+      "head": "Tech Lead",
+      "employeeCount": 25,
+      "budget": 500000
+    },
+    {
+      "id": "2",
+      "name": "Marketing",
+      "head": "Marketing Director",
+      "employeeCount": 12,
+      "budget": 200000
+    },
+    {
+      "id": "3",
+      "name": "Sales",
+      "head": "Sales Manager",
+      "employeeCount": 18,
+      "budget": 300000
+    },
+    {
+      "id": "4",
+      "name": "Human Resources",
+      "head": "HR Manager",
+      "employeeCount": 5,
+      "budget": 150000
+    }
+  ],
+  "notifications": [
+    {
+      "id": "1",
+      "title": "Leave Request Update",
+      "message": "Your vacation leave request has been approved",
+      "type": "success",
+      "read": false,
+      "createdAt": "2024-07-30T09:00:00Z",
+      "actionUrl": "/dashboard/leave"
+    },
+    {
+      "id": "2",
+      "title": "New Policy Update",
+      "message": "Company remote work policy has been updated",
+      "type": "info",
+      "read": false,
+      "createdAt": "2024-07-29T15:30:00Z",
+      "actionUrl": "/dashboard/policies"
+    },
+    {
+      "id": "3",
+      "title": "Payroll Reminder",
+      "message": "Payroll processing deadline is approaching",
+      "type": "warning",
+      "read": true,
+      "createdAt": "2024-07-28T11:00:00Z",
+      "actionUrl": "/dashboard/payroll"
+    }
+  ],
+  "dashboardStats": {
+    "totalEmployees": 248,
+    "activeEmployees": 234,
+    "pendingLeaves": 12,
+    "upcomingHolidays": 3,
+    "newHires": 8,
+    "departmentCount": 4
+  }
+}

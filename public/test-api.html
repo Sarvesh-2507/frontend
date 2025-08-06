@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>API Connection Test</h1>
+    <button onclick="testAPI()">Test Mock API Connection</button>
+    <button onclick="testLogin()">Test Login</button>
+    <div id="results"></div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3002/api';
+        
+        function addResult(message, isSuccess = true) {
+            const div = document.createElement('div');
+            div.className = `result ${isSuccess ? 'success' : 'error'}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            document.getElementById('results').appendChild(div);
+        }
+
+        async function testAPI() {
+            try {
+                addResult(`Testing connection to: ${API_BASE_URL}`);
+                
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'test', password: 'test' })
+                });
+                
+                addResult(`Response Status: ${response.status}`, response.status < 500);
+                addResult(`Response URL: ${response.url}`);
+                
+                const data = await response.json();
+                addResult(`Response Data: ${JSON.stringify(data, null, 2)}`);
+                
+            } catch (error) {
+                addResult(`Error: ${error.message}`, false);
+            }
+        }
+
+        async function testLogin() {
+            try {
+                addResult(`Testing login with admin credentials...`);
+                
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: 'admin@mh-hr.com', 
+                        password: 'admin123' 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    addResult(`✅ Login successful! User: ${data.data.user.email}`, true);
+                    addResult(`User Role: ${data.data.user.role}`);
+                } else {
+                    addResult(`❌ Login failed: ${data.message || 'Unknown error'}`, false);
+                }
+                
+            } catch (error) {
+                addResult(`❌ Login error: ${error.message}`, false);
+            }
+        }
+
+        // Auto-test on page load
+        window.onload = () => {
+            addResult('Page loaded. API Base URL: ' + API_BASE_URL);
+            testAPI();
+        };
+    </script>
+</body>
+</html>
