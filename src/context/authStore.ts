@@ -336,7 +336,12 @@ export const useAuthStore = create<AuthStore>()(
         try {
           set({ isLoading: true, error: null });
 
+          console.log('🔐 AuthStore - Starting password reset');
+          console.log('🌐 AuthStore - Token:', data.token);
+
           const response = await authApi.resetPassword(data);
+
+          console.log('✅ AuthStore - Password reset API response:', response);
 
           if (response.success) {
             set({ isLoading: false, error: null });
@@ -345,15 +350,30 @@ export const useAuthStore = create<AuthStore>()(
             throw new Error(response.message || "Password reset failed");
           }
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message ||
-            error.message ||
-            "Password reset failed";
+          console.error('❌ AuthStore - Password reset error:', error);
+
+          let errorMessage = "Password reset failed";
+
+          // Handle different error scenarios
+          if (error.response?.status === 400) {
+            errorMessage = error.response?.data?.message || error.response?.data?.error || 'Invalid or expired reset token.';
+          } else if (error.response?.status === 404) {
+            errorMessage = 'Reset token not found. Please request a new password reset.';
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.response?.data?.error) {
+            errorMessage = error.response.data.error;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+
           set({
             isLoading: false,
             error: errorMessage,
           });
-          toast.error(errorMessage);
+
+          // Don't show toast here as component will handle the error display
+          console.error('❌ AuthStore - Final error message:', errorMessage);
           throw error;
         }
       },

@@ -23,6 +23,19 @@ import {
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 import Sidebar from "../../components/Sidebar";
 import Logo from "../../components/ui/Logo";
 import { dashboardAPI } from "../../services/api";
@@ -300,6 +313,28 @@ const Attendance: React.FC = () => {
       color: "bg-blue-500",
     },
   ];
+
+  // Monthly Attendance Data for Bar Chart
+  const monthlyAttendanceData = [
+    { month: 'Jan', present: 4850, absent: 150, late: 200, overtime: 300 },
+    { month: 'Feb', present: 4920, absent: 120, late: 180, overtime: 280 },
+    { month: 'Mar', present: 5100, absent: 100, late: 150, overtime: 350 },
+    { month: 'Apr', present: 4980, absent: 140, late: 170, overtime: 320 },
+    { month: 'May', present: 5050, absent: 110, late: 160, overtime: 290 },
+    { month: 'Jun', present: 5200, absent: 80, late: 140, overtime: 380 },
+  ];
+
+  // Department Distribution Data for Pie Chart
+  const departmentData = [
+    { name: 'Engineering', value: 45, employees: 112, color: '#3B82F6' },
+    { name: 'Marketing', value: 20, employees: 50, color: '#10B981' },
+    { name: 'Sales', value: 15, employees: 38, color: '#F59E0B' },
+    { name: 'HR', value: 8, employees: 20, color: '#EF4444' },
+    { name: 'Finance', value: 7, employees: 18, color: '#8B5CF6' },
+    { name: 'Operations', value: 5, employees: 12, color: '#06B6D4' },
+  ];
+
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
 
   const getStatusColor = (status: string) => {
     switch (status) {

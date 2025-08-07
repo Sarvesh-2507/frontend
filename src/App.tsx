@@ -6,11 +6,13 @@ import {
   Routes,
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { ToastProvider } from "./context/ToastContext";
 
 // Auth Components
 import Login from "./features/authentication/Login";
 import Register from "./features/authentication/Register";
 import ForgotPassword from "./features/authentication/ForgotPassword";
+import ResetPassword from "./features/authentication/ResetPassword";
 import ChangePassword from "./features/authentication/ChangePassword";
 
 // Main Components
@@ -81,12 +83,14 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <ToastProvider>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Routes>
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/change-password" element={<ChangePassword />} />
 
           {/* Main App Routes */}
@@ -499,7 +503,8 @@ const App: React.FC = () => {
             },
           }}
         />
-      </div>
+        </div>
+      </ToastProvider>
     </Router>
   );
 };

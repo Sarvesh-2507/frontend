@@ -9,7 +9,7 @@ const Login = () => {
 
   // Redirect if already authenticated
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return <LoginForm />;

@@ -50,7 +50,8 @@ import Logo from './ui/Logo';
 import { useThemeStore } from '../context/themeStore';
 import { useAuthStore } from '../modules/auth/store/authStore';
 import { useNavigate, useLocation } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { useToast } from '../context/ToastContext';
+import ConfirmationDialog from './ui/ConfirmationDialog';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -359,20 +360,26 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
   const { isDark, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
   const location = useLocation();
+  const { showSuccess, showError } = useToast();
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const handleLogout = async () => {
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleLogoutConfirm = async () => {
     try {
       console.log('🚪 Sidebar - Starting logout process...');
       await logout();
       console.log('✅ Sidebar - Logout successful');
-      toast.success('Logged out successfully');
+      showSuccess('Logged out successfully');
       navigate('/login');
     } catch (error) {
       console.error('❌ Sidebar - Logout error:', error);
-      toast.error('An error occurred during logout');
+      showError('An error occurred during logout');
     }
   };
 
@@ -516,7 +523,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
             </button>
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={handleLogoutClick}
               className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex items-center space-x-2"
             >
               <LogOut className="w-4 h-4" />
@@ -735,7 +742,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          onClick={handleLogout}
+          onClick={handleLogoutClick}
           className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
@@ -754,6 +761,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
           </AnimatePresence>
         </motion.button>
       </div>
+
+      {/* Logout Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogoutConfirm}
+        title="Confirm Logout"
+        message="Are you sure you want to logout? You will need to sign in again to access your account."
+        confirmText="Logout"
+        cancelText="Cancel"
+        type="warning"
+      />
     </motion.div>
   );
 };

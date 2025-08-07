@@ -16,6 +16,19 @@ import {
   Filter,
   RefreshCw
 } from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  Legend
+} from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 
@@ -62,6 +75,33 @@ const AttendanceMetricsDashboard: React.FC = () => {
     { value: 'quarter', label: 'This Quarter' },
     { value: 'year', label: 'This Year' }
   ];
+
+  // Monthly Attendance Trend Data
+  const attendanceTrendData = [
+    { month: 'Jan', attendance: 92, target: 95, present: 315, absent: 27 },
+    { month: 'Feb', attendance: 88, target: 95, present: 301, absent: 41 },
+    { month: 'Mar', attendance: 94, target: 95, present: 321, absent: 21 },
+    { month: 'Apr', attendance: 91, target: 95, present: 311, absent: 31 },
+    { month: 'May', attendance: 96, target: 95, present: 328, absent: 14 },
+    { month: 'Jun', attendance: 93, target: 95, present: 318, absent: 24 },
+    { month: 'Jul', attendance: 89, target: 95, present: 304, absent: 38 },
+    { month: 'Aug', attendance: 95, target: 95, present: 325, absent: 17 },
+    { month: 'Sep', attendance: 97, target: 95, present: 332, absent: 10 },
+    { month: 'Oct', attendance: 94, target: 95, present: 321, absent: 21 },
+    { month: 'Nov', attendance: 92, target: 95, present: 315, absent: 27 },
+    { month: 'Dec', attendance: 90, target: 95, present: 308, absent: 34 }
+  ];
+
+  // Department Distribution Data
+  const departmentDistributionData = [
+    { name: 'Engineering', value: 45, employees: 158, color: '#3B82F6' },
+    { name: 'Sales & Marketing', value: 25, employees: 88, color: '#10B981' },
+    { name: 'Operations', value: 15, employees: 53, color: '#F59E0B' },
+    { name: 'Human Resources', value: 8, employees: 28, color: '#EF4444' },
+    { name: 'Finance', value: 7, employees: 25, color: '#8B5CF6' }
+  ];
+
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
   const departments = [
     { value: 'all', label: 'All Departments' },
@@ -334,16 +374,56 @@ ${departmentMetrics.map(dept =>
                 className="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Attendance Trend</h3>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Attendance Trend</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Monthly attendance vs target</p>
+                  </div>
                   <BarChart3 className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 </div>
-                <div className="h-64 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-700 dark:to-gray-600 rounded-lg">
-                  <div className="text-center">
-                    <BarChart3 className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
-                    <p className="text-gray-500 dark:text-gray-400">Attendance Trend Chart</p>
-                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
-                      {trendData.length} days of data
-                    </p>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={attendanceTrendData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                      <XAxis
+                        dataKey="month"
+                        stroke="#6B7280"
+                        fontSize={12}
+                      />
+                      <YAxis
+                        stroke="#6B7280"
+                        fontSize={12}
+                        domain={[80, 100]}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#1F2937',
+                          border: 'none',
+                          borderRadius: '8px',
+                          color: '#F9FAFB'
+                        }}
+                        formatter={(value: any, name: string) => [
+                          `${value}%`,
+                          name === 'attendance' ? 'Attendance Rate' : 'Target'
+                        ]}
+                      />
+                      <Bar dataKey="target" fill="#E5E7EB" name="target" radius={[2, 2, 0, 0]} />
+                      <Bar dataKey="attendance" fill="#3B82F6" name="attendance" radius={[2, 2, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-4 flex items-center justify-between text-sm">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                      <span className="text-gray-600 dark:text-gray-400">Actual</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-gray-300 rounded"></div>
+                      <span className="text-gray-600 dark:text-gray-400">Target (95%)</span>
+                    </div>
+                  </div>
+                  <div className="text-gray-500 dark:text-gray-400">
+                    Avg: {(attendanceTrendData.reduce((sum, item) => sum + item.attendance, 0) / attendanceTrendData.length).toFixed(1)}%
                   </div>
                 </div>
               </motion.div>
@@ -356,17 +436,46 @@ ${departmentMetrics.map(dept =>
                 className="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Department Distribution</h3>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Department Distribution</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Employee distribution by department</p>
+                  </div>
                   <PieChart className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 </div>
-                <div className="h-64 flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-700 dark:to-gray-600 rounded-lg">
-                  <div className="text-center">
-                    <PieChart className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
-                    <p className="text-gray-500 dark:text-gray-400">Department Distribution Chart</p>
-                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
-                      {departmentMetrics.length} departments
-                    </p>
-                  </div>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsPieChart>
+                      <Pie
+                        data={departmentDistributionData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={2}
+                        dataKey="value"
+                      >
+                        {departmentDistributionData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#1F2937',
+                          border: 'none',
+                          borderRadius: '8px',
+                          color: '#F9FAFB'
+                        }}
+                        formatter={(value: any) => [`${value}%`, 'Percentage']}
+                      />
+                      <Legend
+                        verticalAlign="bottom"
+                        height={36}
+                        formatter={(value, entry: any) => (
+                          <span style={{ color: entry.color }}>{value}</span>
+                        )}
+                      />
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
                 </div>
               </motion.div>
             </div>

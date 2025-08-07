@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -36,6 +36,7 @@ import { logoutUser } from '../../store/slices/authSlice';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Logo from '../ui/Logo';
+import ConfirmationDialog from '../ui/ConfirmationDialog';
 
 interface MenuItem {
   id: string;
@@ -188,6 +189,7 @@ const SidebarModern: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
 
   const [expandedItems, setExpandedItems] = React.useState<string[]>(['dashboard']);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const toggleExpanded = (itemId: string) => {
     setExpandedItems(prev => 
@@ -197,7 +199,11 @@ const SidebarModern: React.FC = () => {
     );
   };
 
-  const handleLogout = async () => {
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleLogoutConfirm = async () => {
     try {
       console.log('🚪 SidebarModern - Starting logout process');
       await dispatch(logoutUser()).unwrap();
@@ -406,7 +412,7 @@ const SidebarModern: React.FC = () => {
                   size="sm"
                   fullWidth
                   icon={<LogOut className="w-4 h-4" />}
-                  onClick={handleLogout}
+                  onClick={handleLogoutClick}
                   className="justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
                   Logout
@@ -437,9 +443,9 @@ const SidebarModern: React.FC = () => {
                 
                 <button
                   type="button"
-                  onClick={handleLogout}
+                  onClick={handleLogoutClick}
                   className="w-full p-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                title="Toggle sidebar"
+                title="Logout"
                 >
                   <LogOut className="w-5 h-5 text-red-600 mx-auto" />
                 </button>
@@ -448,6 +454,18 @@ const SidebarModern: React.FC = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Logout Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogoutConfirm}
+        title="Confirm Logout"
+        message="Are you sure you want to logout? You will need to sign in again to access your account."
+        confirmText="Logout"
+        cancelText="Cancel"
+        type="warning"
+      />
     </>
   );
 };

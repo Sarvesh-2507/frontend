@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Lock, Mail } from "lucide-react";
+import { ArrowRight, Lock, Mail, Moon, Sun } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Logo from "../../components/ui/Logo";
+import { useThemeStore } from "../../context/themeStore";
 
 // Redux
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
@@ -25,6 +26,7 @@ const LoginModern: React.FC = () => {
 
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { isDark, toggleTheme } = useThemeStore();
 
   const { isLoading, error, isAuthenticated } = useAppSelector(
     (state) => state.auth
@@ -45,7 +47,7 @@ const LoginModern: React.FC = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard");
+      navigate("/home");
     }
   }, [isAuthenticated, navigate]);
 
@@ -62,10 +64,10 @@ const LoginModern: React.FC = () => {
       console.log("🔐 Login Component - Starting login with:", data.email);
       await dispatch(loginUser(data)).unwrap();
       console.log(
-        "✅ Login Component - Login successful, navigating to dashboard"
+        "✅ Login Component - Login successful, navigating to home"
       );
       toast.success("Login successful!");
-      navigate("/dashboard");
+      navigate("/home");
     } catch (error: any) {
       console.error("❌ Login Component - Login failed:", error);
       // Error is handled by Redux and shown via useEffect
@@ -90,6 +92,22 @@ const LoginModern: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 p-4">
+      {/* Theme Toggle Button */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.5 }}
+        onClick={toggleTheme}
+        className="fixed top-4 left-4 p-3 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 z-50"
+        title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+      >
+        {isDark ? (
+          <Sun className="w-5 h-5 text-yellow-500" />
+        ) : (
+          <Moon className="w-5 h-5 text-gray-600" />
+        )}
+      </motion.button>
+
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-gradient-to-br from-transparent via-blue-50/10 to-purple-50/10 dark:from-transparent dark:via-blue-900/5 dark:to-purple-900/5 opacity-30"></div>
 

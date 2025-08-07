@@ -62,51 +62,6 @@ export const testOrganizationsAPI = async () => {
 (window as any).testOrganizationsAPI = testOrganizationsAPI;
 
 export const organizationAPI = {
-  // Get all organizations
-  getOrganizations: async (): Promise<AxiosResponse<Organization[]>> => {
-    const url = `${API_BASE_URL}/organizations/`;
-    console.log("🏢 API - Fetching organizations from:", url);
-
-    try {
-      const response = await axios.get(url, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        timeout: 15000,
-      });
-
-      console.log("✅ API - Organizations response:", response.status, response.data);
-      return response;
-    } catch (error: any) {
-      console.error("❌ API - Organizations fetch error:", error.message);
-      // Fallback to mock data
-      return {
-        data: [
-          {
-            id: 1,
-            company_name: "Tech Solutions Inc",
-            industry_type: "Technology",
-            created_at: "2024-01-15T10:00:00Z",
-            updated_at: "2024-01-15T10:00:00Z",
-          },
-          {
-            id: 2,
-            company_name: "Healthcare Plus",
-            industry_type: "Healthcare",
-            created_at: "2024-01-10T09:00:00Z",
-            updated_at: "2024-01-10T09:00:00Z",
-          },
-        ],
-        status: 200,
-        statusText: "OK",
-        headers: {},
-        config: {},
-        request: {},
-      } as AxiosResponse<Organization[]>;
-    }
-  },
 
   // Organizations - Public endpoint for registration (fallback to mock data if auth required)
   getPublicOrganizations: async (): Promise<AxiosResponse<Organization[]>> => {

@@ -19,6 +19,19 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  Legend
+} from 'recharts';
 import Sidebar from './Sidebar';
 
 interface MetricCardProps {
@@ -89,56 +102,7 @@ const ChartPlaceholder: React.FC<{ title: string; type: 'bar' | 'pie'; icon: Rea
   );
 };
 
-const RecentActivity: React.FC = () => {
-  const activities = [
-    {
-      id: 1,
-      title: 'New HR Policy Update',
-      description: 'Please review the updated leave policy effective from next month.',
-      time: '2024-01-15',
-      type: 'policy'
-    },
-    {
-      id: 2,
-      title: 'Team Building Event',
-      description: 'Join us for the quarterly team building event this Friday.',
-      time: '2024-01-12',
-      type: 'event'
-    }
-  ];
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.3 }}
-      className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
-    >
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Activities</h3>
-        <Clock className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-      </div>
-      <div className="space-y-4">
-        {activities.map((activity) => (
-          <div key={activity.id} className="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <div className="flex-shrink-0">
-              {activity.type === 'policy' ? (
-                <FileText className="w-5 h-5 text-blue-500" />
-              ) : (
-                <Users className="w-5 h-5 text-green-500" />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">{activity.title}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{activity.description}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">{activity.time}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </motion.div>
-  );
-};
 
 const AnalyticsDashboard: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -146,6 +110,33 @@ const AnalyticsDashboard: React.FC = () => {
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
+
+  // Monthly Attendance Data
+  const monthlyAttendanceData = [
+    { month: 'Jan', attendance: 92, target: 95 },
+    { month: 'Feb', attendance: 88, target: 95 },
+    { month: 'Mar', attendance: 94, target: 95 },
+    { month: 'Apr', attendance: 91, target: 95 },
+    { month: 'May', attendance: 96, target: 95 },
+    { month: 'Jun', attendance: 93, target: 95 },
+    { month: 'Jul', attendance: 89, target: 95 },
+    { month: 'Aug', attendance: 95, target: 95 },
+    { month: 'Sep', attendance: 97, target: 95 },
+    { month: 'Oct', attendance: 94, target: 95 },
+    { month: 'Nov', attendance: 92, target: 95 },
+    { month: 'Dec', attendance: 90, target: 95 }
+  ];
+
+  // Department Distribution Data
+  const departmentData = [
+    { name: 'Engineering', value: 45, employees: 158, color: '#3B82F6' },
+    { name: 'Sales', value: 25, employees: 88, color: '#10B981' },
+    { name: 'Marketing', value: 15, employees: 53, color: '#F59E0B' },
+    { name: 'HR', value: 8, employees: 28, color: '#EF4444' },
+    { name: 'Finance', value: 7, employees: 25, color: '#8B5CF6' }
+  ];
+
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
   const metrics = [
     {
@@ -155,6 +146,14 @@ const AnalyticsDashboard: React.FC = () => {
       changeType: 'positive' as const,
       icon: Users,
       color: 'bg-blue-500'
+    },
+    {
+      title: 'Employees present',
+      value: '330',
+      change: '+2%',
+      changeType: 'positive' as const,
+      icon: UserCheck,
+      color: 'bg-green-600'
     },
     {
       title: 'Number of leave',
@@ -173,14 +172,6 @@ const AnalyticsDashboard: React.FC = () => {
       color: 'bg-green-500'
     },
     {
-      title: 'Happiness rate',
-      value: '82%',
-      change: '-1%',
-      changeType: 'negative' as const,
-      icon: Activity,
-      color: 'bg-orange-500'
-    },
-    {
       title: 'Organization',
       value: '8',
       change: '+2%',
@@ -195,22 +186,6 @@ const AnalyticsDashboard: React.FC = () => {
       changeType: 'positive' as const,
       icon: AlertCircle,
       color: 'bg-red-500'
-    },
-    {
-      title: 'Completed Tasks',
-      value: '156',
-      change: '+8%',
-      changeType: 'positive' as const,
-      icon: CheckCircle,
-      color: 'bg-green-500'
-    },
-    {
-      title: 'Monthly Budget',
-      value: '$45.2K',
-      change: '+5%',
-      changeType: 'positive' as const,
-      icon: DollarSign,
-      color: 'bg-indigo-500'
     }
   ];
 
@@ -249,65 +224,59 @@ const AnalyticsDashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Attendance Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Average Team KPI */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Average Team KPI</h3>
-            <span className="text-xs text-gray-500">Monthly</span>
-          </div>
-          <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">84.45%</div>
-          <div className="flex items-center text-green-600">
-            <TrendingUp className="w-4 h-4 mr-1" />
-            <span className="text-sm font-medium">+5.2%</span>
-          </div>
-          <div className="mt-4 h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
-            <div className="h-2 bg-blue-500 rounded-full" style={{ width: '84.45%' }}></div>
-          </div>
-        </motion.div>
-
-        {/* Attendance Overview Chart */}
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Attendance Overview Chart - Compact */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+          className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700"
         >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Attendance Overview</h3>
-            <div className="flex items-center space-x-4 text-xs">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-md font-semibold text-gray-900 dark:text-white">Attendance Overview</h3>
+            <div className="flex items-center space-x-2 text-xs">
               <div className="flex items-center space-x-1">
-                <div className="w-3 h-3 bg-orange-500 rounded"></div>
+                <div className="w-2 h-2 bg-orange-500 rounded"></div>
                 <span className="text-gray-600 dark:text-gray-400">On Time</span>
               </div>
               <div className="flex items-center space-x-1">
-                <div className="w-3 h-3 bg-blue-300 rounded"></div>
+                <div className="w-2 h-2 bg-blue-300 rounded"></div>
                 <span className="text-gray-600 dark:text-gray-400">Late</span>
               </div>
               <div className="flex items-center space-x-1">
-                <div className="w-3 h-3 bg-gray-300 rounded"></div>
+                <div className="w-2 h-2 bg-gray-300 rounded"></div>
                 <span className="text-gray-600 dark:text-gray-400">Absent</span>
               </div>
             </div>
           </div>
-          <div className="h-48 flex items-end justify-center space-x-2">
+          <div className="h-32 flex items-end justify-center space-x-1">
             {/* Attendance bars for each day */}
             {Array.from({ length: 7 }, (_, i) => (
               <div key={i} className="flex flex-col items-center space-y-1">
-                <div className="flex flex-col space-y-1">
-                  <div className="w-8 bg-orange-500 rounded-t" style={{ height: `${60 + Math.random() * 40}px` }}></div>
-                  <div className="w-8 bg-blue-300 rounded" style={{ height: `${20 + Math.random() * 20}px` }}></div>
-                  <div className="w-8 bg-gray-300 rounded-b" style={{ height: `${10 + Math.random() * 15}px` }}></div>
+                <div className="flex flex-col space-y-0.5">
+                  <div className="w-6 bg-orange-500 rounded-t" style={{ height: `${40 + Math.random() * 25}px` }}></div>
+                  <div className="w-6 bg-blue-300 rounded" style={{ height: `${15 + Math.random() * 15}px` }}></div>
+                  <div className="w-6 bg-gray-300 rounded-b" style={{ height: `${8 + Math.random() * 10}px` }}></div>
                 </div>
                 <span className="text-xs text-gray-500">{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]}</span>
               </div>
             ))}
+          </div>
+          {/* Additional attendance stats */}
+          <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+            <div className="text-center">
+              <div className="font-semibold text-gray-900 dark:text-white">94.2%</div>
+              <div className="text-gray-500">On Time</div>
+            </div>
+            <div className="text-center">
+              <div className="font-semibold text-gray-900 dark:text-white">4.8%</div>
+              <div className="text-gray-500">Late</div>
+            </div>
+            <div className="text-center">
+              <div className="font-semibold text-gray-900 dark:text-white">1.0%</div>
+              <div className="text-gray-500">Absent</div>
+            </div>
           </div>
         </motion.div>
 
@@ -391,9 +360,69 @@ const AnalyticsDashboard: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* Charts and Activities */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly Attendance */}
+        {/* Monthly Attendance - Enhanced */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Monthly Attendance</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Attendance rate vs target (95%)</p>
+            </div>
+            <BarChart3 className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          </div>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={monthlyAttendanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                <XAxis
+                  dataKey="month"
+                  stroke="#6B7280"
+                  fontSize={12}
+                />
+                <YAxis
+                  stroke="#6B7280"
+                  fontSize={12}
+                  domain={[80, 100]}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1F2937',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: '#F9FAFB'
+                  }}
+                  formatter={(value: any, name: string) => [
+                    `${value}%`,
+                    name === 'attendance' ? 'Attendance' : 'Target'
+                  ]}
+                />
+                <Bar dataKey="target" fill="#E5E7EB" name="target" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="attendance" fill="#3B82F6" name="attendance" radius={[2, 2, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-4 flex items-center justify-between text-sm">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                <span className="text-gray-600 dark:text-gray-400">Actual</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-gray-300 rounded"></div>
+                <span className="text-gray-600 dark:text-gray-400">Target</span>
+              </div>
+            </div>
+            <div className="text-gray-500 dark:text-gray-400">
+              Avg: {(monthlyAttendanceData.reduce((sum, item) => sum + item.attendance, 0) / monthlyAttendanceData.length).toFixed(1)}%
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Department Distribution - Enhanced */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -401,42 +430,65 @@ const AnalyticsDashboard: React.FC = () => {
           className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Monthly Attendance</h3>
-            <BarChart3 className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          </div>
-          <div className="h-48 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-700 dark:to-gray-600 rounded-lg">
-            <div className="text-center">
-              <BarChart3 className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
-              <p className="text-gray-500 dark:text-gray-400">Monthly Attendance Chart</p>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Department Distribution</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Employee distribution across departments</p>
             </div>
-          </div>
-        </motion.div>
-
-        {/* Department Distribution */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Department Distribution</h3>
             <PieChart className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </div>
-          <div className="h-48 flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-700 dark:to-gray-600 rounded-lg">
-            <div className="text-center">
-              <PieChart className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
-              <p className="text-gray-500 dark:text-gray-400">Department Distribution Chart</p>
+          <div className="flex items-center space-x-8">
+            <div className="h-64 w-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsPieChart>
+                  <Pie
+                    data={departmentData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {departmentData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#1F2937',
+                      border: 'none',
+                      borderRadius: '8px',
+                      color: '#F9FAFB'
+                    }}
+                    formatter={(value: any, name: string) => [`${value}%`, 'Percentage']}
+                  />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex-1 space-y-3">
+              {departmentData.map((dept, index) => (
+                <div key={dept.name} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: dept.color }}
+                    ></div>
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">{dept.name}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{dept.employees} employees</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-gray-900 dark:text-white">{dept.value}%</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </motion.div>
       </div>
-
-      {/* Recent Activities */}
-      <RecentActivity />
         </div>
       </div>
-    </div>
   );
 };
 

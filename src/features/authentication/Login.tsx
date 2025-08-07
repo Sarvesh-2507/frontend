@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
-import React, { useState } from "react";
+import { Eye, EyeOff, Lock, Mail, Moon, Sun } from "lucide-react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import Logo from "../../components/ui/Logo";
 import { useAuthStore } from "../../context/authStore";
+import { useToast } from "../../context/ToastContext";
+import { useThemeStore } from "../../context/themeStore";
 import type { LoginCredentials } from "../types/auth";
 
 const Login: React.FC = () => {
@@ -15,7 +17,20 @@ const Login: React.FC = () => {
   const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isLoading, error, forgotPassword } = useAuthStore();
+  const { showSuccess, showError } = useToast();
+  const { isDark, toggleTheme } = useThemeStore();
+
+  // Handle success message from navigation state (e.g., from password reset)
+  useEffect(() => {
+    const state = location.state as { message?: string } | null;
+    if (state?.message) {
+      showSuccess(state.message);
+      // Clear the state to prevent showing the message again on refresh
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, showSuccess, navigate, location.pathname]);
 
   const {
     register,
@@ -28,12 +43,13 @@ const Login: React.FC = () => {
       console.log("🔐 Login Component - Starting login with:", data.email);
       await login(data);
       console.log(
-        "✅ Login Component - Login successful, navigating to dashboard"
+        "✅ Login Component - Login successful, navigating to home"
       );
-      navigate("/dashboard");
+      showSuccess("Logged in successfully");
+      navigate("/home");
     } catch (error) {
       console.error("❌ Login Component - Login failed:", error);
-      // Error is handled in the store
+      showError("Login failed. Please check your credentials.");
     }
   };
 
@@ -71,6 +87,22 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen flex">
+      {/* Theme Toggle Button */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.5 }}
+        onClick={toggleTheme}
+        className="fixed top-4 left-4 p-3 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 z-50"
+        title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+      >
+        {isDark ? (
+          <Sun className="w-5 h-5 text-yellow-500" />
+        ) : (
+          <Moon className="w-5 h-5 text-gray-600" />
+        )}
+      </motion.button>
+
       {/* Debug Info */}
       <div className="fixed top-4 right-4 bg-black bg-opacity-75 text-white p-2 rounded text-xs z-50">
         <div>VITE_USE_MOCK: {import.meta.env.VITE_USE_MOCK}</div>
@@ -324,12 +356,6 @@ const Login: React.FC = () => {
                     placeholder="Enter your email address"
                     required
                   />
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  API Endpoint:{" "}
-                  <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">
-                    http://192.168.1.132:8000/api/forgot-password/
-                  </code>
                 </div>
                 <div className="flex gap-3">
                   <button

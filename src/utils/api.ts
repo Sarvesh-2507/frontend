@@ -277,9 +277,15 @@ export const authApi = {
   resetPassword: async (
     data: ResetPasswordRequest
   ): Promise<ApiResponse<any>> => {
-    return apiRequest("/reset-password/", {
+    console.log('=== API REQUEST DEBUG ===');
+    console.log('Reset password token:', data.token);
+    console.log('API endpoint:', `/reset-password/${data.token}/`);
+    console.log('Request data:', { password: data.password });
+    console.log('========================');
+
+    return apiRequest(`/reset-password/${data.token}/`, {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify({ password: data.password }),
     });
   },
 

@@ -519,7 +519,7 @@ const Register: React.FC = () => {
                   <option value="">
                     {loadingManagers
                       ? "Loading managers..."
-                      : "Select a reporting manager (optional)"}
+                      : "Select a reporting manager"}
                   </option>
                   {reportingManagers.map((manager) => (
                     <option key={manager.id} value={manager.id}>
@@ -628,13 +628,13 @@ const Register: React.FC = () => {
               )}
             </div>
 
-            {/* Department Reference Field (Optional) */}
+            {/* Department Reference Field */}
             <div>
               <label
                 htmlFor="department_ref"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
-                Department (Optional)
+                Department
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -650,7 +650,7 @@ const Register: React.FC = () => {
                   <option value="">
                     {loadingDepts
                       ? "Loading departments..."
-                      : "Select a department (optional)"}
+                      : "Select a department"}
                   </option>
                   {departments.map((dept) => (
                     <option key={dept.id} value={dept.id}>
@@ -661,26 +661,7 @@ const Register: React.FC = () => {
               </div>
             </div>
 
-            {/* Reporting Manager Field (Optional) */}
-            <div>
-              <label
-                htmlFor="reporting_manager"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Reporting Manager (Optional)
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  {...register("reporting_manager")}
-                  type="text"
-                  className="input-field pl-10 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                  placeholder="Enter reporting manager name"
-                />
-              </div>
-            </div>
+
 
             {/* Password Field */}
             <div>

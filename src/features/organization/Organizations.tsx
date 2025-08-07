@@ -65,17 +65,17 @@ const Organizations: React.FC = () => {
     },
     {
       id: "domains",
-      name: "Domains",
+      name: "Departments",
       icon: Globe,
       path: "/organizations/domains",
-      description: "Domain and subdomain management"
+      description: "Department management"
     },
     {
       id: "create",
-      name: "Create Organization",
+      name: "Create Companies",
       icon: Plus,
       path: "/organizations/create",
-      description: "Add new organization"
+      description: "Add new company"
     }
   ];
 
@@ -88,7 +88,6 @@ const Organizations: React.FC = () => {
       setLoading(true);
       const response = await organizationAPI.getOrganizations();
       setOrganizations(response.data);
-      toast.success(`Loaded ${response.data.length} organizations`);
     } catch (error) {
       console.error("Error fetching organizations:", error);
       toast.error("Failed to fetch organizations");
@@ -161,7 +160,7 @@ const Organizations: React.FC = () => {
                   Organizations
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Manage your organizations and companies
+                  Manage your organization and companies
                 </p>
               </div>
             </div>
@@ -172,7 +171,7 @@ const Organizations: React.FC = () => {
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add Organization</span>
+                <span>Add Company</span>
               </button>
               <button
                 type="button"
@@ -222,7 +221,7 @@ const Organizations: React.FC = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="Search organizations..."
+                    placeholder="Search companies..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
