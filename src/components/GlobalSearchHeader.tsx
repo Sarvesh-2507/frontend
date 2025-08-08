@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Clock, Users, Calendar, FileText, Building2, X, BarChart3 } from 'lucide-react';
+import { Search, Clock, Users, Calendar, FileText, Building2, X, BarChart3, Bell } from 'lucide-react';
 
 interface SearchResult {
   id: string;
@@ -120,8 +120,21 @@ const GlobalSearchHeader: React.FC<GlobalSearchHeaderProps> = ({ onNavigate }) =
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={() => setIsSearchFocused(true)}
-          className="w-full pl-12 pr-12 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 shadow-sm"
+          className="w-full pl-12 pr-16 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 shadow-sm"
         />
+        {/* Bell button at right of input */}
+        <button
+          type="button"
+          aria-label="Notifications"
+          onClick={() => {
+            // For now, route to announcements (demo). If there are message notifications, route to inbox.
+            const hasMessageNotification = false;
+            onNavigate(hasMessageNotification ? '/inbox' : '/announcements');
+          }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+        >
+          <Bell className="w-5 h-5" />
+        </button>
         {searchQuery && (
           <button
             onClick={clearSearch}

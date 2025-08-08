@@ -312,18 +312,16 @@ const menuItems: MenuItem[] = [
     ]
   },
   {
-    id: 'compliance',
-    label: 'Compliance & Legal',
-    icon: Shield,
-    path: '/compliance',
+    id: 'policies-docs',
+    label: 'Policies & Documents',
+    icon: FileText,
+    path: '/policies',
     hasSubmenu: true,
     roles: ['admin', 'hr'],
     children: [
-      { id: 'policy-management', label: 'Policy Management', icon: FileText, path: '/compliance/policies' },
-      { id: 'audit-trails', label: 'Audit Trails', icon: Search, path: '/compliance/audit-trails' },
-      { id: 'legal-documents', label: 'Legal Documents', icon: FileText, path: '/compliance/legal-documents' },
-      { id: 'compliance-tracking', label: 'Compliance Tracking', icon: CheckCircle, path: '/compliance/tracking' },
-      { id: 'risk-management', label: 'Risk Management', icon: AlertCircle, path: '/compliance/risk-management' },
+      { id: 'all-policies', label: 'Policies', icon: FileText, path: '/policies' },
+      { id: 'all-documents', label: 'Documents', icon: FileText, path: '/policies/documents' },
+      { id: 'acknowledgements', label: 'Acknowledgements', icon: CheckCircle, path: '/policies/acknowledgements' },
     ]
   },
   {
@@ -460,18 +458,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
         </div>
       </div>
 
-      {/* User Info - Clickable */}
+      {/* HR Profile Button (no dropdown) */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => setShowUserDropdown(!showUserDropdown)}
+          onClick={() => navigate('/hr/profile')}
           className="w-full flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          title="HR Profile"
         >
           <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-            <span className="text-blue-600 dark:text-blue-400 font-medium text-sm">
-              {user?.username?.charAt(0).toUpperCase() || 'U'}
-            </span>
+            <span className="text-blue-600 dark:text-blue-400 font-medium text-sm">HR</span>
           </div>
           <AnimatePresence mode="wait">
             {!isCollapsed && (
@@ -482,53 +479,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
                 transition={{ duration: 0.2 }}
                 className="flex-1 min-w-0 text-left"
               >
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  User
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Admin
-                </p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">HR</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Profile</p>
               </motion.div>
             )}
           </AnimatePresence>
-          {!isCollapsed && (
-            <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
-          )}
         </motion.button>
-
-        {!isCollapsed && showUserDropdown && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="mt-2 space-y-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-2"
-          >
-            <button
-              type="button"
-              onClick={() => navigate('/profile')}
-              className="w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center space-x-2"
-            >
-              <User className="w-4 h-4" />
-              <span>View Profile</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/settings')}
-              className="w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center space-x-2"
-            >
-              <Settings className="w-4 h-4" />
-              <span>Settings</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleLogoutClick}
-              className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex items-center space-x-2"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Logout</span>
-            </button>
-          </motion.div>
-        )}
       </div>
 
       {/* Navigation */}

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import BackButton from '../../components/ui/BackButton';
+import { useLocation } from 'react-router-dom';
 
 interface Announcement {
   id: string;
@@ -40,6 +41,18 @@ const Announcements: React.FC = () => {
   const [filterPriority, setFilterPriority] = useState('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
+
+  const location = useLocation() as any;
+
+  React.useEffect(() => {
+    if (location?.state?.openCreate) {
+      setShowCreateModal(true);
+      // Optional: clear the state so back nav doesn't reopen it
+      if (history.replaceState) {
+        history.replaceState({}, document.title);
+      }
+    }
+  }, [location?.state]);
 
   const [announcements] = useState<Announcement[]>([
     {
@@ -309,6 +322,87 @@ const Announcements: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Announcement Create Modal */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowCreateModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">New Announcement</h2>
+                <button onClick={() => setShowCreateModal(false)} className="p-2 text-gray-400 hover:text-gray-600"><X className="w-5 h-5"/></button>
+              </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const form = e.target as HTMLFormElement;
+                  const formData = new FormData(form);
+                  const newItem: Announcement = {
+                    id: String(Date.now()),
+                    title: String(formData.get('title') || ''),
+                    content: String(formData.get('content') || ''),
+                    author: 'HR',
+                    authorRole: 'HR Manager',
+                    createdAt: new Date().toISOString(),
+                    priority: (formData.get('priority') as any) || 'medium',
+                    type: (formData.get('type') as any) || 'general',
+                    status: 'published',
+                    readBy: 0,
+                    totalEmployees: 0,
+                  };
+                  // For demo: just close the modal. Could push to state if needed
+                  setShowCreateModal(false);
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                  <input name="title" required className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg" />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Content</label>
+                  <textarea name="content" rows={4} required className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Priority</label>
+                    <select name="priority" className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg">
+                      <option value="high">High</option>
+                      <option value="medium">Medium</option>
+                      <option value="low">Low</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                    <select name="type" className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg">
+                      <option value="general">General</option>
+                      <option value="policy">Policy</option>
+                      <option value="event">Event</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex items-center justify-end space-x-2 pt-2">
+                  <button type="button" onClick={()=>setShowCreateModal(false)} className="px-4 py-2 rounded-lg border">Cancel</button>
+                  <button type="submit" className="px-4 py-2 rounded-lg bg-blue-600 text-white">Create</button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Announcement Detail Modal */}
       <AnimatePresence>

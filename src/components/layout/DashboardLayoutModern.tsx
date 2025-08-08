@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Search, Menu, User, ChevronDown } from 'lucide-react';
+import { Bell, Search, Menu, User } from 'lucide-react';
 
 // Redux
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
@@ -11,6 +11,7 @@ import SidebarModern from './SidebarModern';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import { useNavigate } from 'react-router-dom';
 
 interface DashboardLayoutModernProps {
   children: React.ReactNode;
@@ -27,10 +28,9 @@ const DashboardLayoutModern: React.FC<DashboardLayoutModernProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const { sidebarCollapsed } = useAppSelector((state: any) => state.ui);
-  const { user } = useAppSelector((state: any) => state.auth);
+  const navigate = useNavigate();
 
   const [showNotifications, setShowNotifications] = React.useState(false);
-  const [showUserMenu, setShowUserMenu] = React.useState(false);
 
   const notifications = [
     {
@@ -181,58 +181,21 @@ const DashboardLayoutModern: React.FC<DashboardLayoutModernProps> = ({
                 )}
               </div>
 
-              {/* User Menu */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-bold text-white">
-                      {user?.name?.charAt(0) || user?.username?.charAt(0) || 'U'}
-                    </span>
-                  </div>
-                  <div className="hidden md:block text-left">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {user?.name || user?.username}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {user?.role || 'Employee'}
-                    </p>
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
-                </button>
-
-                {/* User Dropdown */}
-                {showUserMenu && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-soft-xl border border-gray-200 dark:border-gray-700 z-50"
-                  >
-                    <div className="p-2">
-                      <Button variant="ghost" size="sm" fullWidth className="justify-start">
-                        <User className="w-4 h-4 mr-2" />
-                        Profile
-                      </Button>
-                      <Button variant="ghost" size="sm" fullWidth className="justify-start">
-                        Settings
-                      </Button>
-                      <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        fullWidth 
-                        className="justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      >
-                        Logout
-                      </Button>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
+              {/* HR Profile Button (no dropdown) */}
+              <button
+                type="button"
+                onClick={() => navigate('/hr/profile')}
+                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                title="HR Profile"
+              >
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
+                  <span className="text-sm font-bold text-white">HR</span>
+                </div>
+                <div className="hidden md:block text-left">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">HR</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Profile</p>
+                </div>
+              </button>
             </div>
           </div>
         </Card>
@@ -256,12 +219,7 @@ const DashboardLayoutModern: React.FC<DashboardLayoutModernProps> = ({
           onClick={() => setShowNotifications(false)}
         />
       )}
-      {showUserMenu && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setShowUserMenu(false)}
-        />
-      )}
+
     </div>
   );
 };

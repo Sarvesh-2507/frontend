@@ -422,11 +422,69 @@ const AnalyticsDashboard: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Department Distribution - Enhanced */}
+        {/* Leave Statistics - Demo Charts */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Leave Statistics</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Monthly leave trends and type breakdown</p>
+            </div>
+            <PieChart className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Bar: Leave taken by month */}
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={[
+                  { month: 'Jan', leave: 22 },
+                  { month: 'Feb', leave: 18 },
+                  { month: 'Mar', leave: 26 },
+                  { month: 'Apr', leave: 19 },
+                  { month: 'May', leave: 31 },
+                  { month: 'Jun', leave: 24 },
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
+                  <XAxis dataKey="month" stroke="#6B7280" fontSize={12} />
+                  <YAxis stroke="#6B7280" fontSize={12} />
+                  <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#F9FAFB' }} />
+                  <Bar dataKey="leave" fill="#3B82F6" radius={[4,4,0,0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Pie: Leave by type */}
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsPieChart>
+                  <Pie dataKey="value" data={[
+                    { name: 'Casual', value: 35 },
+                    { name: 'Sick', value: 25 },
+                    { name: 'Earned', value: 20 },
+                    { name: 'Maternity', value: 10 },
+                    { name: 'Others', value: 10 },
+                  ]} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2}>
+                    {['#3B82F6','#EF4444','#10B981','#F59E0B','#8B5CF6'].map((c, i) => (
+                      <Cell key={i} fill={c} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#F9FAFB' }} />
+                  <Legend />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Department Distribution - Enhanced */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
           className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
         >
           <div className="flex items-center justify-between mb-4">

@@ -25,6 +25,7 @@ import {
   Sun,
   Moon,
 } from 'lucide-react';
+import { FileText, FolderOpen, CheckCircle } from 'lucide-react';
 
 // Redux
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
@@ -157,6 +158,16 @@ const menuItems: MenuItem[] = [
     ],
   },
   {
+    id: 'policies-docs',
+    label: 'Policies & Documents',
+    icon: FileText,
+    children: [
+      { id: 'policies', label: 'Policies', icon: FileText, path: '/policies' },
+      { id: 'documents', label: 'Documents', icon: FolderOpen, path: '/policies/documents' },
+      { id: 'acknowledgements', label: 'Acknowledgements', icon: CheckCircle, path: '/policies/acknowledgements' },
+    ],
+  },
+  {
     id: 'hr-analytics',
     label: 'HR Analytics & Reports',
     icon: TrendingUp,
@@ -184,7 +195,7 @@ const SidebarModern: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  
+
   const { sidebarCollapsed, theme } = useAppSelector((state: { ui: { sidebarCollapsed: boolean; theme: string } }) => state.ui);
   const { user } = useAppSelector((state) => state.auth);
 
@@ -192,8 +203,8 @@ const SidebarModern: React.FC = () => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const toggleExpanded = (itemId: string) => {
-    setExpandedItems(prev => 
-      prev.includes(itemId) 
+    setExpandedItems(prev =>
+      prev.includes(itemId)
         ? prev.filter(id => id !== itemId)
         : [...prev, itemId]
     );
@@ -309,7 +320,7 @@ const SidebarModern: React.FC = () => {
     <>
       {/* Mobile Overlay */}
       {!sidebarCollapsed && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => dispatch(toggleSidebar())}
         />
@@ -394,7 +405,7 @@ const SidebarModern: React.FC = () => {
                 >
                   {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
                 </Button>
-                
+
                 <Link to="/settings">
                   <Button
                     variant="ghost"
@@ -406,7 +417,7 @@ const SidebarModern: React.FC = () => {
                     Settings
                   </Button>
                 </Link>
-                
+
                 <Button
                   variant="ghost"
                   size="sm"
@@ -419,7 +430,7 @@ const SidebarModern: React.FC = () => {
                 </Button>
               </>
             )}
-            
+
             {sidebarCollapsed && (
               <div className="space-y-2">
                 <button
@@ -433,14 +444,14 @@ const SidebarModern: React.FC = () => {
                     <Moon className="w-5 h-5 text-gray-600 dark:text-gray-400 mx-auto" />
                   )}
                 </button>
-                
+
                 <Link
                   to="/settings"
                   className="block w-full p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400 mx-auto" />
                 </Link>
-                
+
                 <button
                   type="button"
                   onClick={handleLogoutClick}

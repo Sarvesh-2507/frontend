@@ -191,9 +191,11 @@ const HomePage: React.FC = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+            className="bg-white dark:bg-gray-800 rounded-lg p-2 md:p-3 shadow-sm border border-gray-200 dark:border-gray-700"
           >
-            <GlobalSearchHeader onNavigate={navigate} />
+            <div className="scale-95 md:scale-100">
+              <GlobalSearchHeader onNavigate={navigate} />
+            </div>
           </motion.div>
 
           {/* Welcome Header */}
@@ -302,7 +304,7 @@ const HomePage: React.FC = () => {
           boxShadow: "0 8px 25px rgba(59, 130, 246, 0.4)"
         }}
         whileTap={{ scale: 0.9 }}
-        onClick={() => navigate('/organizations/create')}
+        onClick={() => navigate('/announcements', { state: { openCreate: true } })}
         className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center z-50 transition-colors"
       >
         <Plus className="w-6 h-6" />

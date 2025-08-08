@@ -63,6 +63,10 @@ import Compliance from "./features/compliance/Compliance";
 import Communication from "./features/communication/Communication";
 import Announcements from "./features/announcements/Announcements";
 import Inbox from "./features/inbox/Inbox";
+import HRProfile from "./features/hr/HRProfile";
+import Policies from "./features/policies/Policies";
+import Documents from "./features/policies/Documents";
+import Acknowledgements from "./features/policies/Acknowledgements";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -483,6 +487,41 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <Inbox />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/hr/profile"
+            element={
+              <ProtectedRoute>
+                <HRProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Policies & Documents */}
+          <Route
+            path="/policies"
+            element={
+              <ProtectedRoute>
+                <Policies />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/policies/documents"
+            element={
+              <ProtectedRoute>
+                <Documents />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/policies/acknowledgements"
+            element={
+              <ProtectedRoute>
+                <Acknowledgements />
               </ProtectedRoute>
             }
           />
