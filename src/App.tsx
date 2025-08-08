@@ -61,6 +61,8 @@ import Benefits from "./features/benefits/Benefits";
 
 import Compliance from "./features/compliance/Compliance";
 import Communication from "./features/communication/Communication";
+import Announcements from "./features/announcements/Announcements";
+import Inbox from "./features/inbox/Inbox";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -468,7 +470,25 @@ const App: React.FC = () => {
           />
 
           <Route
-            path="/settings"
+            path="/announcements"
+            element={
+              <ProtectedRoute>
+                <Announcements />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/inbox"
+            element={
+              <ProtectedRoute>
+                <Inbox />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/settings/*"
             element={
               <ProtectedRoute>
                 <Settings />

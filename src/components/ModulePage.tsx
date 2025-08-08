@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Construction, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import BackButton from './ui/BackButton';
 
 interface ModulePageProps {
   title: string;
@@ -34,15 +35,7 @@ const ModulePage: React.FC<ModulePageProps> = ({
         <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <button
-                type="button"
-                onClick={() => navigate('/dashboard')}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                aria-label="Back to Dashboard"
-                title="Back to Dashboard"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              </button>
+              <BackButton variant="home" />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center space-x-3">
                   <Icon className="w-8 h-8 text-blue-600" />

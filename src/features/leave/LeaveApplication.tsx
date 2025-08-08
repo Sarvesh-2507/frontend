@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
+import BackButton from '../../components/ui/BackButton';
 
 interface LeaveType {
   id: string;
@@ -306,12 +307,7 @@ const LeaveApplication: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/leave')}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              </button>
+              <BackButton to="/leave" label="Back to Leave" variant="default" />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Leave Application</h1>
                 <p className="text-gray-600 dark:text-gray-400">Apply for time off</p>

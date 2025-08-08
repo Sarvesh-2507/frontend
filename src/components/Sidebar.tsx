@@ -327,18 +327,16 @@ const menuItems: MenuItem[] = [
     ]
   },
   {
-    id: 'communication',
-    label: 'Communication',
+    id: 'announcements',
+    label: 'Announcements',
+    icon: Bell,
+    path: '/announcements',
+  },
+  {
+    id: 'inbox',
+    label: 'Inbox',
     icon: MessageSquare,
-    path: '/communication',
-    hasSubmenu: true,
-    children: [
-      { id: 'announcements', label: 'Announcements', icon: Bell, path: '/communication/announcements' },
-      { id: 'internal-messaging', label: 'Internal Messaging', icon: MessageSquare, path: '/communication/messaging' },
-      { id: 'company-news', label: 'Company News', icon: FileText, path: '/communication/news' },
-      { id: 'employee-directory', label: 'Employee Directory', icon: Users, path: '/communication/directory' },
-      { id: 'team-collaboration', label: 'Team Collaboration', icon: Users, path: '/communication/collaboration' },
-    ]
+    path: '/inbox',
   },
   {
     id: 'settings',

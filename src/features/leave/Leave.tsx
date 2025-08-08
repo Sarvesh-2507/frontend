@@ -25,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import Sidebar from "../../components/Sidebar";
 import Logo from "../../components/ui/Logo";
+import BackButton from "../../components/ui/BackButton";
 import { dashboardAPI } from "../../services/api";
 
 interface LeaveRequest {
@@ -298,14 +299,17 @@ const Leave: React.FC = () => {
         {/* Header */}
         <header className="header-modern px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center space-x-3">
-                <Calendar className="w-8 h-8 text-green-600" />
-                <span>Leave Management</span>
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Manage employee leave requests, approvals, and time-off balances
-              </p>
+            <div className="flex items-center space-x-4">
+              <BackButton variant="home" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center space-x-3">
+                  <Calendar className="w-8 h-8 text-green-600" />
+                  <span>Leave Management</span>
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Manage employee leave requests, approvals, and time-off balances
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center space-x-4">

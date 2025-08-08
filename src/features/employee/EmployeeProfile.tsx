@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import Sidebar from "../../components/Sidebar";
+import BackButton from "../../components/ui/BackButton";
 
 interface Employee {
   id: string;
@@ -193,15 +194,18 @@ const EmployeeProfile: React.FC = () => {
         {/* Header */}
         <header className="header-modern px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center space-x-3">
-                <Users className="w-8 h-8 text-blue-600" />
-                <span>Employee Profiles</span>
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Manage employee information, profiles, and organizational
-                structure
-              </p>
+            <div className="flex items-center space-x-4">
+              <BackButton variant="home" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center space-x-3">
+                  <Users className="w-8 h-8 text-blue-600" />
+                  <span>Employee Profiles</span>
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Manage employee information, profiles, and organizational
+                  structure
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center space-x-4">

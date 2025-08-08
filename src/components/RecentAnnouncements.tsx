@@ -124,13 +124,14 @@ const RecentAnnouncements: React.FC = () => {
         ))}
       </div>
 
-      <motion.button
+      <motion.a
+        href="/announcements"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        className="w-full mt-4 py-2 text-sm text-blue-600 hover:text-blue-700 font-medium border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+        className="block text-center w-full mt-4 py-2 text-sm text-blue-600 hover:text-blue-700 font-medium border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
       >
         View All Announcements
-      </motion.button>
+      </motion.a>
     </motion.div>
   );
 };

@@ -21,6 +21,7 @@ import { toast } from "react-hot-toast";
 import { useNavigate, Routes, Route } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import Logo from "../../components/ui/Logo";
+import BackButton from "../../components/ui/BackButton";
 import { organizationAPI } from "../../services/organizationApi";
 import { Organization } from "../types/organization";
 
@@ -146,14 +147,7 @@ const Organizations: React.FC = () => {
         <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <button
-                type="button"
-                title="Go back to dashboard"
-                onClick={() => navigate("/dashboard")}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              </button>
+              <BackButton variant="home" />
               <Logo width={100} height={25} />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
