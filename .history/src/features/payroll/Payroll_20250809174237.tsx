@@ -114,7 +114,7 @@ const Payroll: React.FC = () => {
       id: "payslip",
       name: "Payslip Generation",
       icon: FileText,
-      path: "/payroll/payslips",
+      path: "/payroll/payslip",
       description: "Generate and distribute payslips",
     },
   ];

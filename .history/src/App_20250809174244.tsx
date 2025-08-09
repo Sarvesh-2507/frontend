@@ -46,13 +46,6 @@ import Payroll from "./features/payroll/Payroll";
 import SalaryStructure from "./features/payroll/SalaryStructure";
 import PayrollRun from "./features/payroll/PayrollRun";
 import Payslips from "./features/payroll/Payslips";
-import AttendanceIntegration from "./features/payroll/AttendanceIntegration";
-import TaxManagement from "./features/payroll/TaxManagement";
-import BankProcessing from "./features/payroll/BankProcessing";
-import PayrollCompliance from "./features/payroll/PayrollCompliance";
-import PayrollReports from "./features/payroll/PayrollReports";
-import PayrollAudit from "./features/payroll/PayrollAudit";
-import PayrollSelfService from "./features/payroll/PayrollSelfService";
 import Performance from "./features/performance/Performance";
 import Offboarding from "./features/offboarding/Offboarding";
 import Assets from "./features/assets/Assets";
@@ -373,68 +366,10 @@ const App: React.FC = () => {
           />
 
           <Route
-            path="/payroll/payslips"
+            path="/payroll/payslip"
             element={
               <ProtectedRoute>
                 <Payslips />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Payroll Subfeatures */}
-          <Route
-            path="/payroll/attendance-integration"
-            element={
-              <ProtectedRoute>
-                <AttendanceIntegration />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payroll/tax-management"
-            element={
-              <ProtectedRoute>
-                <TaxManagement />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payroll/bank-processing"
-            element={
-              <ProtectedRoute>
-                <BankProcessing />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payroll/compliance"
-            element={
-              <ProtectedRoute>
-                <PayrollCompliance />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payroll/reports"
-            element={
-              <ProtectedRoute>
-                <PayrollReports />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payroll/audit"
-            element={
-              <ProtectedRoute>
-                <PayrollAudit />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payroll/self-service"
-            element={
-              <ProtectedRoute>
-                <PayrollSelfService />
               </ProtectedRoute>
             }
           />

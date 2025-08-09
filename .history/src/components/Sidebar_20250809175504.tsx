@@ -182,6 +182,7 @@ const menuItems: MenuItem[] = [
     icon: CreditCard,
     path: '/payroll',
     hasSubmenu: true,
+    roles: ['admin', 'hr'],
     children: [
       { id: 'salary-structure', label: 'Employee Salary Structure Setup', icon: DollarSign, path: '/payroll/salary-structure' },
       { id: 'attendance-integration', label: 'Attendance & Time Integration', icon: Clock, path: '/payroll/attendance-integration' },
