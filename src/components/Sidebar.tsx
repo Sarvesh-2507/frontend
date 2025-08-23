@@ -76,12 +76,7 @@ const menuItems: MenuItem[] = [
     icon: Home,
     path: '/home',
   },
-  {
-    id: 'dashboard',
-    label: 'Dashboard',
-    icon: BarChart3,
-    path: '/dashboard',
-  },
+
   {
     id: 'organizations',
     label: 'Organization',
@@ -307,7 +302,7 @@ const menuItems: MenuItem[] = [
       { id: 'performance-reports', label: 'Performance Reports', icon: TrendingUp, path: '/reports/performance' },
       { id: 'recruitment-reports', label: 'Recruitment Reports', icon: Search, path: '/reports/recruitment' },
       { id: 'custom-reports', label: 'Custom Reports', icon: FileText, path: '/reports/custom' },
-      { id: 'dashboard-analytics', label: 'Dashboard Analytics', icon: BarChart3, path: '/reports/analytics' },
+
     ]
   },
   {
@@ -409,10 +404,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
   return (
     <motion.div
       initial={false}
-      animate={{ width: isCollapsed ? 80 : 280 }}
+      animate={{
+        width: isCollapsed ? 80 : window.innerWidth < 768 ? 240 : 280
+      }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="sidebar-modern flex flex-col h-full"
-      style={{ minWidth: isCollapsed ? '80px' : '280px' }} // Ensure minimum width
+      className="sidebar-modern flex flex-col h-full relative z-20"
+      style={{
+        minWidth: isCollapsed ? '80px' : window.innerWidth < 768 ? '240px' : '280px'
+      }}
     >
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">

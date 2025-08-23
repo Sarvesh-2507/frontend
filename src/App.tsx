@@ -17,7 +17,7 @@ import ChangePassword from "./features/authentication/ChangePassword";
 
 // Main Components
 import HomePage from "./components/HomePage";
-import Dashboard from "./components/AnalyticsDashboard";
+
 
 // HR Modules
 import Organizations from "./features/organization/Organizations";
@@ -119,14 +119,7 @@ const App: React.FC = () => {
             }
           />
 
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+
 
           {/* Core HR Modules */}
           <Route
@@ -633,16 +626,12 @@ const App: React.FC = () => {
           {/* Default Routes */}
           <Route
             path="/"
-            element={
-              <Navigate to={isAuthenticated ? "/home" : "/login"} replace />
-            }
+            element={<Navigate to="/login" replace />}
           />
 
           <Route
             path="*"
-            element={
-              <Navigate to={isAuthenticated ? "/home" : "/login"} replace />
-            }
+            element={<Navigate to="/login" replace />}
           />
         </Routes>
 

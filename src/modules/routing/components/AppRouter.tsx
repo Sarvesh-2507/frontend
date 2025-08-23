@@ -4,7 +4,7 @@ import { useAuthStore } from '../../auth/store/authStore';
 
 // Import all the page components
 import { Login, Register, ForgotPassword, ChangePassword } from '../../auth';
-import { Dashboard } from '../../dashboard';
+
 
 // Legacy components (to be migrated)
 import Notifications from '../../../features/common/Notifications';
@@ -22,7 +22,7 @@ const AppRouter: React.FC = () => {
         path="/login"
         element={
           isAuthenticated ? (
-            <Navigate to="/dashboard" replace />
+            <Navigate to="/home" replace />
           ) : (
             <Login />
           )
@@ -32,7 +32,7 @@ const AppRouter: React.FC = () => {
         path="/register"
         element={
           isAuthenticated ? (
-            <Navigate to="/dashboard" replace />
+            <Navigate to="/home" replace />
           ) : (
             <Register />
           )
@@ -42,7 +42,7 @@ const AppRouter: React.FC = () => {
         path="/forgot-password"
         element={
           isAuthenticated ? (
-            <Navigate to="/dashboard" replace />
+            <Navigate to="/home" replace />
           ) : (
             <ForgotPassword />
           )
@@ -50,33 +50,13 @@ const AppRouter: React.FC = () => {
       />
 
       {/* Protected Routes */}
-      <Route
-        path="/dashboard"
-        element={
-          isAuthenticated ? (
-            <Dashboard />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route
-        path="/home"
-        element={
-          isAuthenticated ? (
-            <Dashboard />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
 
       {/* Default redirect */}
       <Route
         path="/"
         element={
           isAuthenticated ? (
-            <Navigate to="/dashboard" replace />
+            <Navigate to="/home" replace />
           ) : (
             <Navigate to="/login" replace />
           )

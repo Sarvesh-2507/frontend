@@ -49,12 +49,7 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  {
-    id: 'dashboard',
-    label: 'HR Dashboard',
-    icon: Home,
-    path: '/dashboard',
-  },
+
   {
     id: 'organizations',
     label: 'Organization',

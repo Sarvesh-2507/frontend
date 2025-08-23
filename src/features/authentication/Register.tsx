@@ -10,8 +10,8 @@ import {
   organizationAPI,
   Role,
 } from "../../services/organizationApi";
-import type { RegisterCredentials } from "../types/auth";
-import { Organization } from "../types/organization";
+import type { RegisterCredentials } from "../../types/auth";
+import { Organization } from "../../types/organization";
 
 interface RegisterFormData extends RegisterCredentials {
   // No additional fields needed since RegisterCredentials now has all required fields

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Clock, Users, Calendar, FileText, Building2, X, BarChart3, Bell } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 interface SearchResult {
   id: string;
@@ -20,6 +21,8 @@ const GlobalSearchHeader: React.FC<GlobalSearchHeaderProps> = ({ onNavigate }) =
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
   // Mock search data - in real app, this would come from API
   const searchData: SearchResult[] = [
@@ -102,6 +105,32 @@ const GlobalSearchHeader: React.FC<GlobalSearchHeaderProps> = ({ onNavigate }) =
     setSearchResults([]);
   };
 
+  const updateDropdownPosition = () => {
+    if (searchContainerRef.current) {
+      const rect = searchContainerRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const dropdownMaxHeight = 384; // max-h-96 = 24rem = 384px
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      // Position dropdown below if there's enough space, otherwise above
+      const shouldPositionAbove = spaceBelow < dropdownMaxHeight + 16 && spaceAbove > spaceBelow;
+
+      setDropdownPosition({
+        top: shouldPositionAbove
+          ? rect.top + window.scrollY - dropdownMaxHeight - 8
+          : rect.bottom + window.scrollY + 8,
+        left: Math.max(8, Math.min(rect.left + window.scrollX, window.innerWidth - rect.width - 8)),
+        width: rect.width
+      });
+    }
+  };
+
+  const handleFocus = () => {
+    setIsSearchFocused(true);
+    updateDropdownPosition();
+  };
+
   useEffect(() => {
     const saved = localStorage.getItem('recentSearches');
     if (saved) {
@@ -109,8 +138,24 @@ const GlobalSearchHeader: React.FC<GlobalSearchHeaderProps> = ({ onNavigate }) =
     }
   }, []);
 
+  useEffect(() => {
+    if (isSearchFocused) {
+      updateDropdownPosition();
+      const handleResize = () => updateDropdownPosition();
+      const handleScroll = () => updateDropdownPosition();
+
+      window.addEventListener('resize', handleResize);
+      window.addEventListener('scroll', handleScroll);
+
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        window.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, [isSearchFocused]);
+
   return (
-    <div className="relative w-full max-w-2xl mx-auto">
+    <div ref={searchContainerRef} className="relative w-full max-w-2xl mx-auto">
       {/* Search Input */}
       <div className="relative">
         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -119,10 +164,21 @@ const GlobalSearchHeader: React.FC<GlobalSearchHeaderProps> = ({ onNavigate }) =
           placeholder="Search for actions, pages, requests, reports, people..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onFocus={() => setIsSearchFocused(true)}
-          className="w-full pl-12 pr-16 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 shadow-sm"
+          onFocus={handleFocus}
+          className="w-full pl-12 pr-20 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 shadow-sm"
         />
-        {/* Bell button at right of input */}
+
+        {/* Clear search button (X) - only show when there's text */}
+        {searchQuery && (
+          <button
+            onClick={clearSearch}
+            className="absolute right-12 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+          >
+            <X className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" />
+          </button>
+        )}
+
+        {/* Bell button at right of input - separate from X button */}
         <button
           type="button"
           aria-label="Notifications"
@@ -131,29 +187,27 @@ const GlobalSearchHeader: React.FC<GlobalSearchHeaderProps> = ({ onNavigate }) =
             const hasMessageNotification = false;
             onNavigate(hasMessageNotification ? '/inbox' : '/announcements');
           }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
         >
           <Bell className="w-5 h-5" />
         </button>
-        {searchQuery && (
-          <button
-            onClick={clearSearch}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-          >
-            <X className="w-4 h-4 text-gray-400" />
-          </button>
-        )}
       </div>
 
-      {/* Search Results Dropdown */}
-      <AnimatePresence>
-        {isSearchFocused && (searchResults.length > 0 || recentSearches.length > 0) && (
+      {/* Search Results Dropdown - Rendered via Portal */}
+      {isSearchFocused && (searchResults.length > 0 || recentSearches.length > 0) && document.body && createPortal(
+        <AnimatePresence>
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto"
+            className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-96 overflow-y-auto"
+            style={{
+              top: dropdownPosition.top,
+              left: dropdownPosition.left,
+              width: dropdownPosition.width,
+              zIndex: 999999
+            }}
           >
             {searchResults.length > 0 ? (
               <div className="p-2">
@@ -201,15 +255,18 @@ const GlobalSearchHeader: React.FC<GlobalSearchHeaderProps> = ({ onNavigate }) =
               </div>
             ) : null}
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Click outside to close */}
-      {isSearchFocused && (
+      {isSearchFocused && document.body && createPortal(
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0"
+          style={{ zIndex: 999998 }}
           onClick={() => setIsSearchFocused(false)}
-        />
+        />,
+        document.body
       )}
     </div>
   );

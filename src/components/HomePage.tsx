@@ -185,15 +185,15 @@ const HomePage: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="p-6 space-y-6">
+        <div className="container-responsive py-4 sm:py-6 space-y-4 sm:space-y-6">
           {/* Header with Search */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="bg-white dark:bg-gray-800 rounded-lg p-2 md:p-3 shadow-sm border border-gray-200 dark:border-gray-700"
+            className="bg-white dark:bg-gray-800 rounded-lg p-2 sm:p-3 lg:p-4 shadow-sm border border-gray-200 dark:border-gray-700"
           >
-            <div className="scale-95 md:scale-100">
+            <div className="scale-90 sm:scale-95 lg:scale-100">
               <GlobalSearchHeader onNavigate={navigate} />
             </div>
           </motion.div>
@@ -204,10 +204,10 @@ const HomePage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
             whileHover={{
-              scale: 1.01,
-              boxShadow: "0 20px 40px rgba(59, 130, 246, 0.3)"
+              scale: 1.005,
+              boxShadow: "0 10px 30px rgba(59, 130, 246, 0.2)"
             }}
-            className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 dark:from-blue-700 dark:via-blue-800 dark:to-blue-900 rounded-xl p-8 text-white relative overflow-hidden cursor-pointer"
+            className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 dark:from-blue-700 dark:via-blue-800 dark:to-blue-900 rounded-xl p-4 sm:p-6 lg:p-8 text-white relative overflow-hidden cursor-pointer"
           >
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
@@ -220,13 +220,13 @@ const HomePage: React.FC = () => {
                 ease: "easeInOut"
               }}
             />
-            <div className="flex justify-between items-start relative z-10">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center relative z-10 space-y-4 sm:space-y-0">
               <div>
                 <motion.h1
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2, duration: 0.6 }}
-                  className="text-3xl font-bold mb-2"
+                  className="text-responsive-xl font-bold mb-2"
                 >
                   Welcome to MH-HR, Tamil
                 </motion.h1>
@@ -234,7 +234,7 @@ const HomePage: React.FC = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.4, duration: 0.6 }}
-                  className="text-blue-100 text-lg"
+                  className="text-blue-100 text-responsive-base"
                 >
                   Hope you are having a great day.
                 </motion.p>
@@ -254,7 +254,7 @@ const HomePage: React.FC = () => {
           </motion.div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 min-h-[calc(100vh-200px)] lg:h-[calc(100vh-200px)]">
         {/* Left Sidebar - Quick Actions & Recent Announcements */}
         <div className="space-y-6">
           {/* Quick Actions */}

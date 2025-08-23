@@ -1,26 +1,22 @@
-import { motion } from "framer-motion";
-import { Eye, EyeOff, Lock, Mail, Moon, Sun } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import Logo from "../../components/ui/Logo";
+import { motion } from "framer-motion";
+import { Eye, EyeOff, Smartphone } from "lucide-react";
+import { useForm } from "react-hook-form";
 import { useAuthStore } from "../../context/authStore";
 import { useToast } from "../../context/ToastContext";
-import { useThemeStore } from "../../context/themeStore";
-import type { LoginCredentials } from "../types/auth";
+import type { LoginCredentials } from "../../types/auth";
 
 const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
-  const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isLoading, error, forgotPassword } = useAuthStore();
   const { showSuccess, showError } = useToast();
-  const { isDark, toggleTheme } = useThemeStore();
 
   // Handle success message from navigation state (e.g., from password reset)
   useEffect(() => {
@@ -86,84 +82,128 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Theme Toggle Button */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.5 }}
-        onClick={toggleTheme}
-        className="fixed top-4 left-4 p-3 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 z-50"
-        title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-      >
-        {isDark ? (
-          <Sun className="w-5 h-5 text-yellow-500" />
-        ) : (
-          <Moon className="w-5 h-5 text-gray-600" />
-        )}
-      </motion.button>
-
-      {/* Debug Info */}
-      <div className="fixed top-4 right-4 bg-black bg-opacity-75 text-white p-2 rounded text-xs z-50">
-        <div>VITE_USE_MOCK: {import.meta.env.VITE_USE_MOCK}</div>
-        <div>
-          API Base:{" "}
-          {import.meta.env.VITE_USE_MOCK !== "false"
-            ? "http://localhost:3002/api"
-            : "http://192.168.1.132:8000/api"}
-        </div>
-        <div>Login: /login/ | Forgot: /forgot-password/</div>
-        <div>Expected: {`{"email": "string", "password": "string"}`}</div>
-        <div>Time: {new Date().toLocaleTimeString()}</div>
-      </div>
-
-      {/* Left Side - Login Form */}
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{
+        backgroundImage: 'url("/Login page (1).jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        fontFamily: 'Roboto, sans-serif'
+      }}
+    >
+      {/* Login Container - Black Box */}
       <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6 }}
-        className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
+        className="relative flex flex-col items-center"
+        style={{
+          width: '866px',
+          height: '584px',
+          backgroundColor: '#000000',
+          borderRadius: '12px',
+          padding: '48px',
+          paddingTop: '80px', // This will push content slightly below center
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+        }}
       >
-        <div className="max-w-md w-full space-y-8">
-          {/* Header */}
-          <div className="text-center">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-            >
-              <div className="flex justify-center mb-6">
-                <Logo width={200} height={50} className="drop-shadow-lg" />
-              </div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                MH Cognition
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Welcome back! Please sign in to your account.
-              </p>
-            </motion.div>
-          </div>
+        {/* Header Section */}
+        <div className="relative mb-12 w-full">
+          {/* Logo and Try Smart Sign In Button Row */}
+          <div className="flex items-center justify-between mb-8 w-full">
+            <img
+              src="/mh_cognition_cover-removebg-preview.png"
+              alt="MH Cognition"
+              className="h-auto w-auto object-contain"
+              style={{ maxHeight: '32px' }}
+            />
 
-          {/* Login Form */}
-          <motion.form
-            initial={{ opacity: 0, y: 20 }}
+            {/* Try Smart Sign In Button - Positioned to the right inside the box */}
+            <motion.button
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              type="button"
+              className="text-white px-3 py-2 rounded text-sm font-medium flex items-center space-x-2 transition-all duration-300 hover:opacity-90"
+              style={{
+                backgroundColor: '#8E2255',
+                fontFamily: 'Roboto, sans-serif',
+                borderRadius: '20px',
+                fontSize: '12px'
+              }}
+            >
+              <i className="bi bi-qr-code text-sm"></i>
+              <span>Try smart sign in</span>
+            </motion.button>
+          </div>
+        </div>
+
+        {/* Title Section */}
+        {!showForgotPassword ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            onSubmit={handleSubmit(onSubmit)}
-            className="space-y-6"
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="mb-8"
+            style={{ textAlign: 'left' }}
           >
-            {/* Email Field */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Email Address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
+            <h2
+              className="text-white font-normal"
+              style={{
+                fontFamily: 'Roboto, sans-serif',
+                fontSize: '32px',
+                lineHeight: '1.2',
+                marginBottom: '4px'
+              }}
+            >
+              Sign in
+            </h2>
+            <p
+              style={{
+                fontFamily: 'Roboto, sans-serif',
+                fontSize: '14px',
+                fontWeight: '300',
+                color: '#888888',
+                marginTop: '4px',
+                marginBottom: '32px'
+              }}
+            >
+              to access people
+            </p>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="mb-8"
+            style={{ textAlign: 'left' }}
+          >
+            <h2
+              className="text-white font-bold"
+              style={{
+                fontFamily: 'Roboto, sans-serif',
+                fontSize: '24px',
+                marginBottom: '32px'
+              }}
+            >
+              Forgot password
+            </h2>
+          </motion.div>
+        )}
+
+        {!showForgotPassword ? (
+            /* Login Form */
+            <motion.form
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              onSubmit={handleSubmit(onSubmit)}
+              className="w-full max-w-md"
+            >
+              {/* Email Field */}
+              <div style={{ marginBottom: '16px' }}>
                 <input
                   {...register("email", {
                     required: "Email is required",
@@ -173,243 +213,221 @@ const Login: React.FC = () => {
                     },
                   })}
                   type="email"
-                  className="input-field pl-10 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                  placeholder="Enter your email"
+                  className="focus:outline-none transition-all duration-300"
+                  placeholder="Enter email ID"
+                  style={{
+                    fontFamily: 'Roboto, sans-serif',
+                    width: '100%',
+                    height: '40px',
+                    backgroundColor: '#FFFFFF',
+                    color: '#000000',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '10px 12px',
+                    fontSize: '16px',
+                    fontWeight: '400'
+                  }}
                 />
+                {errors.email && (
+                  <p className="mt-2 text-sm text-red-400">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
 
-            {/* Password Field */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+              {/* Password Field */}
+              <div style={{ marginBottom: '16px' }}>
+                <div className="relative" style={{ width: '100%' }}>
+                  <input
+                    {...register("password", {
+                      required: "Password is required",
+                      minLength: {
+                        value: 6,
+                        message: "Password must be at least 6 characters",
+                      },
+                    })}
+                    type={showPassword ? "text" : "password"}
+                    className="focus:outline-none transition-all duration-300"
+                    placeholder="••••••••••"
+                    style={{
+                      fontFamily: 'Roboto, sans-serif',
+                      width: '100%',
+                      height: '40px',
+                      backgroundColor: '#FFFFFF',
+                      color: '#000000',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '10px 12px',
+                      paddingRight: '40px',
+                      fontSize: '16px',
+                      fontWeight: '400'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute flex items-center"
+                    style={{
+                      top: '50%',
+                      right: '12px',
+                      transform: 'translateY(-50%)',
+                      zIndex: 10
+                    }}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    ) : (
+                      <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    )}
+                  </button>
                 </div>
-                <input
-                  {...register("password", {
-                    required: "Password is required",
-                    minLength: {
-                      value: 6,
-                      message: "Password must be at least 6 characters",
-                    },
-                  })}
-                  type={showPassword ? "text" : "password"}
-                  className="input-field pl-10 pr-10 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                  placeholder="Enter your password"
-                />
+                {errors.password && (
+                  <p className="mt-2 text-sm text-red-400">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Links Section */}
+              <div className="mb-6" style={{ textAlign: 'left' }}>
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="transition-colors duration-300 hover:underline"
+                  style={{
+                    color: '#DC2626',
+                    fontFamily: 'Roboto, sans-serif',
+                    fontSize: '14px',
+                    fontWeight: '400',
+                    background: 'none',
+                    border: 'none',
+                    padding: '0',
+                    cursor: 'pointer'
+                  }}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  )}
+                  Forgot password?
                 </button>
               </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.password.message}
-                </p>
+
+              {/* Error Message */}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-red-900/20 border border-red-800 rounded-lg p-3 mb-4"
+                >
+                  <p className="text-sm text-red-400">
+                    {error}
+                  </p>
+                </motion.div>
               )}
-            </div>
 
-            {/* Error Message */}
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3"
+              {/* Submit Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                disabled={isLoading}
+                className="text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center hover:opacity-90"
+                style={{
+                  backgroundColor: '#8E2255',
+                  fontFamily: 'Roboto, sans-serif',
+                  width: '100%',
+                  height: '40px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  fontSize: '16px',
+                  fontWeight: '500'
+                }}
               >
-                <p className="text-sm text-red-600 dark:text-red-400">
-                  {error}
-                </p>
-              </motion.div>
-            )}
-
-            {/* Submit Button */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              disabled={isLoading}
-              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                "Sign In"
-              )}
-            </motion.button>
-
-            {/* Links */}
-            <div className="flex items-center justify-between text-sm">
-              <button
-                type="button"
-                onClick={() => setShowForgotPassword(true)}
-                className="text-primary-600 hover:text-primary-500 dark:text-primary-400"
-              >
-                Forgot Password?
-              </button>
-              <Link
-                to="/register"
-                className="text-primary-600 hover:text-primary-500 dark:text-primary-400"
-              >
-                Sign Up
-              </Link>
-            </div>
-          </motion.form>
-        </div>
-      </motion.div>
-
-      {/* Right Side - Background Image */}
-      <motion.div
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6 }}
-        className="hidden lg:flex flex-1 relative"
-      >
-        <div className="absolute inset-0 gradient-bg"></div>
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative z-10 flex items-center justify-center p-12">
-          <div className="text-center text-white">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-              className="text-4xl font-bold mb-4"
-            >
-              Welcome to MH Cognition
-            </motion.h2>
-            <motion.p
+                {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  "Sign in"
+                )}
+              </motion.button>
+            </motion.form>
+          ) : (
+            /* Forgot Password Form */
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.5 }}
-              className="text-xl opacity-90"
+              className="w-full max-w-md"
             >
-              Your comprehensive HR management solution
-            </motion.p>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Forgot Password Modal */}
-      {showForgotPassword && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4"
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Reset Password
-              </h3>
-              <button
-                type="button"
-                onClick={resetForgotPasswordModal}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                title="Close modal"
-                aria-label="Close modal"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {!forgotPasswordSuccess ? (
-              <form onSubmit={handleForgotPassword}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={forgotPasswordEmail}
-                    onChange={(e) => setForgotPasswordEmail(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
-                    placeholder="Enter your email address"
-                    required
-                  />
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={resetForgotPasswordModal}
-                    className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={forgotPasswordLoading || !forgotPasswordEmail}
-                    className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {forgotPasswordLoading ? "Sending..." : "Send Reset Email"}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="text-center">
-                <div className="mb-4">
-                  <svg
-                    className="w-16 h-16 text-green-500 mx-auto"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  Email Sent!
-                </h4>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  We've sent a password reset link to{" "}
-                  <strong>{forgotPasswordEmail}</strong>
-                </p>
-                <button
-                  type="button"
-                  onClick={resetForgotPasswordModal}
-                  className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
-                >
-                  Close
-                </button>
+              {/* Email Field */}
+              <div style={{ marginBottom: '24px' }}>
+                <input
+                  type="email"
+                  value={forgotPasswordEmail}
+                  onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                  className="focus:outline-none transition-all duration-300"
+                  placeholder="Enter email ID"
+                  style={{
+                    fontFamily: 'Roboto, sans-serif',
+                    width: '100%',
+                    height: '40px',
+                    backgroundColor: '#FFFFFF',
+                    color: '#000000',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '10px 12px',
+                    fontSize: '16px',
+                    fontWeight: '400'
+                  }}
+                />
               </div>
-            )}
-          </motion.div>
-        </div>
-      )}
+
+              {/* Send Verification Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={forgotPasswordLoading}
+                className="text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center hover:opacity-90"
+                style={{
+                  backgroundColor: '#8E2255',
+                  fontFamily: 'Roboto, sans-serif',
+                  width: '100%',
+                  height: '40px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  marginBottom: '16px'
+                }}
+              >
+                {forgotPasswordLoading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  "Send Verification"
+                )}
+              </motion.button>
+
+              {/* Back to Login Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                onClick={() => setShowForgotPassword(false)}
+                className="text-white transition-all duration-300 flex items-center justify-center hover:opacity-90"
+                style={{
+                  backgroundColor: '#8E2255',
+                  fontFamily: 'Roboto, sans-serif',
+                  width: '100%',
+                  height: '40px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  fontSize: '16px',
+                  fontWeight: '500'
+                }}
+              >
+                Back To Login
+              </motion.button>
+            </motion.div>
+          )}
+      </motion.div>
     </div>
   );
 };

@@ -8,6 +8,7 @@ interface WithBackButtonOptions {
   variant?: 'default' | 'home' | 'minimal';
   position?: 'top-left' | 'top-right' | 'header';
   showInHeader?: boolean;
+  className?: string;
 }
 
 const withBackButton = <P extends object>(
@@ -19,12 +20,13 @@ const withBackButton = <P extends object>(
     label = 'Back to Home',
     variant = 'home',
     position = 'top-left',
-    showInHeader = true
+    showInHeader = true,
+    className = ''
   } = options;
 
   const WithBackButtonComponent: React.FC<P> = (props) => {
     return (
-      <div className="relative">
+      <div className={`relative ${className}`}>
         {/* Back Button */}
         {showInHeader && (
           <motion.div
@@ -32,8 +34,8 @@ const withBackButton = <P extends object>(
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
             className={`absolute z-50 ${
-              position === 'top-left' 
-                ? 'top-4 left-4' 
+              position === 'top-left'
+                ? 'top-4 left-4'
                 : position === 'top-right'
                 ? 'top-4 right-4'
                 : 'top-4 left-4'
@@ -46,7 +48,7 @@ const withBackButton = <P extends object>(
             />
           </motion.div>
         )}
-        
+
         {/* Wrapped Component */}
         <WrappedComponent {...props} />
       </div>
