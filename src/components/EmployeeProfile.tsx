@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 
 interface PersonalInfo {
   dateOfBirth: string;

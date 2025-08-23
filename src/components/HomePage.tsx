@@ -88,19 +88,20 @@ const QuickActionButton: React.FC<QuickActionProps> = ({ title, icon: Icon, onCl
       }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="flex items-center space-x-3 w-full p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 group"
+      className="flex items-center space-x-3 w-full p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 group min-h-[48px]"
     >
       <motion.div
         whileHover={{ rotate: 5 }}
         transition={{ type: "spring", stiffness: 300 }}
+        className="flex-shrink-0"
       >
         <Icon className="w-5 h-5 text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors" />
       </motion.div>
-      <span className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-gray-700 dark:group-hover:text-gray-100 transition-colors">{title}</span>
+      <span className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-gray-700 dark:group-hover:text-gray-100 transition-colors flex-1 text-left leading-tight">{title}</span>
       <motion.div
         whileHover={{ x: 3 }}
         transition={{ type: "spring", stiffness: 300 }}
-        className="ml-auto"
+        className="flex-shrink-0"
       >
         <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
       </motion.div>
@@ -185,7 +186,7 @@ const HomePage: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="container-responsive py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <div className="container-responsive py-3 sm:py-4 lg:py-6 space-y-3 sm:space-y-4 lg:space-y-6">
           {/* Header with Search */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -254,18 +255,18 @@ const HomePage: React.FC = () => {
           </motion.div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 min-h-[calc(100vh-200px)] lg:h-[calc(100vh-200px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 min-h-[calc(100vh-200px)]">
         {/* Left Sidebar - Quick Actions & Recent Announcements */}
-        <div className="space-y-6">
+        <div className="space-y-4 lg:space-y-6">
           {/* Quick Actions */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+            className="bg-white dark:bg-gray-800 rounded-xl p-4 lg:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
           >
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
-            <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 lg:mb-4">Quick Actions</h3>
+            <div className="space-y-2 lg:space-y-3">
               {quickActions.map((action, index) => (
                 <QuickActionButton
                   key={index}
@@ -287,7 +288,7 @@ const HomePage: React.FC = () => {
         </div>
 
         {/* Right Sidebar - Schedule and Widgets */}
-        <div className="space-y-6">
+        <div className="space-y-4 lg:space-y-6">
           <ScheduleComponent />
           <LeaveBalanceWidget />
           <YesterdayAttendanceWidget />

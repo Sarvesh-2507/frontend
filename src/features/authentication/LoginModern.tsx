@@ -3,7 +3,7 @@ import { ArrowRight, Lock, Mail, Moon, Sun } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 import Logo from "../../components/ui/Logo";
 import { useThemeStore } from "../../context/themeStore";
 

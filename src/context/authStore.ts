@@ -1,4 +1,4 @@
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type {

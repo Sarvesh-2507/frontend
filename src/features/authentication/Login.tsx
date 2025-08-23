@@ -12,6 +12,7 @@ const Login: React.FC = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+  const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,7 +52,17 @@ const Login: React.FC = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!forgotPasswordEmail) return;
+    if (!forgotPasswordEmail) {
+      showError("Please enter your email address");
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+    if (!emailRegex.test(forgotPasswordEmail)) {
+      showError("Please enter a valid email address");
+      return;
+    }
 
     try {
       setForgotPasswordLoading(true);
@@ -66,9 +77,12 @@ const Login: React.FC = () => {
 
       await forgotPassword(forgotPasswordEmail);
       setForgotPasswordSuccess(true);
+      showSuccess(`Password reset email sent to ${forgotPasswordEmail}`);
       console.log("✅ Forgot password email sent successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ Forgot password failed:", error);
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to send reset email. Please try again.";
+      showError(errorMessage);
     } finally {
       setForgotPasswordLoading(false);
     }
@@ -97,14 +111,15 @@ const Login: React.FC = () => {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
-        className="relative flex flex-col items-center"
+        className="relative flex flex-col items-center justify-center"
         style={{
           width: '866px',
           height: '584px',
           backgroundColor: '#000000',
           borderRadius: '12px',
           padding: '48px',
-          paddingTop: '80px', // This will push content slightly below center
+          paddingTop: '40px', // Reduced from 80px to move content higher
+          paddingBottom: '48px',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
         }}
       >
@@ -145,7 +160,7 @@ const Login: React.FC = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.5 }}
-            className="mb-8"
+            className="mb-4"
             style={{ textAlign: 'left' }}
           >
             <h2
@@ -166,7 +181,7 @@ const Login: React.FC = () => {
                 fontWeight: '300',
                 color: '#888888',
                 marginTop: '4px',
-                marginBottom: '32px'
+                marginBottom: '16px'
               }}
             >
               to access people
@@ -177,7 +192,7 @@ const Login: React.FC = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.5 }}
-            className="mb-8"
+            className="mb-4"
             style={{ textAlign: 'left' }}
           >
             <h2
@@ -185,7 +200,7 @@ const Login: React.FC = () => {
               style={{
                 fontFamily: 'Roboto, sans-serif',
                 fontSize: '24px',
-                marginBottom: '32px'
+                marginBottom: '16px'
               }}
             >
               Forgot password
@@ -203,7 +218,7 @@ const Login: React.FC = () => {
               className="w-full max-w-md"
             >
               {/* Email Field */}
-              <div style={{ marginBottom: '16px' }}>
+              <div style={{ marginBottom: '12px' }}>
                 <input
                   {...register("email", {
                     required: "Email is required",
@@ -229,14 +244,14 @@ const Login: React.FC = () => {
                   }}
                 />
                 {errors.email && (
-                  <p className="mt-2 text-sm text-red-400">
+                  <p className="mt-1 text-sm text-red-400">
                     {errors.email.message}
                   </p>
                 )}
               </div>
 
               {/* Password Field */}
-              <div style={{ marginBottom: '16px' }}>
+              <div style={{ marginBottom: '12px' }}>
                 <div className="relative" style={{ width: '100%' }}>
                   <input
                     {...register("password", {
@@ -282,14 +297,14 @@ const Login: React.FC = () => {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="mt-2 text-sm text-red-400">
+                  <p className="mt-1 text-sm text-red-400">
                     {errors.password.message}
                   </p>
                 )}
               </div>
 
               {/* Links Section */}
-              <div className="mb-6" style={{ textAlign: 'left' }}>
+              <div className="mb-4" style={{ textAlign: 'left' }}>
                 <button
                   type="button"
                   onClick={() => setShowForgotPassword(true)}
@@ -314,7 +329,7 @@ const Login: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-red-900/20 border border-red-800 rounded-lg p-3 mb-4"
+                  className="bg-red-900/20 border border-red-800 rounded-lg p-2 mb-3"
                 >
                   <p className="text-sm text-red-400">
                     {error}
@@ -378,16 +393,29 @@ const Login: React.FC = () => {
                 />
               </div>
 
+              {/* Success Message */}
+              {forgotPasswordSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-green-900/20 border border-green-800 rounded-lg p-3 mb-4"
+                >
+                  <p className="text-sm text-green-400">
+                    Password reset email sent successfully! Please check your inbox and follow the instructions.
+                  </p>
+                </motion.div>
+              )}
+
               {/* Send Verification Button */}
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: forgotPasswordSuccess ? 1 : 1.02 }}
+                whileTap={{ scale: forgotPasswordSuccess ? 1 : 0.98 }}
                 type="button"
                 onClick={handleForgotPassword}
-                disabled={forgotPasswordLoading}
+                disabled={forgotPasswordLoading || forgotPasswordSuccess}
                 className="text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center hover:opacity-90"
                 style={{
-                  backgroundColor: '#8E2255',
+                  backgroundColor: forgotPasswordSuccess ? '#10B981' : '#8E2255',
                   fontFamily: 'Roboto, sans-serif',
                   width: '100%',
                   height: '40px',
@@ -400,31 +428,62 @@ const Login: React.FC = () => {
               >
                 {forgotPasswordLoading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : forgotPasswordSuccess ? (
+                  "Email Sent ✓"
                 ) : (
                   "Send Verification"
                 )}
               </motion.button>
 
-              {/* Back to Login Button */}
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="button"
-                onClick={() => setShowForgotPassword(false)}
-                className="text-white transition-all duration-300 flex items-center justify-center hover:opacity-90"
-                style={{
-                  backgroundColor: '#8E2255',
-                  fontFamily: 'Roboto, sans-serif',
-                  width: '100%',
-                  height: '40px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  fontSize: '16px',
-                  fontWeight: '500'
-                }}
-              >
-                Back To Login
-              </motion.button>
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                {forgotPasswordSuccess && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="button"
+                    onClick={() => {
+                      setForgotPasswordSuccess(false);
+                      setForgotPasswordEmail("");
+                    }}
+                    className="text-white transition-all duration-300 flex items-center justify-center hover:opacity-90"
+                    style={{
+                      backgroundColor: '#6B7280',
+                      fontFamily: 'Roboto, sans-serif',
+                      width: '100%',
+                      height: '40px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      fontSize: '16px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Send to Different Email
+                  </motion.button>
+                )}
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  onClick={resetForgotPasswordModal}
+                  className="text-white transition-all duration-300 flex items-center justify-center hover:opacity-90"
+                  style={{
+                    backgroundColor: '#8E2255',
+                    fontFamily: 'Roboto, sans-serif',
+                    width: '100%',
+                    height: '40px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    fontSize: '16px',
+                    fontWeight: '500'
+                  }}
+                >
+                  Back To Login
+                </motion.button>
+              </div>
             </motion.div>
           )}
       </motion.div>

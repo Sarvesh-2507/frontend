@@ -64,19 +64,18 @@ import FAQ from "./features/help-desk/FAQ";
 import FeedbackEngagement from "./features/help-desk/FeedbackEngagement";
 import Settings from "./features/settings/Settings";
 
-// Additional Enhanced Modules
-import Training from "./features/training/Training";
-import Reports from "./features/reports/Reports";
-import Benefits from "./features/benefits/Benefits";
-
-import Compliance from "./features/compliance/Compliance";
-import Communication from "./features/communication/Communication";
-import Announcements from "./features/announcements/Announcements";
-import Inbox from "./features/inbox/Inbox";
-import HRProfile from "./features/hr/HRProfile";
-import Policies from "./features/policies/Policies";
-import Documents from "./features/policies/Documents";
-import Acknowledgements from "./features/policies/Acknowledgements";
+// Additional Enhanced Modules - Commented out to prevent loading issues
+// import Training from "./features/training/Training";
+// import Reports from "./features/reports/Reports";
+// import Benefits from "./features/benefits/Benefits";
+// import Compliance from "./features/compliance/Compliance";
+// import Communication from "./features/communication/Communication";
+// import Announcements from "./features/announcements/Announcements";
+// import Inbox from "./features/inbox/Inbox";
+// import HRProfile from "./features/hr/HRProfile";
+// import Policies from "./features/policies/Policies";
+// import Documents from "./features/policies/Documents";
+// import Acknowledgements from "./features/policies/Acknowledgements";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -513,7 +512,7 @@ const App: React.FC = () => {
             }
           />
 
-          {/* Enhanced Modules */}
+          {/* Enhanced Modules - Temporarily commented out
           <Route
             path="/training"
             element={
@@ -541,8 +540,6 @@ const App: React.FC = () => {
             }
           />
 
-
-
           <Route
             path="/compliance"
             element={
@@ -551,7 +548,9 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          */}
 
+          {/* Temporarily commented out to prevent loading issues
           <Route
             path="/communication"
             element={
@@ -587,8 +586,9 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          */}
 
-          {/* Policies & Documents */}
+          {/* Policies & Documents - Temporarily commented out
           <Route
             path="/policies"
             element={
@@ -613,6 +613,7 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          */}
 
           <Route
             path="/settings/*"

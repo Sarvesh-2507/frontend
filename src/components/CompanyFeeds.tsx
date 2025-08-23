@@ -107,15 +107,15 @@ const CompanyFeeds: React.FC = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 h-full"
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 h-full flex flex-col"
     >
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-4 lg:p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Company Feeds</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">Stay updated with company activities</p>
       </div>
 
-      <div className="overflow-y-auto max-h-[600px] scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
-        <div className="space-y-6 p-6">
+      <div className="flex-1 overflow-y-auto max-h-[600px] scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+        <div className="space-y-4 lg:space-y-6 p-4 lg:p-6">
           {posts.map((post, index) => (
             <motion.div
               key={post.id}
@@ -156,7 +156,7 @@ const CompanyFeeds: React.FC = () => {
 
               {/* Post Content */}
               <div className="px-4 pb-3">
-                <p className="text-gray-900 dark:text-white text-sm leading-relaxed">
+                <p className="text-gray-900 dark:text-white text-sm leading-relaxed break-words">
                   {post.content}
                 </p>
               </div>
