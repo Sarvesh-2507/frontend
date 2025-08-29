@@ -12,7 +12,6 @@ import {
 } from "../../services/candidateOnboardingService";
 import { Organization } from "../../types/organization";
 import { organizationAPI } from "../../services/organizationApi";
-import { useToast } from "../../context/ToastContext";
 
 // Using the CandidateProfile interface from our service
 // Added local UI-specific properties
@@ -40,12 +39,6 @@ const CandidateInvite: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  
-  // Get toast functions
-  const { showSuccess, showError, showInfo } = useToast();
-  
-  // Initialize the candidates state
-  const [candidates, setCandidates] = useState<CandidateWithUIProps[]>([]);
   
   // Validate email format
   const validateEmail = (email: string): boolean => {
@@ -180,61 +173,71 @@ const CandidateInvite: React.FC = () => {
       // Refresh candidates list
       fetchCandidates();
       
-      showSuccess("Invitation sent successfully!");
+      alert("Invitation sent successfully!");
     } catch (err) {
       console.error("Error sending invitation:", err);
       setError("Failed to send invitation. Please try again.");
-      showError("Failed to send invitation. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
   
-  // Handle bulk upload from CSV
-  const handleBulkUpload = async () => {
-    if (!csvFile) {
-      setError("Please select a CSV file");
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-
-      // Create FormData object to send the file
-      const formData = new FormData();
-      formData.append('csv_file', csvFile);
-
-      // Send the file to the API
-      const response = await fetch('http://192.168.1.132:8000/api/profiles/api/candidate-onboarding/bulk-invite/', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+  // Initialize the candidates state with sample data
+  const [candidates, setCandidates] = useState<CandidateWithUIProps[]>([]);
+  
+  // Load initial data - a fallback if API fails
+  useEffect(() => {
+    if (candidates.length === 0) {
+      setCandidates([
+        {
+          id: "c1",
+          first_name: "David",
+          last_name: "Wilson",
+          email: "david.wilson@example.com",
+          phone_number: "555-123-4567",
+          position: "Frontend Developer",
+          department: "Engineering",
+          status: "pending"
         },
-        body: formData
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to process bulk invitations');
-      }
-
-      const result = await response.json();
-      
-      // Reset the file input
-      setCsvFile(null);
-      
-      // Refresh candidates list
-      fetchCandidates();
-      
-      showSuccess(`Successfully processed ${result.success_count || 0} invitations${result.failed_count ? `. ${result.failed_count} failed.` : ''}`);
-    } catch (err: any) {
-      console.error("Error processing bulk invitations:", err);
-      setError(err.message || "Failed to process bulk invitations. Please try again.");
-      showError(err.message || "Failed to process bulk invitations. Please try again.");
-    } finally {
-      setIsLoading(false);
+        {
+          id: "c2",
+          first_name: "Jessica",
+          last_name: "Martinez",
+          email: "jessica.m@example.com",
+          phone_number: "555-234-5678",
+          position: "Product Manager",
+          department: "Product",
+          status: "invited",
+          invited_at: "2023-08-25",
+          inviteExpiry: "2023-09-01"
+        },
+        {
+          id: "c3",
+          first_name: "Robert",
+          last_name: "Chang",
+          email: "robert.c@example.com",
+          phone_number: "555-345-6789",
+          position: "UX Designer",
+          department: "Design",
+          status: "submitted",
+          invited_at: "2023-08-20",
+          inviteExpiry: "2023-08-27"
+        },
+        {
+          id: "c4",
+          first_name: "Emily",
+          last_name: "Brown",
+          email: "emily.b@example.com",
+          phone_number: "555-567-8901",
+          position: "Marketing Specialist",
+          department: "Marketing",
+          status: "rejected",
+          invited_at: "2023-08-10",
+          inviteExpiry: "2023-08-17"
+        }
+      ]);
     }
-  };
+  }, [candidates.length]);
 
   const [showModal, setShowModal] = useState(false);
   const [newCandidate, setNewCandidate] = useState<Partial<CandidateProfile>>({
@@ -555,315 +558,80 @@ const CandidateInvite: React.FC = () => {
               Send Candidate Invitation
             </h3>
             
-            <div className="flex justify-between mb-4">
-              <button
-                type="button"
-                className={`px-4 py-2 rounded-md ${!bulkMode ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-white'}`}
-                onClick={() => setBulkMode(false)}
-              >
-                Single Invite
-              </button>
-              <button
-                type="button"
-                className={`px-4 py-2 rounded-md ${bulkMode ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-white'}`}
-                onClick={() => setBulkMode(true)}
-              >
-                Bulk Invite
-              </button>
-            </div>
-            
-            {!bulkMode ? (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      First Name *
-                    </label>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="candidateEmail" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Enter Candidate Email Address
+                </label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-grow">
                     <input
-                      id="first_name"
-                      name="first_name"
-                      type="text"
-                      placeholder="John"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                      value={formData.first_name}
-                      onChange={handleInputChange}
-                      required
+                      id="candidateEmail"
+                      type="email"
+                      placeholder="example@company.com"
+                      className={`w-full px-4 py-2 border ${emailError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
+                      value={email}
+                      onChange={handleEmailChange}
                     />
+                    {emailError && (
+                      <p className="mt-1 text-sm text-red-500">{emailError}</p>
+                    )}
                   </div>
                   
-                  <div className="space-y-2">
-                    <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Last Name *
-                    </label>
-                    <input
-                      id="last_name"
-                      name="last_name"
-                      type="text"
-                      placeholder="Doe"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                      value={formData.last_name}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label htmlFor="candidateEmail" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Enter Candidate Email Address *
-                  </label>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="relative flex-grow">
-                      <input
-                        id="candidateEmail"
-                        name="email"
-                        type="email"
-                        placeholder="example@company.com"
-                        className={`w-full px-4 py-2 border ${emailError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        required
-                      />
-                      {emailError && (
-                        <p className="mt-1 text-sm text-red-500">{emailError}</p>
-                      )}
-                    </div>
-                    
-                    <button
-                      type="button"
-                      onClick={verifyEmail}
-                      disabled={isVerifying || !formData.email}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center ${
-                        isVerifying 
-                          ? 'bg-blue-400 text-white cursor-not-allowed' 
-                          : !formData.email
-                            ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed'
-                            : 'bg-blue-600 hover:bg-blue-700 text-white'
-                      }`}
-                      title="Verify email address"
-                    >
-                      {isVerifying ? (
-                        <>
-                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                          Verifying...
-                        </>
-                      ) : isEmailVerified ? (
-                        <>
-                          <Check className="h-4 w-4 mr-2" />
-                          Verified
-                        </>
-                      ) : (
-                        'Verify Email'
-                      )}
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label htmlFor="organization" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Organization *
-                  </label>
-                  <select
-                    id="organization"
-                    name="organization"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    value={formData.organization}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">Select Organization</option>
-                    {isOrgLoading ? (
-                      <option disabled>Loading organizations...</option>
-                    ) : (
-                      organizations.map(org => (
-                        <option key={org.id} value={org.id}>
-                          {org.company_name}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </div>
-                
-                <div className="space-y-2">
-                  <label htmlFor="organization_name_for_email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Custom Organization Name (Optional)
-                  </label>
-                  <input
-                    id="organization_name_for_email"
-                    name="organization_name_for_email"
-                    type="text"
-                    placeholder="Custom name for email (if different from organization name)"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    value={formData.organization_name_for_email}
-                    onChange={handleInputChange}
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    This name will be used in the invitation email instead of the organization name
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <label htmlFor="position" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Position (Optional)
-                  </label>
-                  <input
-                    id="position"
-                    name="position"
-                    type="text"
-                    placeholder="Software Engineer"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    value={formData.position}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label htmlFor="joining_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Joining Date (Optional)
-                  </label>
-                  <input
-                    id="joining_date"
-                    name="joining_date"
-                    type="date"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    value={formData.joining_date}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                
-                {isEmailVerified && (
-                  <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
-                    <div className="flex items-center">
-                      <Check className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
-                      <p className="text-sm text-green-800 dark:text-green-200">Email verified successfully. Ready to send invitation.</p>
-                    </div>
-                  </div>
-                )}
-                
-                {error && (
-                  <div className="p-3 bg-red-100 dark:bg-red-900 rounded-lg">
-                    <div className="flex items-center">
-                      <X className="h-5 w-5 text-red-600 dark:text-red-400 mr-2" />
-                      <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="flex justify-end">
                   <button
-                    type="submit"
-                    disabled={!isEmailVerified || isLoading}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center ${
-                      !isEmailVerified || isLoading
-                        ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed'
-                        : 'bg-green-600 hover:bg-green-700 text-white'
+                    type="button"
+                    onClick={verifyEmail}
+                    disabled={isVerifying || !email}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center ${
+                      isVerifying 
+                        ? 'bg-blue-400 text-white cursor-not-allowed' 
+                        : !email
+                          ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
                     }`}
-                    title="Send invitation"
+                    title="Verify email address"
                   >
-                    {isLoading ? (
+                    {isVerifying ? (
                       <>
                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        Sending...
+                        Verifying...
+                      </>
+                    ) : isEmailVerified ? (
+                      <>
+                        <Check className="h-4 w-4 mr-2" />
+                        Verified
                       </>
                     ) : (
-                      <>
-                        <Mail className="h-4 w-4 mr-2" />
-                        Send Invitation
-                      </>
+                      'Verify Email'
                     )}
                   </button>
                 </div>
-              </form>
-            ) : (
-              <div className="bulk-upload-section">
-                <div className="bg-white dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
-                  <Upload className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    Upload CSV File for Bulk Invitations
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    CSV format: email,first_name,last_name,organization_id,organization_name_for_email
-                  </p>
-                  
-                  <input
-                    type="file"
-                    accept=".csv"
-                    onChange={(e) => e.target.files && setCsvFile(e.target.files[0])}
-                    className="hidden"
-                    id="csv-upload"
-                  />
-                  
-                  <div className="flex flex-col items-center">
-                    <label
-                      htmlFor="csv-upload"
-                      className="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer mb-4"
-                    >
-                      Select CSV File
-                    </label>
-                    
-                    {csvFile && (
-                      <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        <FileText className="w-4 h-4" />
-                        <span>{csvFile.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => setCsvFile(null)}
-                          className="text-red-500 hover:text-red-700"
-                          title="Remove selected file"
-                          aria-label="Remove selected file"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-                    
-                    <button
-                      type="button"
-                      disabled={!csvFile || isLoading}
-                      onClick={handleBulkUpload}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center ${
-                        !csvFile || isLoading
-                          ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed'
-                          : 'bg-blue-600 hover:bg-blue-700 text-white'
-                      }`}
-                      title="Process bulk invitations"
-                      aria-label="Process bulk invitations"
-                    >
-                      {isLoading ? (
-                        <>
-                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="h-4 w-4 mr-2" />
-                          Process Bulk Invites
-                        </>
-                      )}
-                    </button>
+              </div>
+              
+              {isEmailVerified && (
+                <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
+                  <div className="flex items-center">
+                    <Check className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
+                    <p className="text-sm text-green-800 dark:text-green-200">Email verified successfully. Ready to send invitation.</p>
                   </div>
                 </div>
-                
-                <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">CSV File Format</h4>
-                  <p className="mb-2">Your CSV file should contain the following columns:</p>
-                  <ul className="list-disc list-inside mb-4">
-                    <li>email - The candidate's email address</li>
-                    <li>first_name - The candidate's first name</li>
-                    <li>last_name - The candidate's last name</li>
-                    <li>organization_id - The ID of the organization</li>
-                    <li>organization_name_for_email (optional) - Custom organization name for the email</li>
-                    <li>position (optional) - The candidate's position</li>
-                    <li>joining_date (optional) - The candidate's joining date (YYYY-MM-DD)</li>
-                  </ul>
-                  <p>
-                    <a href="#" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
-                      Download sample CSV template
-                    </a>
-                  </p>
-                </div>
+              )}
+              
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={!isEmailVerified}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                    !isEmailVerified
+                      ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed'
+                      : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
+                  title="Send invitation"
+                >
+                  Send Invitation
+                </button>
               </div>
-            )}
+            </form>
           </div>
           
           {/* Table */}

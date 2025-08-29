@@ -205,7 +205,7 @@ const CandidateInvite: React.FC = () => {
       formData.append('csv_file', csvFile);
 
       // Send the file to the API
-      const response = await fetch('http://192.168.1.132:8000/api/profiles/api/candidate-onboarding/bulk-invite/', {
+      const response = await fetch('/api/candidate-onboarding/bulk-invite/', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
@@ -226,11 +226,10 @@ const CandidateInvite: React.FC = () => {
       // Refresh candidates list
       fetchCandidates();
       
-      showSuccess(`Successfully processed ${result.success_count || 0} invitations${result.failed_count ? `. ${result.failed_count} failed.` : ''}`);
+      alert(`Successfully processed ${result.success_count || 0} invitations${result.failed_count ? `. ${result.failed_count} failed.` : ''}`);
     } catch (err: any) {
       console.error("Error processing bulk invitations:", err);
       setError(err.message || "Failed to process bulk invitations. Please try again.");
-      showError(err.message || "Failed to process bulk invitations. Please try again.");
     } finally {
       setIsLoading(false);
     }

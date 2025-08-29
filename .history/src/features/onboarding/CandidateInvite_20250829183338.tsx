@@ -12,7 +12,6 @@ import {
 } from "../../services/candidateOnboardingService";
 import { Organization } from "../../types/organization";
 import { organizationAPI } from "../../services/organizationApi";
-import { useToast } from "../../context/ToastContext";
 
 // Using the CandidateProfile interface from our service
 // Added local UI-specific properties
@@ -40,9 +39,6 @@ const CandidateInvite: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  
-  // Get toast functions
-  const { showSuccess, showError, showInfo } = useToast();
   
   // Initialize the candidates state
   const [candidates, setCandidates] = useState<CandidateWithUIProps[]>([]);
@@ -180,11 +176,10 @@ const CandidateInvite: React.FC = () => {
       // Refresh candidates list
       fetchCandidates();
       
-      showSuccess("Invitation sent successfully!");
+      alert("Invitation sent successfully!");
     } catch (err) {
       console.error("Error sending invitation:", err);
       setError("Failed to send invitation. Please try again.");
-      showError("Failed to send invitation. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -205,7 +200,7 @@ const CandidateInvite: React.FC = () => {
       formData.append('csv_file', csvFile);
 
       // Send the file to the API
-      const response = await fetch('http://192.168.1.132:8000/api/profiles/api/candidate-onboarding/bulk-invite/', {
+      const response = await fetch('/api/candidate-onboarding/bulk-invite/', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
@@ -226,11 +221,10 @@ const CandidateInvite: React.FC = () => {
       // Refresh candidates list
       fetchCandidates();
       
-      showSuccess(`Successfully processed ${result.success_count || 0} invitations${result.failed_count ? `. ${result.failed_count} failed.` : ''}`);
+      alert(`Successfully processed ${result.success_count || 0} invitations${result.failed_count ? `. ${result.failed_count} failed.` : ''}`);
     } catch (err: any) {
       console.error("Error processing bulk invitations:", err);
       setError(err.message || "Failed to process bulk invitations. Please try again.");
-      showError(err.message || "Failed to process bulk invitations. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -809,8 +803,6 @@ const CandidateInvite: React.FC = () => {
                           type="button"
                           onClick={() => setCsvFile(null)}
                           className="text-red-500 hover:text-red-700"
-                          title="Remove selected file"
-                          aria-label="Remove selected file"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -820,14 +812,15 @@ const CandidateInvite: React.FC = () => {
                     <button
                       type="button"
                       disabled={!csvFile || isLoading}
-                      onClick={handleBulkUpload}
+                      onClick={() => {
+                        // Implement bulk upload functionality
+                        alert("Bulk upload functionality to be implemented");
+                      }}
                       className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center ${
                         !csvFile || isLoading
                           ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed'
                           : 'bg-blue-600 hover:bg-blue-700 text-white'
                       }`}
-                      title="Process bulk invitations"
-                      aria-label="Process bulk invitations"
                     >
                       {isLoading ? (
                         <>

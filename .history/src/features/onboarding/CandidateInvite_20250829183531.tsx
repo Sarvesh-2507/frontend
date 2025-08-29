@@ -205,7 +205,7 @@ const CandidateInvite: React.FC = () => {
       formData.append('csv_file', csvFile);
 
       // Send the file to the API
-      const response = await fetch('http://192.168.1.132:8000/api/profiles/api/candidate-onboarding/bulk-invite/', {
+      const response = await fetch('/api/candidate-onboarding/bulk-invite/', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,

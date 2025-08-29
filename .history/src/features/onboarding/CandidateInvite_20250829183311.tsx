@@ -12,7 +12,6 @@ import {
 } from "../../services/candidateOnboardingService";
 import { Organization } from "../../types/organization";
 import { organizationAPI } from "../../services/organizationApi";
-import { useToast } from "../../context/ToastContext";
 
 // Using the CandidateProfile interface from our service
 // Added local UI-specific properties
@@ -40,12 +39,6 @@ const CandidateInvite: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  
-  // Get toast functions
-  const { showSuccess, showError, showInfo } = useToast();
-  
-  // Initialize the candidates state
-  const [candidates, setCandidates] = useState<CandidateWithUIProps[]>([]);
   
   // Validate email format
   const validateEmail = (email: string): boolean => {
@@ -180,61 +173,71 @@ const CandidateInvite: React.FC = () => {
       // Refresh candidates list
       fetchCandidates();
       
-      showSuccess("Invitation sent successfully!");
+      alert("Invitation sent successfully!");
     } catch (err) {
       console.error("Error sending invitation:", err);
       setError("Failed to send invitation. Please try again.");
-      showError("Failed to send invitation. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
   
-  // Handle bulk upload from CSV
-  const handleBulkUpload = async () => {
-    if (!csvFile) {
-      setError("Please select a CSV file");
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-
-      // Create FormData object to send the file
-      const formData = new FormData();
-      formData.append('csv_file', csvFile);
-
-      // Send the file to the API
-      const response = await fetch('http://192.168.1.132:8000/api/profiles/api/candidate-onboarding/bulk-invite/', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+  // Initialize the candidates state with sample data
+  const [candidates, setCandidates] = useState<CandidateWithUIProps[]>([]);
+  
+  // Load initial data - a fallback if API fails
+  useEffect(() => {
+    if (candidates.length === 0) {
+      setCandidates([
+        {
+          id: "c1",
+          first_name: "David",
+          last_name: "Wilson",
+          email: "david.wilson@example.com",
+          phone_number: "555-123-4567",
+          position: "Frontend Developer",
+          department: "Engineering",
+          status: "pending"
         },
-        body: formData
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to process bulk invitations');
-      }
-
-      const result = await response.json();
-      
-      // Reset the file input
-      setCsvFile(null);
-      
-      // Refresh candidates list
-      fetchCandidates();
-      
-      showSuccess(`Successfully processed ${result.success_count || 0} invitations${result.failed_count ? `. ${result.failed_count} failed.` : ''}`);
-    } catch (err: any) {
-      console.error("Error processing bulk invitations:", err);
-      setError(err.message || "Failed to process bulk invitations. Please try again.");
-      showError(err.message || "Failed to process bulk invitations. Please try again.");
-    } finally {
-      setIsLoading(false);
+        {
+          id: "c2",
+          first_name: "Jessica",
+          last_name: "Martinez",
+          email: "jessica.m@example.com",
+          phone_number: "555-234-5678",
+          position: "Product Manager",
+          department: "Product",
+          status: "invited",
+          invited_at: "2023-08-25",
+          inviteExpiry: "2023-09-01"
+        },
+        {
+          id: "c3",
+          first_name: "Robert",
+          last_name: "Chang",
+          email: "robert.c@example.com",
+          phone_number: "555-345-6789",
+          position: "UX Designer",
+          department: "Design",
+          status: "submitted",
+          invited_at: "2023-08-20",
+          inviteExpiry: "2023-08-27"
+        },
+        {
+          id: "c4",
+          first_name: "Emily",
+          last_name: "Brown",
+          email: "emily.b@example.com",
+          phone_number: "555-567-8901",
+          position: "Marketing Specialist",
+          department: "Marketing",
+          status: "rejected",
+          invited_at: "2023-08-10",
+          inviteExpiry: "2023-08-17"
+        }
+      ]);
     }
-  };
+  }, [candidates.length]);
 
   const [showModal, setShowModal] = useState(false);
   const [newCandidate, setNewCandidate] = useState<Partial<CandidateProfile>>({
@@ -809,8 +812,6 @@ const CandidateInvite: React.FC = () => {
                           type="button"
                           onClick={() => setCsvFile(null)}
                           className="text-red-500 hover:text-red-700"
-                          title="Remove selected file"
-                          aria-label="Remove selected file"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -820,14 +821,15 @@ const CandidateInvite: React.FC = () => {
                     <button
                       type="button"
                       disabled={!csvFile || isLoading}
-                      onClick={handleBulkUpload}
+                      onClick={() => {
+                        // Implement bulk upload functionality
+                        alert("Bulk upload functionality to be implemented");
+                      }}
                       className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center ${
                         !csvFile || isLoading
                           ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed'
                           : 'bg-blue-600 hover:bg-blue-700 text-white'
                       }`}
-                      title="Process bulk invitations"
-                      aria-label="Process bulk invitations"
                     >
                       {isLoading ? (
                         <>

@@ -38,7 +38,7 @@ export interface FormSubmissionPayload {
   documents?: File[];
 }
 
-const API_BASE_URL = 'http://192.168.1.132:8000/api/profiles/api/candidate-onboarding';
+const API_BASE_URL = '/api/profiles/candidate-onboarding';
 
 /**
  * Fetch all candidates who are in onboarding
@@ -201,17 +201,7 @@ export const getPendingCandidates = async (): Promise<CandidateProfile[]> => {
  */
 export const sendCandidateInvite = async (payload: SendInvitePayload): Promise<void> => {
   try {
-    console.log(`🚀 Sending invite to ${payload.email} at organization ${payload.organization}`, payload);
-    console.log(`📤 API URL: ${API_BASE_URL}/send-invite/`);
-    
-    await axios.post(`${API_BASE_URL}/send-invite/`, payload, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-      }
-    });
-    
-    console.log(`✅ Successfully sent invite to ${payload.email}`);
+    await axios.post(`${API_BASE_URL}/send-invite/`, payload);
   } catch (error) {
     console.error('Error sending invite to candidate:', error);
     throw error;

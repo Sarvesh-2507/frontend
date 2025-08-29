@@ -33,5 +33,3 @@ src/features/onboarding/CandidateUploadsFixed.tsx
 src/features/onboarding/CandidateUploadsRefactored.tsx
 src/features/onboarding/clean-CandidateUploads.tsx
 src/features/onboarding/CandidateUploads.tsx
-.bat
-.md
