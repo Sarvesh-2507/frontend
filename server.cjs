@@ -293,6 +293,55 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
+  // Company feeds endpoint
+  if (pathname === '/api/company-feeds' && method === 'GET') {
+    const user = authenticateToken(req);
+    if (!user) {
+      return sendJSON(res, 401, { message: 'Access token required' });
+    }
+
+    const db = getDb();
+    const { query } = url.parse(req.url, true);
+    let feeds = [...db.companyFeeds];
+    
+    // Filtering by department
+    if (query.department) {
+      feeds = feeds.filter(feed => 
+        feed.author.department.toLowerCase() === query.department.toLowerCase()
+      );
+    }
+    
+    // Filtering by type
+    if (query.type) {
+      feeds = feeds.filter(feed => 
+        feed.type.toLowerCase() === query.type.toLowerCase()
+      );
+    }
+    
+    // Search by keyword
+    if (query.search) {
+      const searchTerm = query.search.toLowerCase();
+      feeds = feeds.filter(feed => 
+        feed.content.toLowerCase().includes(searchTerm) || 
+        feed.author.name.toLowerCase().includes(searchTerm) ||
+        feed.author.department.toLowerCase().includes(searchTerm) ||
+        (feed.tags && feed.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
+      );
+    }
+
+    // Add user-specific like and bookmark status for each post
+    feeds = feeds.map(feed => ({
+      ...feed,
+      isLiked: Math.random() > 0.5, // Random for demo
+      isBookmarked: Math.random() > 0.7 // Random for demo
+    }));
+
+    return sendJSON(res, 200, {
+      success: true,
+      data: feeds
+    });
+  }
+
   // Default 404
   sendJSON(res, 404, { message: 'Endpoint not found' });
 });

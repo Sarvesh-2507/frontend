@@ -81,11 +81,12 @@ export interface AuthActions {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => Promise<void>;
-  refreshToken: () => Promise<void>;
+  refreshToken: () => Promise<boolean>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (data: ResetPasswordRequest) => Promise<void>;
   clearError: () => void;
   setLoading: (loading: boolean) => void;
+  checkSession: () => Promise<boolean>;
 }
 
 export type AuthStore = AuthState & AuthActions;

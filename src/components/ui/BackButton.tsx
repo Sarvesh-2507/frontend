@@ -45,7 +45,7 @@ const BackButton: React.FC<BackButtonProps> = ({
       ) : (
         <ArrowLeft className="w-4 h-4" />
       )}
-      <span>{label}</span>
+      {variant !== 'minimal' && <span>{label}</span>}
     </motion.button>
   );
 };

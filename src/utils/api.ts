@@ -293,6 +293,11 @@ export const authApi = {
   getProfile: async (): Promise<ApiResponse<any>> => {
     return apiRequest("/profile/");
   },
+  
+  // Get current user info (with authorization)
+  getCurrentUser: async (): Promise<ApiResponse<any>> => {
+    return apiRequest("/user/me/");
+  },
 
   // Update user profile
   updateProfile: async (data: any): Promise<ApiResponse<any>> => {
@@ -408,10 +413,71 @@ export const dashboardApi = {
   getNotifications: async (): Promise<ApiResponse<any>> => {
     return apiRequest("/notifications/");
   },
+  
+  getCurrentUser: async (): Promise<ApiResponse<any>> => {
+    return apiRequest("/user/me/");
+  },
 };
 
+// Track if we're currently refreshing to prevent infinite loops
+let isRefreshingToken = false;
+let refreshPromise: Promise<any> | null = null;
+
 // Utility function to handle token refresh automatically
-export const setupApiInterceptors = () => {
-  // This would be implemented to automatically refresh tokens on 401 responses
-  // For now, we'll handle it manually in the auth store
+export const setupApiInterceptors = (refreshTokenCallback: () => Promise<void>) => {
+  // Store original fetch
+  const originalFetch = window.fetch;
+  
+  // Override fetch with our version that handles 401s
+  window.fetch = async function(input, init) {
+    // Call original fetch
+    const response = await originalFetch(input, init);
+    
+    // If response is 401 Unauthorized and we're not already refreshing
+    if (response.status === 401 && !isRefreshingToken) {
+      try {
+        console.log("🔄 API Interceptor - 401 detected, attempting token refresh");
+        
+        // Set flag to prevent multiple refresh attempts
+        isRefreshingToken = true;
+        
+        // Only create one refresh promise if multiple requests fail at once
+        if (!refreshPromise) {
+          refreshPromise = refreshTokenCallback();
+        }
+        
+        // Wait for token refresh
+        await refreshPromise;
+        
+        // Clear refresh promise after it completes
+        refreshPromise = null;
+        
+        // Get updated access token
+        const newToken = localStorage.getItem("accessToken");
+        
+        // Clone the original request with the new token
+        const newInit = {
+          ...init,
+          headers: {
+            ...(init?.headers || {}),
+            Authorization: `Bearer ${newToken}`
+          }
+        };
+        
+        console.log("🔄 API Interceptor - Retrying request with new token");
+        
+        // Retry the request with new token
+        return originalFetch(input, newInit);
+      } catch (error) {
+        console.error("🔄 API Interceptor - Token refresh failed:", error);
+        // Still return the original 401 response if refresh failed
+        return response;
+      } finally {
+        isRefreshingToken = false;
+      }
+    }
+    
+    // Return original response for non-401 responses
+    return response;
+  };
 };

@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { ToastProvider } from "./context/ToastContext";
+import { setupApiInterceptors } from "./utils/api";
 
 // Auth Components
 import Login from "./features/authentication/Login";
@@ -24,6 +25,17 @@ import Organizations from "./features/organization/Organizations";
 import CreateOrganization from "./features/organization/CreateOrganization";
 import Recruitment from "./features/recruitment/Recruitment";
 import Onboarding from "./features/onboarding/Onboarding";
+// Onboarding sub-features
+import OfferLetter from "./features/onboarding/OfferLetter";
+import PreBoarding from "./features/onboarding/PreBoarding";
+import BackgroundVerification from "./features/onboarding/BackgroundVerification";
+import JoiningFormalities from "./features/onboarding/JoiningFormalities";
+import CandidateDocumentManager from "./features/onboarding/CandidateDocumentManager";
+import TaskChecklist from "./features/onboarding/TaskChecklist";
+import CandidateInvite from "./features/onboarding/CandidateInvite";
+import CandidateInvites from "./features/onboarding/CandidateInvites";
+import AssetAllocation from "./features/onboarding/AssetAllocation";
+// Employee Features
 import EmployeeProfileModern from "./features/employee/EmployeeProfileModern";
 import EmployeeDirectory from "./features/employee/EmployeeDirectory";
 import ProfileManagement from "./features/employee/ProfileManagement";
@@ -70,8 +82,8 @@ import Settings from "./features/settings/Settings";
 // import Benefits from "./features/benefits/Benefits";
 // import Compliance from "./features/compliance/Compliance";
 // import Communication from "./features/communication/Communication";
-// import Announcements from "./features/announcements/Announcements";
-// import Inbox from "./features/inbox/Inbox";
+import Announcements from "./features/announcements/Announcements";
+import Inbox from "./features/inbox/Inbox";
 // import HRProfile from "./features/hr/HRProfile";
 // import Policies from "./features/policies/Policies";
 // import Documents from "./features/policies/Documents";
@@ -84,7 +96,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuthStore } from "./context/authStore";
 
 const App: React.FC = () => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, refreshToken, checkSession } = useAuthStore();
 
   // Apply theme
   useEffect(() => {
@@ -94,6 +106,26 @@ const App: React.FC = () => {
     } else {
       document.documentElement.classList.remove("dark");
     }
+  }, []);
+  
+  // Set up API interceptor for token refresh
+  useEffect(() => {
+    // Initialize API interceptors to handle 401 responses
+    setupApiInterceptors(async () => {
+      console.log("🔄 App - Refreshing token via interceptor");
+      try {
+        const success = await refreshToken();
+        if (!success) {
+          console.warn("🔄 App - Token refresh returned false, but continuing");
+        }
+      } catch (error) {
+        console.error("🔄 App - Token refresh failed:", error);
+        // Don't auto-logout, just let the component handle the error
+      }
+    });
+    
+    // Initial session check
+    checkSession();
   }, []);
 
   return (
@@ -171,6 +203,88 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <Onboarding />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Onboarding Sub-routes */}
+          <Route
+            path="/onboarding/offer-letter"
+            element={
+              <ProtectedRoute>
+                <OfferLetter />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/onboarding/pre-boarding"
+            element={
+              <ProtectedRoute>
+                <PreBoarding />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/onboarding/background-verification"
+            element={
+              <ProtectedRoute>
+                <BackgroundVerification />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/onboarding/joining-formalities"
+            element={
+              <ProtectedRoute>
+                <JoiningFormalities />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/onboarding/candidate-uploads"
+            element={
+              <ProtectedRoute>
+                <CandidateDocumentManager />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/onboarding/tasks"
+            element={
+              <ProtectedRoute>
+                <TaskChecklist />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/onboarding/candidate-invite"
+            element={
+              <ProtectedRoute>
+                <CandidateInvite />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/onboarding/candidate-invites"
+            element={
+              <ProtectedRoute>
+                <CandidateInvites />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/onboarding/asset-allocation"
+            element={
+              <ProtectedRoute>
+                <AssetAllocation />
               </ProtectedRoute>
             }
           />
@@ -642,8 +756,36 @@ const App: React.FC = () => {
           toastOptions={{
             duration: 4000,
             style: {
-              background: 'var(--toast-bg)',
-              color: 'var(--toast-color)',
+              background: 'var(--toast-bg, #ffffff)',
+              color: 'var(--toast-color, #333333)',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '500',
+              maxWidth: '320px'
+            },
+            success: {
+              style: {
+                background: '#10B981',
+                color: '#FFFFFF',
+                border: '1px solid #059669',
+              },
+              iconTheme: {
+                primary: '#FFFFFF',
+                secondary: '#10B981',
+              },
+            },
+            error: {
+              style: {
+                background: '#EF4444',
+                color: '#FFFFFF',
+                border: '1px solid #DC2626',
+              },
+              iconTheme: {
+                primary: '#FFFFFF',
+                secondary: '#EF4444',
+              },
             },
           }}
         />

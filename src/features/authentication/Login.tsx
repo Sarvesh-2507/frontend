@@ -42,7 +42,7 @@ const Login: React.FC = () => {
       console.log(
         "✅ Login Component - Login successful, navigating to home"
       );
-      showSuccess("Logged in successfully");
+      // Removed duplicate toast notification - it's already shown in authStore
       navigate("/home");
     } catch (error) {
       console.error("❌ Login Component - Login failed:", error);

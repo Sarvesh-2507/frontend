@@ -77,8 +77,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredRoles = [],
   redirectTo = '/login',
 }) => {
-  const { isAuthenticated, user, isLoading } = useAuthStore();
+  const { isAuthenticated, user, isLoading, checkSession } = useAuthStore();
   const location = useLocation();
+
+  // Check the session when the component mounts or location changes
+  useEffect(() => {
+    const validateSession = async () => {
+      await checkSession();
+    };
+    validateSession();
+  }, [checkSession, location]);
 
   console.log('🛡️ ProtectedRoute - Auth state:', { isAuthenticated, user: !!user, isLoading });
 
@@ -87,19 +95,30 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <LoadingSpinner />;
   }
 
-  // Redirect to login if not authenticated
-  if (!isAuthenticated || !user) {
-    return (
-      <Navigate 
-        to={redirectTo} 
-        state={{ from: location }} 
-        replace 
-      />
-    );
+  // Only redirect to login if we've completed loading and determined the user is not authenticated
+  // This prevents premature redirects when tokens exist but haven't been validated yet
+  if (!isAuthenticated && !isLoading) {
+    // Check localStorage directly as a final fallback
+    const accessToken = localStorage.getItem("accessToken");
+    
+    if (!accessToken) {
+      console.log('🔒 User not authenticated, redirecting to login');
+      return (
+        <Navigate 
+          to={redirectTo} 
+          state={{ from: location }} 
+          replace 
+        />
+      );
+    }
   }
+  
+  // If we have authentication but no user data yet, that's okay
+  // We'll allow the route to render while user data is being fetched
+  // This prevents unnecessary redirects for API errors in user profile fetching
 
   // Check role-based access if roles are specified
-  if (requiredRoles.length > 0) {
+  if (requiredRoles.length > 0 && user) {
     const hasRequiredRole = requiredRoles.includes(user.role);
     
     if (!hasRequiredRole) {

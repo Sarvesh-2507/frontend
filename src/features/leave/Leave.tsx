@@ -391,7 +391,11 @@ const Leave: React.FC = () => {
                 </h3>
 
                 <div className="flex items-center space-x-4">
-                  <button className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <button 
+                    type="button" 
+                    className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    aria-label="Filter leave requests"
+                  >
                     <Filter className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                   </button>
                 </div>
@@ -482,10 +486,18 @@ const Leave: React.FC = () => {
                           <div className="flex items-center space-x-2">
                             {request.status === "pending" && (
                               <>
-                                <button className="p-1 text-green-600 hover:text-green-700 dark:text-green-400">
+                                <button 
+                                  type="button"
+                                  className="p-1 text-green-600 hover:text-green-700 dark:text-green-400"
+                                  aria-label="Approve leave request"
+                                >
                                   <CheckCircle className="w-4 h-4" />
                                 </button>
-                                <button className="p-1 text-red-600 hover:text-red-700 dark:text-red-400">
+                                <button 
+                                  type="button"
+                                  className="p-1 text-red-600 hover:text-red-700 dark:text-red-400"
+                                  aria-label="Reject leave request"
+                                >
                                   <XCircle className="w-4 h-4" />
                                 </button>
                               </>

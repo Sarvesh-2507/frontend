@@ -10,13 +10,15 @@ interface ModulePageProps {
   description: string;
   icon: React.ComponentType<any>;
   comingSoon?: boolean;
+  children?: React.ReactNode;
 }
 
 const ModulePage: React.FC<ModulePageProps> = ({ 
   title, 
   description, 
   icon: Icon, 
-  comingSoon = true 
+  comingSoon = true,
+  children 
 }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
@@ -32,16 +34,16 @@ const ModulePage: React.FC<ModulePageProps> = ({
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <BackButton variant="home" />
+        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-5">
+          <div className="flex items-center justify-between max-w-7xl mx-auto w-full">
+            <div className="flex items-center space-x-5">
+              <BackButton variant="minimal" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center space-x-3">
-                  <Icon className="w-8 h-8 text-blue-600" />
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center space-x-4">
+                  <Icon className="w-9 h-9 text-blue-600" />
                   <span>{title}</span>
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-600 dark:text-gray-400 text-lg mt-1">
                   {description}
                 </p>
               </div>
@@ -50,8 +52,8 @@ const ModulePage: React.FC<ModulePageProps> = ({
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-4xl mx-auto">
+        <main className="flex-1 overflow-y-auto p-8">
+          <div className="max-w-7xl mx-auto w-full">
             {comingSoon ? (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -59,7 +61,7 @@ const ModulePage: React.FC<ModulePageProps> = ({
                 transition={{ duration: 0.5 }}
                 className="text-center py-20"
               >
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-12">
                   <Construction className="w-24 h-24 text-gray-400 mx-auto mb-6" />
                   <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
                     Coming Soon
@@ -91,13 +93,17 @@ const ModulePage: React.FC<ModulePageProps> = ({
                 </div>
               </motion.div>
             ) : (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                  {title} Content
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400">
-                  This is where the {title} module content would be displayed.
-                </p>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-8">
+                {children ? children : (
+                  <>
+                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                      {title} Content
+                    </h2>
+                    <p className="text-lg text-gray-600 dark:text-gray-400">
+                      This is where the {title} module content would be displayed.
+                    </p>
+                  </>
+                )}
               </div>
             )}
           </div>

@@ -192,7 +192,7 @@ const ScheduleComponent: React.FC = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2 mb-1">
                   <span className="text-sm">{getEventTypeIcon(event.type)}</span>
-                  <h5 className="font-medium text-gray-900 dark:text-white text-sm truncate">
+                  <h5 className="font-medium text-gray-900 dark:text-white text-sm whitespace-normal break-words">
                     {event.title}
                   </h5>
                 </div>

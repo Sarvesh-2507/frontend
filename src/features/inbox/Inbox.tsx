@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageSquare,
@@ -16,10 +16,14 @@ import {
   Clock,
   Check,
   CheckCheck,
-  X
+  X,
+  RefreshCw,
+  AlertTriangle
 } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import BackButton from '../../components/ui/BackButton';
+import { useToast } from '../../context/ToastContext';
+import { useAuthStore } from '../../context/authStore';
 
 interface Message {
   id: string;
@@ -55,8 +59,60 @@ const Inbox: React.FC = () => {
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [showCompose, setShowCompose] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  
+  const { showError } = useToast();
+  const { checkSession } = useAuthStore();
+  
+  // Load messages with error handling
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        setIsLoading(true);
+        setHasError(false);
+        
+        // Ensure session is valid before making requests
+        // Note: We don't redirect on failure anymore, just show an error state
+        await checkSession();
+        
+        // In a real application, you'd fetch from an API
+        // const response = await fetch('/api/inbox/messages');
+        // if (!response.ok) {
+        //   throw new Error(`API error: ${response.status}`);
+        // }
+        // const data = await response.json();
+        // setMessages(data);
+        
+        // Simulate API delay for testing UI
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // For now, we'll just use the mock data
+        console.log("📨 Inbox - Messages loaded successfully");
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error("📨 Inbox - Error loading messages:", error);
+        setIsLoading(false);
+        setHasError(true);
+        
+        if (retryCount < 2) {
+          // Auto-retry once after a short delay
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+          }, 2000);
+        } else {
+          // Just show an error message, don't redirect
+          showError("Unable to load messages. Please try refreshing the page.");
+        }
+      }
+    };
+    
+    fetchMessages();
+  }, [retryCount, checkSession, showError]);
 
-  const [messages] = useState<Message[]>([
+  const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       from: {
@@ -281,59 +337,107 @@ const Inbox: React.FC = () => {
 
             {/* Message List */}
             <div className="flex-1 overflow-y-auto">
-              {filteredMessages.map((message) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className={`p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
-                    selectedMessage?.id === message.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                  } ${!message.isRead ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
-                  onClick={() => setSelectedMessage(message)}
-                >
-                  <div className="flex items-start space-x-3">
-                    <div className="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className={`text-sm font-medium truncate ${
-                          !message.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center h-64 p-4">
+                  <RefreshCw className="w-8 h-8 text-blue-500 animate-spin mb-3" />
+                  <p className="text-gray-600 dark:text-gray-400">Loading messages...</p>
+                </div>
+              ) : hasError ? (
+                <div className="flex flex-col items-center justify-center h-64 p-4">
+                  <AlertTriangle className="w-10 h-10 text-amber-500 mb-3" />
+                  <p className="text-gray-800 dark:text-gray-200 font-medium mb-2">Failed to load messages</p>
+                  <p className="text-gray-600 dark:text-gray-400 text-center mb-4">
+                    There was a problem loading your messages.
+                  </p>
+                  <button 
+                    onClick={() => setRetryCount(prev => prev + 1)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2 inline" />
+                    Retry
+                  </button>
+                </div>
+              ) : filteredMessages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 p-4">
+                  <MessageSquare className="w-10 h-10 text-gray-400 mb-3" />
+                  <p className="text-gray-600 dark:text-gray-400">No messages found</p>
+                </div>
+              ) : (
+                filteredMessages.map((message) => (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className={`p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                      selectedMessage?.id === message.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                    } ${!message.isRead ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
+                    onClick={() => setSelectedMessage(message)}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
+                        <User className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className={`text-sm font-medium truncate ${
+                            !message.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'
+                          }`}>
+                            {message.from.name}
+                          </p>
+                          <div className="flex items-center space-x-1">
+                            {message.isStarred && <Star className="w-3 h-3 text-yellow-500 fill-current" />}
+                            {message.hasAttachments && <Paperclip className="w-3 h-3 text-gray-400" />}
+                            <span className="text-xs text-gray-500">{formatTime(message.timestamp)}</span>
+                          </div>
+                        </div>
+                        <p className={`text-sm truncate mb-1 ${
+                          !message.isRead ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-600 dark:text-gray-400'
                         }`}>
-                          {message.from.name}
+                          {message.subject}
                         </p>
-                        <div className="flex items-center space-x-1">
-                          {message.isStarred && <Star className="w-3 h-3 text-yellow-500 fill-current" />}
-                          {message.hasAttachments && <Paperclip className="w-3 h-3 text-gray-400" />}
-                          <span className="text-xs text-gray-500">{formatTime(message.timestamp)}</span>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                          {message.content}
+                        </p>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className={`text-xs ${getPriorityColor(message.priority)}`}>
+                            {message.priority === 'high' ? '● High' : message.priority === 'low' ? '● Low' : ''}
+                          </span>
+                          {!message.isRead && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          )}
                         </div>
                       </div>
-                      <p className={`text-sm truncate mb-1 ${
-                        !message.isRead ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-600 dark:text-gray-400'
-                      }`}>
-                        {message.subject}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {message.content}
-                      </p>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className={`text-xs ${getPriorityColor(message.priority)}`}>
-                          {message.priority === 'high' ? '● High' : message.priority === 'low' ? '● Low' : ''}
-                        </span>
-                        {!message.isRead && (
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        )}
-                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              )}
             </div>
           </div>
 
           {/* Message Detail */}
-          <div className="flex-1 flex flex-col">
-            {selectedMessage ? (
+          <div className="flex-1 flex flex-col bg-white dark:bg-gray-800">
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center h-full p-4">
+                <RefreshCw className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+                <p className="text-lg text-gray-800 dark:text-gray-200 font-medium mb-2">Loading messages...</p>
+                <p className="text-gray-600 dark:text-gray-400">Please wait while we retrieve your inbox</p>
+              </div>
+            ) : hasError ? (
+              <div className="flex flex-col items-center justify-center h-full p-4">
+                <AlertTriangle className="w-16 h-16 text-amber-500 mb-4" />
+                <p className="text-xl text-gray-800 dark:text-gray-200 font-medium mb-2">Failed to load messages</p>
+                <p className="text-gray-600 dark:text-gray-400 text-center max-w-md mb-6">
+                  We encountered a problem accessing your inbox. This may be due to network issues or server unavailability.
+                </p>
+                <button 
+                  onClick={() => setRetryCount(prev => prev + 1)}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                >
+                  <RefreshCw className="w-5 h-5 mr-2" />
+                  Try Again
+                </button>
+              </div>
+            ) : selectedMessage ? (
               <>
                 {/* Message Header */}
                 <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6">
@@ -342,16 +446,32 @@ const Inbox: React.FC = () => {
                       {selectedMessage.subject}
                     </h2>
                     <div className="flex items-center space-x-2">
-                      <button className="p-2 text-gray-400 hover:text-yellow-500 transition-colors">
+                      <button 
+                        className="p-2 text-gray-400 hover:text-yellow-500 transition-colors"
+                        aria-label={selectedMessage.isStarred ? "Unstar message" : "Star message"}
+                        title={selectedMessage.isStarred ? "Unstar message" : "Star message"}
+                      >
                         <Star className={`w-5 h-5 ${selectedMessage.isStarred ? 'text-yellow-500 fill-current' : ''}`} />
                       </button>
-                      <button className="p-2 text-gray-400 hover:text-blue-600 transition-colors">
+                      <button 
+                        className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                        aria-label="Reply to message"
+                        title="Reply to message"
+                      >
                         <Reply className="w-5 h-5" />
                       </button>
-                      <button className="p-2 text-gray-400 hover:text-green-600 transition-colors">
+                      <button 
+                        className="p-2 text-gray-400 hover:text-green-600 transition-colors"
+                        aria-label="Forward message"
+                        title="Forward message"
+                      >
                         <Forward className="w-5 h-5" />
                       </button>
-                      <button className="p-2 text-gray-400 hover:text-red-600 transition-colors">
+                      <button 
+                        className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                        aria-label="Delete message"
+                        title="Delete message"
+                      >
                         <Trash2 className="w-5 h-5" />
                       </button>
                     </div>

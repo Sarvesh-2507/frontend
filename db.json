@@ -193,5 +193,97 @@
     "upcomingHolidays": 3,
     "newHires": 8,
     "departmentCount": 4
-  }
+  },
+  "companyFeeds": [
+    {
+      "id": "1",
+      "author": {
+        "name": "Sarah Johnson",
+        "department": "Marketing",
+        "id": "user123"
+      },
+      "content": "Excited to share our Q4 achievements! Our team exceeded all targets and delivered exceptional results. Thank you to everyone who contributed to this success! 🎉",
+      "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=500&h=300&fit=crop",
+      "timestamp": "2024-07-12T14:30:00Z",
+      "likes": 24,
+      "comments": 8,
+      "tags": ["achievement", "marketing", "q4results"],
+      "type": "announcement"
+    },
+    {
+      "id": "2",
+      "author": {
+        "name": "Mike Davis",
+        "department": "Engineering",
+        "id": "user456"
+      },
+      "content": "Just completed our latest product feature! The new dashboard is now live and ready for testing. Looking forward to your feedback! 💻",
+      "image": "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=500&h=300&fit=crop",
+      "timestamp": "2024-07-12T12:15:00Z",
+      "likes": 18,
+      "comments": 5,
+      "tags": ["product", "development", "feature"],
+      "type": "update"
+    },
+    {
+      "id": "3",
+      "author": {
+        "name": "Emily Brown",
+        "department": "HR",
+        "id": "user789"
+      },
+      "content": "Welcome to our new team members who joined us this week! We're thrilled to have you aboard and look forward to working together. 🤝",
+      "image": "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=500&h=300&fit=crop",
+      "timestamp": "2024-07-12T10:45:00Z",
+      "likes": 32,
+      "comments": 12,
+      "tags": ["onboarding", "newemployees", "welcome"],
+      "type": "announcement"
+    },
+    {
+      "id": "4",
+      "author": {
+        "name": "David Wilson",
+        "department": "Sales",
+        "id": "user101"
+      },
+      "content": "Great team lunch today! Nothing beats good food and even better company. These moments remind us why we love working together! 🍕",
+      "image": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=500&h=300&fit=crop",
+      "timestamp": "2024-07-11T13:20:00Z",
+      "likes": 45,
+      "comments": 15,
+      "tags": ["teambuilding", "culture", "companylunch"],
+      "type": "social"
+    },
+    {
+      "id": "5",
+      "author": {
+        "name": "Lisa Chen",
+        "department": "Finance",
+        "id": "user202"
+      },
+      "content": "Important reminder: All expense reports for Q2 must be submitted by Friday. Please make sure to include all necessary receipts and documentation.",
+      "image": null,
+      "timestamp": "2024-07-11T09:00:00Z",
+      "likes": 7,
+      "comments": 3,
+      "tags": ["finance", "expenses", "deadline"],
+      "type": "announcement"
+    },
+    {
+      "id": "6",
+      "author": {
+        "name": "Robert Kim",
+        "department": "IT",
+        "id": "user303"
+      },
+      "content": "System maintenance scheduled for Saturday night from 10 PM to 2 AM. Expect some system downtime during this period. We'll be upgrading our security infrastructure.",
+      "image": null,
+      "timestamp": "2024-07-10T16:45:00Z",
+      "likes": 12,
+      "comments": 8,
+      "tags": ["it", "maintenance", "systemupdate"],
+      "type": "announcement"
+    }
+  ]
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell,
@@ -13,11 +13,14 @@ import {
   Clock,
   AlertTriangle,
   CheckCircle,
-  X
+  X,
+  RefreshCw
 } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import BackButton from '../../components/ui/BackButton';
 import { useLocation } from 'react-router-dom';
+import { useToast } from '../../context/ToastContext';
+import { useAuthStore } from '../../context/authStore';
 
 interface Announcement {
   id: string;
@@ -41,20 +44,66 @@ const Announcements: React.FC = () => {
   const [filterPriority, setFilterPriority] = useState('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
+  const { showError } = useToast();
+  const { checkSession } = useAuthStore();
   const location = useLocation() as any;
 
+  // Handle location state for opening create modal
   React.useEffect(() => {
     if (location?.state?.openCreate) {
       setShowCreateModal(true);
-      // Optional: clear the state so back nav doesn't reopen it
+      // Clear the state so back nav doesn't reopen it
       if (history.replaceState) {
         history.replaceState({}, document.title);
       }
     }
   }, [location?.state]);
+  
+  // Load announcements with error handling
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        setIsLoading(true);
+        setHasError(false);
+        
+        // Ensure session is valid before making requests
+        // Note: We don't redirect on failure anymore, just show an error state
+        await checkSession();
+        
+        // In a real application, you'd fetch from an API
+        // const response = await fetch('/api/announcements');
+        // const data = await response.json();
+        // setAnnouncements(data);
+        
+        // For now, we'll just use the mock data
+        console.log("📣 Announcements - Loaded successfully");
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error("📣 Announcements - Error loading:", error);
+        setIsLoading(false);
+        setHasError(true);
+        
+        if (retryCount < 2) {
+          // Auto-retry once after a short delay
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+          }, 1000);
+        } else {
+          // Just show an error message, don't redirect
+          showError("Unable to load announcements. Please try refreshing the page.");
+        }
+      }
+    };
+    
+    fetchAnnouncements();
+  }, [retryCount, checkSession, showError]);
 
-  const [announcements] = useState<Announcement[]>([
+  const [announcements, setAnnouncements] = useState<Announcement[]>([
     {
       id: '1',
       title: 'New HR Policy Update',
@@ -241,8 +290,38 @@ const Announcements: React.FC = () => {
         {/* Content */}
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {filteredAnnouncements.map((announcement, index) => (
+            {/* Loading State */}
+            {isLoading && (
+              <div className="flex items-center justify-center h-64">
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 border-4 border-t-blue-600 border-blue-200 rounded-full animate-spin mb-4"></div>
+                  <p className="text-gray-600 dark:text-gray-400">Loading announcements...</p>
+                </div>
+              </div>
+            )}
+            
+            {/* Error State */}
+            {hasError && !isLoading && (
+              <div className="flex flex-col items-center justify-center h-64">
+                <AlertTriangle className="w-12 h-12 text-orange-500 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Unable to load announcements</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4 text-center max-w-md">
+                  There was an issue loading the announcements. Please check your connection and try again.
+                </p>
+                <button
+                  onClick={() => setRetryCount(prev => prev + 1)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  <span>Retry</span>
+                </button>
+              </div>
+            )}
+            
+            {/* Announcements List */}
+            {!isLoading && !hasError && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {filteredAnnouncements.map((announcement, index) => (
                 <motion.div
                   key={announcement.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -306,9 +385,10 @@ const Announcements: React.FC = () => {
                   </div>
                 </motion.div>
               ))}
-            </div>
+              </div>
+            )}
 
-            {filteredAnnouncements.length === 0 && (
+            {!isLoading && !hasError && filteredAnnouncements.length === 0 && (
               <div className="text-center py-12">
                 <Bell className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">

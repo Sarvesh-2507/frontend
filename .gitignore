@@ -22,3 +22,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Duplicate/temporary files in the onboarding feature
+src/features/onboarding/CandidateUploads.clean.tsx
+src/features/onboarding/CandidateUploads.final.tsx
+src/features/onboarding/CandidateUploads.fixed.tsx
+src/features/onboarding/CandidateUploads.new.tsx
+src/features/onboarding/CandidateUploads.tsx.new
+src/features/onboarding/CandidateUploadsFixed.tsx
+src/features/onboarding/CandidateUploadsRefactored.tsx
+src/features/onboarding/clean-CandidateUploads.tsx
+src/features/onboarding/CandidateUploads.tsx

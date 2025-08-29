@@ -114,14 +114,14 @@ const menuItems: MenuItem[] = [
     hasSubmenu: true,
     roles: ['admin', 'hr'],
     children: [
-      { id: 'offer-letter', label: 'Offer Letter Management', icon: FileText, path: '/onboarding/offer-letter' },
-      { id: 'pre-boarding', label: 'Pre-boarding Documentation', icon: ClipboardList, path: '/onboarding/pre-boarding' },
-      { id: 'background-verification', label: 'Background Verification', icon: Shield, path: '/onboarding/background-verification' },
-      { id: 'joining-formalities', label: 'Joining Formalities', icon: CheckCircle, path: '/onboarding/joining-formalities' },
-      { id: 'induction-orientation', label: 'Induction & Orientation', icon: Users, path: '/onboarding/induction' },
-      { id: 'task-checklist', label: 'Task & Checklist Tracking', icon: ClipboardList, path: '/onboarding/tasks' },
-      { id: 'profile-creation', label: 'Employee Profile Creation', icon: User, path: '/onboarding/profile-creation' },
-      { id: 'asset-allocation', label: 'Asset Allocation', icon: Package, path: '/onboarding/asset-allocation' },
+  { id: 'offer-letter', label: 'Offer Letter Management', icon: FileText, path: '/onboarding/offer-letter' },
+  { id: 'pre-boarding', label: 'Pre-boarding Documentation', icon: ClipboardList, path: '/onboarding/pre-boarding' },
+  { id: 'background-verification', label: 'Background Verification', icon: Shield, path: '/onboarding/background-verification' },
+  { id: 'joining-formalities', label: 'Joining Formalities', icon: CheckCircle, path: '/onboarding/joining-formalities' },
+  { id: 'candidate-uploads', label: 'Candidate Uploads', icon: Upload, path: '/onboarding/candidate-uploads' },
+  { id: 'task-checklist', label: 'Task & Checklist Tracking', icon: ClipboardList, path: '/onboarding/tasks' },
+  { id: 'candidate-invite', label: 'Candidate Invite', icon: User, path: '/onboarding/candidate-invite' },
+  { id: 'asset-allocation', label: 'Asset Allocation', icon: Package, path: '/onboarding/asset-allocation' },
     ]
   },
   {
@@ -365,8 +365,24 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
       console.log('🚪 Sidebar - Starting logout process...');
       await logout();
       console.log('✅ Sidebar - Logout successful');
-      showSuccess('Logged out successfully');
-      navigate('/login');
+      // Removed duplicate toast notification - it's already shown in authStore
+      
+      // Force a delay before navigation to ensure state is properly cleared
+      setTimeout(() => {
+        // Force clear any remaining tokens
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("auth-store");
+        
+        // Navigate to login page
+        navigate('/login', { replace: true });
+        
+        // Force page reload if needed
+        if (localStorage.getItem("auth-store")) {
+          window.location.href = '/login';
+        }
+      }, 100);
     } catch (error) {
       console.error('❌ Sidebar - Logout error:', error);
       showError('An error occurred during logout');
@@ -381,7 +397,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
     );
   };
 
+  // Show onboarding for all users if user is missing or role is not set (for dev/demo)
+  // Force Onboarding menu to always appear for all users (dev/demo)
   const filteredMenuItems = menuItems.filter(item => {
+    if (item.id === 'onboarding') return true;
     if (!item.roles) return true;
     if (!user || !(user as any).role) return false;
     const userRole = String((user as any).role).toLowerCase();
@@ -405,12 +424,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
     <motion.div
       initial={false}
       animate={{
-        width: isCollapsed ? 80 : window.innerWidth < 768 ? 240 : 280
+        width: isCollapsed ? 100 : window.innerWidth < 768 ? 300 : 340
       }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
       className="sidebar-modern flex flex-col h-full relative z-20"
       style={{
-        minWidth: isCollapsed ? '80px' : window.innerWidth < 768 ? '240px' : '280px'
+        minWidth: isCollapsed ? '100px' : window.innerWidth < 768 ? '300px' : '340px'
       }}
     >
       {/* Header */}
@@ -523,7 +542,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -10 }}
                       transition={{ duration: 0.2 }}
-                      className="text-sm font-medium truncate flex-1 text-left"
+                      className="text-sm font-medium flex-1 text-left whitespace-normal"
                     >
                       {item.label}
                     </motion.span>
@@ -574,7 +593,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
                           }`}
                         >
                           <ChildIcon className="w-4 h-4 flex-shrink-0" />
-                          <span className="truncate">{child.label}</span>
+                          <span className="whitespace-normal">{child.label}</span>
                         </motion.button>
                       );
                     })}

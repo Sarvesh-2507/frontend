@@ -1,0 +1,874 @@
+
+import React, { useState, useEffect } from "react";
+import { UserPlus, Mail, RefreshCw, FileText, Check, Copy, X, Search, Filter, PlusCircle } from "lucide-react";
+import ModulePage from "../../components/ModulePage";
+import { motion } from "framer-motion";
+import { 
+  CandidateProfile, 
+  getAllCandidates, 
+  sendCandidateInvite, 
+  getPendingCandidates, 
+  SendInvitePayload 
+} from "../../services/candidateOnboardingService";
+
+// Using the CandidateProfile interface from our service
+// Added local UI-specific properties
+interface CandidateWithUIProps extends CandidateProfile {
+  inviteExpiry?: string;
+}
+
+const CandidateInvite: React.FC = () => {
+  // Form states
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [position, setPosition] = useState<string>("");
+  const [joiningDate, setJoiningDate] = useState<string>("");
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
+  const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
+  const [emailError, setEmailError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Validate email format
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+  
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    setEmailError("");
+    setIsEmailVerified(false);
+  };
+  
+  // Verify email format and availability
+  const verifyEmail = () => {
+    if (!email) {
+      setEmailError("Email is required");
+      return;
+    }
+    
+    if (!validateEmail(email)) {
+      setEmailError("Please enter a valid email address");
+      return;
+    }
+    
+    setIsVerifying(true);
+    
+    // In a real implementation, you'd check if the email already exists
+    setTimeout(() => {
+      setIsVerifying(false);
+      setIsEmailVerified(true);
+    }, 1000);
+  };
+  
+  // Fetch candidates on component mount
+  useEffect(() => {
+    fetchCandidates();
+  }, []);
+
+  // Fetch all candidates from API
+  const fetchCandidates = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getAllCandidates();
+      // Ensure candidates is always an array even if API returns null or undefined
+      setCandidates(Array.isArray(data) ? data : []);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching candidates:", err);
+      setError("Failed to fetch candidates. Please try again.");
+      // Set to empty array to prevent filter errors
+      setCandidates([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Send invitation to candidate
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!firstName || !lastName || !email) {
+      setError("Please fill in all required fields");
+      return;
+    }
+    
+    if (!isEmailVerified) {
+      setEmailError("Please verify your email first");
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      
+      const payload: SendInvitePayload = {
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        position: position || undefined,
+        joining_date: joiningDate || undefined
+      };
+      
+      await sendCandidateInvite(payload);
+      
+      // Reset form
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      setPosition("");
+      setJoiningDate("");
+      setIsEmailVerified(false);
+      
+      // Refresh candidates list
+      fetchCandidates();
+      
+      alert("Invitation sent successfully!");
+    } catch (err) {
+      console.error("Error sending invitation:", err);
+      setError("Failed to send invitation. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Initialize the candidates state with sample data
+  const [candidates, setCandidates] = useState<CandidateWithUIProps[]>([]);
+  
+  // Load initial data - a fallback if API fails
+  useEffect(() => {
+    if (candidates.length === 0) {
+      setCandidates([
+        {
+          id: "c1",
+          first_name: "David",
+          last_name: "Wilson",
+          email: "david.wilson@example.com",
+          phone_number: "555-123-4567",
+          position: "Frontend Developer",
+          department: "Engineering",
+          status: "pending"
+        },
+        {
+          id: "c2",
+          first_name: "Jessica",
+          last_name: "Martinez",
+          email: "jessica.m@example.com",
+          phone_number: "555-234-5678",
+          position: "Product Manager",
+          department: "Product",
+          status: "invited",
+          invited_at: "2023-08-25",
+          inviteExpiry: "2023-09-01"
+        },
+        {
+          id: "c3",
+          first_name: "Robert",
+          last_name: "Chang",
+          email: "robert.c@example.com",
+          phone_number: "555-345-6789",
+          position: "UX Designer",
+          department: "Design",
+          status: "submitted",
+          invited_at: "2023-08-20",
+          inviteExpiry: "2023-08-27"
+        },
+        {
+          id: "c4",
+          first_name: "Emily",
+          last_name: "Brown",
+          email: "emily.b@example.com",
+          phone_number: "555-567-8901",
+          position: "Marketing Specialist",
+          department: "Marketing",
+          status: "rejected",
+          invited_at: "2023-08-10",
+          inviteExpiry: "2023-08-17"
+        }
+      ]);
+    }
+  }, [candidates.length]);
+
+  const [showModal, setShowModal] = useState(false);
+  const [newCandidate, setNewCandidate] = useState<Partial<CandidateProfile>>({
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone_number: "",
+    position: "",
+    department: ""
+  });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filter, setFilter] = useState<"all" | "pending" | "invited" | "accepted" | "expired">("all");
+  const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
+  
+  // Function to handle sending invites
+  const handleSendInvite = async (candidateId: string) => {
+    const candidate = candidates.find(c => c.id === candidateId);
+    
+    if (!candidate) return;
+    
+    try {
+      setIsLoading(true);
+      
+      // Prepare payload for API
+      const payload: SendInvitePayload = {
+        first_name: candidate.first_name,
+        last_name: candidate.last_name,
+        email: candidate.email,
+        position: candidate.position,
+        joining_date: candidate.joining_date
+      };
+      
+      // Call API to send invitation
+      await sendCandidateInvite(payload);
+      
+      // Update the candidate status locally
+      setCandidates(prevCandidates => 
+        prevCandidates.map(c => 
+          c.id === candidateId
+            ? { 
+                ...c, 
+                status: "invited", 
+                invited_at: new Date().toISOString().split('T')[0], 
+                inviteExpiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] 
+              }
+            : c
+        )
+      );
+      
+      alert(`Invite sent to ${candidate.first_name} ${candidate.last_name}`);
+    } catch (err) {
+      console.error("Error sending invite:", err);
+      setError("Failed to send invitation. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to handle resending invites
+  const handleResendInvite = async (candidateId: string) => {
+    const candidate = candidates.find(c => c.id === candidateId);
+    
+    if (!candidate) return;
+    
+    try {
+      setIsLoading(true);
+      
+      // Prepare payload for API
+      const payload: SendInvitePayload = {
+        first_name: candidate.first_name,
+        last_name: candidate.last_name,
+        email: candidate.email,
+        position: candidate.position,
+        joining_date: candidate.joining_date
+      };
+      
+      // Call API to send invitation again
+      await sendCandidateInvite(payload);
+      
+      // Update the candidate status locally
+      setCandidates(prevCandidates => 
+        prevCandidates.map(c => 
+          c.id === candidateId
+            ? { 
+                ...c, 
+                status: "invited", 
+                invited_at: new Date().toISOString().split('T')[0],
+                inviteExpiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+              }
+            : c
+        )
+      );
+      
+      alert(`Invite resent to ${candidate.first_name} ${candidate.last_name}`);
+    } catch (err) {
+      console.error("Error resending invite:", err);
+      setError("Failed to resend invitation. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to add a new candidate
+  const handleAddCandidate = async () => {
+    const { first_name, last_name, email, phone_number, position, department } = newCandidate;
+    
+    if (!first_name || !last_name || !email || !phone_number) {
+      alert("Please fill all required fields");
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      
+      // In a real implementation, we would call the API:
+      // const createdCandidate = await createCandidate(newCandidate);
+      
+      // For now, we'll simulate it:
+      const newId = `c${candidates.length + 1}`;
+      const simulatedNewCandidate = {
+        ...newCandidate,
+        id: newId,
+        status: "pending"
+      };
+      
+      setCandidates(prev => [...prev, simulatedNewCandidate as CandidateWithUIProps]);
+      
+      setNewCandidate({
+        first_name: "",
+        last_name: "",
+        email: "",
+        phone_number: "",
+        position: "",
+        department: ""
+      });
+      
+      setShowModal(false);
+      alert(`Candidate ${first_name} ${last_name} added successfully`);
+    } catch (err) {
+      console.error("Error creating candidate:", err);
+      setError("Failed to create candidate. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to handle bulk actions
+  const handleBulkInvite = async () => {
+    if (selectedCandidates.length === 0) {
+      alert("Please select candidates first");
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      
+      // In a production environment, we would use Promise.all to send multiple invites at once
+      // const invitePromises = selectedCandidates.map(id => {
+      //   const candidate = candidates.find(c => c.id === id);
+      //   if (!candidate) return Promise.resolve();
+      //   return sendCandidateInvite({
+      //     first_name: candidate.first_name,
+      //     last_name: candidate.last_name,
+      //     email: candidate.email,
+      //     position: candidate.position,
+      //     joining_date: candidate.joining_date
+      //   });
+      // });
+      // await Promise.all(invitePromises);
+      
+      // For now, simulate the bulk invite by updating local state
+      setCandidates(prevCandidates => 
+        prevCandidates.map(candidate => {
+          if (candidate.id && selectedCandidates.includes(candidate.id) && 
+             (candidate.status === "pending" || candidate.status === "rejected")) {
+            return { 
+              ...candidate, 
+              status: "invited", 
+              invited_at: new Date().toISOString().split('T')[0],
+              inviteExpiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            };
+          }
+          return candidate;
+        })
+      );
+      
+      alert(`Invites sent to ${selectedCandidates.length} candidates`);
+      setSelectedCandidates([]);
+    } catch (err) {
+      console.error("Error sending bulk invites:", err);
+      setError("Failed to send bulk invites. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Toggle select candidate
+  const toggleSelectCandidate = (candidateId: string) => {
+    setSelectedCandidates(prev => 
+      prev.includes(candidateId) 
+        ? prev.filter(id => id !== candidateId)
+        : [...prev, candidateId]
+    );
+  };
+
+  // Select all visible candidates
+  const selectAllVisible = () => {
+    // Filter out any undefined IDs
+    const visibleCandidateIds = filteredCandidates
+      .map(c => c.id)
+      .filter((id): id is string => id !== undefined);
+      
+    setSelectedCandidates(prev => {
+      const allSelected = visibleCandidateIds.length > 0 && visibleCandidateIds.every(id => prev.includes(id));
+      return allSelected ? [] : visibleCandidateIds;
+    });
+  };
+
+  // Filter candidates based on search and filter
+  const filteredCandidates = Array.isArray(candidates) ? candidates.filter(candidate => {
+    const fullName = `${candidate?.first_name || ''} ${candidate?.last_name || ''}`.toLowerCase();
+    const matchesSearch = 
+      fullName.includes(searchTerm.toLowerCase()) ||
+      (candidate?.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (candidate?.position || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (candidate?.department || '').toLowerCase().includes(searchTerm.toLowerCase());
+      
+    // Adjust filter matching to match the API's status values
+    let matchesFilter = filter === "all";
+    if (!matchesFilter && candidate?.status) {
+      if (filter === "pending" && candidate.status === "pending") {
+        matchesFilter = true;
+      } else if (filter === "invited" && candidate.status === "invited") {
+        matchesFilter = true;
+      } else if (filter === "accepted" && candidate.status === "submitted") {
+        matchesFilter = true;
+      } else if (filter === "expired" && candidate.status === "rejected") {
+        matchesFilter = true;
+      }
+    }
+      
+    return matchesSearch && matchesFilter;
+  }) : [];
+
+  // Copy invite link to clipboard
+  const copyInviteLink = (candidateId: string) => {
+    const dummyLink = `https://company.hrapp.com/onboarding/invite/${candidateId}`;
+    navigator.clipboard.writeText(dummyLink);
+    alert("Invite link copied to clipboard");
+  };
+
+  return (
+    <ModulePage
+      title="Candidate Invite"
+      description="Invite candidates to create their profiles and begin the onboarding process"
+      icon={UserPlus}
+      comingSoon={false}
+    >
+      <div className="container mx-auto px-4 py-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+          {/* Header controls */}
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0 mb-6">
+            <div className="flex items-center space-x-4">
+              <div className="relative w-full md:w-64">
+                <input
+                  type="text"
+                  placeholder="Search candidates..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              </div>
+              
+              <div className="relative">
+                <select
+                  className="appearance-none pl-10 pr-8 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value as any)}
+                  title="Filter candidates by status"
+                >
+                  <option value="all">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="invited">Invited</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="expired">Expired</option>
+                </select>
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              </div>
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={handleBulkInvite}
+                disabled={selectedCandidates.length === 0}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm 
+                  ${selectedCandidates.length === 0 
+                    ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed' 
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+              >
+                <Mail className="h-4 w-4" />
+                <span>Bulk Invite ({selectedCandidates.length})</span>
+              </button>
+              
+              <button
+                onClick={() => setShowModal(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
+              >
+                <PlusCircle className="h-4 w-4" />
+                <span>Add Candidate</span>
+              </button>
+            </div>
+          </div>
+          
+          {/* Email Verification Form */}
+          <div className="mb-8 bg-gray-50 dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Send Candidate Invitation
+            </h3>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="candidateEmail" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Enter Candidate Email Address
+                </label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-grow">
+                    <input
+                      id="candidateEmail"
+                      type="email"
+                      placeholder="example@company.com"
+                      className={`w-full px-4 py-2 border ${emailError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
+                      value={email}
+                      onChange={handleEmailChange}
+                    />
+                    {emailError && (
+                      <p className="mt-1 text-sm text-red-500">{emailError}</p>
+                    )}
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={verifyEmail}
+                    disabled={isVerifying || !email}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center ${
+                      isVerifying 
+                        ? 'bg-blue-400 text-white cursor-not-allowed' 
+                        : !email
+                          ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                    title="Verify email address"
+                  >
+                    {isVerifying ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Verifying...
+                      </>
+                    ) : isEmailVerified ? (
+                      <>
+                        <Check className="h-4 w-4 mr-2" />
+                        Verified
+                      </>
+                    ) : (
+                      'Verify Email'
+                    )}
+                  </button>
+                </div>
+              </div>
+              
+              {isEmailVerified && (
+                <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
+                  <div className="flex items-center">
+                    <Check className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
+                    <p className="text-sm text-green-800 dark:text-green-200">Email verified successfully. Ready to send invitation.</p>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={!isEmailVerified}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                    !isEmailVerified
+                      ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed'
+                      : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
+                  title="Send invitation"
+                >
+                  Send Invitation
+                </button>
+              </div>
+            </form>
+          </div>
+          
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                        checked={filteredCandidates.length > 0 && filteredCandidates.every(c => c.id && selectedCandidates.includes(c.id))}
+                        onChange={selectAllVisible}
+                        title="Select all visible candidates"
+                        aria-label="Select all visible candidates"
+                      />
+                    </div>
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Candidate
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Position
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Invited On
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Expires
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {filteredCandidates.length > 0 ? (
+                  filteredCandidates.map((candidate) => (
+                    <tr key={candidate.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                          checked={selectedCandidates.includes(candidate.id || '')}
+                          onChange={() => toggleSelectCandidate(candidate.id || '')}
+                          title={`Select ${candidate.first_name} ${candidate.last_name}`}
+                          aria-label={`Select ${candidate.first_name} ${candidate.last_name}`}
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-start">
+                          <div className="ml-2">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">{candidate.first_name} {candidate.last_name}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{candidate.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900 dark:text-white">{candidate.position}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">{candidate.department}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                          ${candidate.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' : ''} 
+                          ${candidate.status === 'invited' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' : ''} 
+                          ${candidate.status === 'submitted' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : ''} 
+                          ${candidate.status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : ''}`}
+                        >
+                          {candidate.status === 'submitted' ? 'Accepted' : 
+                           candidate.status === 'rejected' ? 'Expired' : 
+                           candidate.status.charAt(0).toUpperCase() + candidate.status.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {candidate.invited_at || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {candidate.inviteExpiry || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-3">
+                          {candidate.status === "pending" && (
+                            <button
+                              onClick={() => candidate.id && handleSendInvite(candidate.id)}
+                              className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                              title="Send invite"
+                              aria-label="Send invite"
+                            >
+                              <Mail className="h-4 w-4" />
+                            </button>
+                          )}
+                          
+                          {(candidate.status === "invited" || candidate.status === "rejected") && (
+                            <>
+                              <button
+                                onClick={() => candidate.id && handleResendInvite(candidate.id)}
+                                className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
+                                title="Resend Invite"
+                              >
+                                <RefreshCw className="h-4 w-4" />
+                              </button>
+                              
+                              <button
+                                onClick={() => candidate.id && copyInviteLink(candidate.id)}
+                                className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300"
+                                title="Copy Invite Link"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </button>
+                            </>
+                          )}
+                          
+                          {candidate.status === "submitted" && (
+                            <button
+                              onClick={() => alert(`View profile for ${candidate.first_name} ${candidate.last_name}`)}
+                              className="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300"
+                              title="View Profile"
+                            >
+                              <FileText className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                      No candidates found matching your search criteria
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      {/* Add Candidate Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center">
+            <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={() => setShowModal(false)}></div>
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="relative w-full max-w-md p-6 mx-auto my-8 bg-white dark:bg-gray-800 rounded-lg shadow-xl"
+            >
+              <div className="absolute top-0 right-0 pt-4 pr-4">
+                <button
+                  type="button"
+                  className="text-gray-400 bg-transparent hover:text-gray-500 dark:hover:text-gray-300"
+                  onClick={() => setShowModal(false)}
+                  title="Close modal"
+                  aria-label="Close modal"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="mt-3 text-center sm:mt-0 sm:text-left">
+                <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white">
+                  Add New Candidate
+                </h3>
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      id="firstName"
+                      className="block w-full mt-1 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      placeholder="John"
+                      value={newCandidate.first_name}
+                      onChange={(e) => setNewCandidate({...newCandidate, first_name: e.target.value})}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      id="lastName"
+                      className="block w-full mt-1 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      placeholder="Doe"
+                      value={newCandidate.last_name}
+                      onChange={(e) => setNewCandidate({...newCandidate, last_name: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      className="block w-full mt-1 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      placeholder="john.doe@example.com"
+                      value={newCandidate.email}
+                      onChange={(e) => setNewCandidate({...newCandidate, email: e.target.value})}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      id="phoneNumber"
+                      className="block w-full mt-1 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      placeholder="555-123-4567"
+                      value={newCandidate.phone_number}
+                      onChange={(e) => setNewCandidate({...newCandidate, phone_number: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="position" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Position
+                    </label>
+                    <input
+                      type="text"
+                      id="position"
+                      className="block w-full mt-1 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      placeholder="Software Engineer"
+                      value={newCandidate.position}
+                      onChange={(e) => setNewCandidate({...newCandidate, position: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="department" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Department
+                    </label>
+                    <select
+                      id="department"
+                      className="block w-full mt-1 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      value={newCandidate.department}
+                      onChange={(e) => setNewCandidate({...newCandidate, department: e.target.value})}
+                    >
+                      <option value="">Select Department</option>
+                      <option value="Engineering">Engineering</option>
+                      <option value="Design">Design</option>
+                      <option value="Marketing">Marketing</option>
+                      <option value="Product">Product</option>
+                      <option value="Human Resources">Human Resources</option>
+                      <option value="Finance">Finance</option>
+                      <option value="Operations">Operations</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  className="inline-flex justify-center w-full px-4 py-2 text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={handleAddCandidate}
+                >
+                  Add Candidate
+                </button>
+                <button
+                  type="button"
+                  className="inline-flex justify-center w-full px-4 py-2 mt-3 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm"
+                  onClick={() => setShowModal(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      )}
+    </ModulePage>
+  );
+};
+
+export default CandidateInvite;

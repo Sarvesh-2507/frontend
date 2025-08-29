@@ -19,6 +19,55 @@ export const useAuthStore = create<AuthStore>()(
       isLoading: false,
       error: null,
 
+      // Session check function to validate token on route change
+      checkSession: async () => {
+        try {
+          set({ isLoading: true });
+          const tokens = get().tokens;
+          
+          // If we have no tokens at all, we're definitely not authenticated
+          if (!tokens?.access) {
+            // Restore tokens from localStorage if they exist but aren't in state
+            const accessToken = localStorage.getItem("accessToken");
+            const refreshToken = localStorage.getItem("refreshToken");
+            
+            if (accessToken) {
+              set({ 
+                tokens: { access: accessToken, refresh: refreshToken || "" },
+                isAuthenticated: true 
+              });
+              
+              // Try to fetch user data with this token
+              try {
+                const userResponse = await authApi.getCurrentUser();
+                if (userResponse.success && userResponse.data) {
+                  set({ user: userResponse.data });
+                }
+                set({ isLoading: false });
+                return true;
+              } catch (error) {
+                console.warn("Failed to fetch user data, but continuing session", error);
+                // Don't automatically log out on 401 here - the component will handle it gracefully
+                set({ isLoading: false });
+                return true;
+              }
+            } else {
+              set({ isAuthenticated: false, isLoading: false });
+              return false;
+            }
+          } else {
+            // We have tokens in state already
+            set({ isAuthenticated: true, isLoading: false });
+            return true;
+          }
+        } catch (error) {
+          console.error("Session check error:", error);
+          set({ isLoading: false });
+          // Don't automatically log out on error
+          return get().isAuthenticated;
+        }
+      },
+
       // Actions
       login: async (credentials: LoginCredentials) => {
         try {
@@ -253,7 +302,13 @@ export const useAuthStore = create<AuthStore>()(
           localStorage.removeItem("authToken");
           localStorage.removeItem("jwt");
           localStorage.removeItem("bearer_token");
-
+          
+          // Clear Zustand persist storage
+          localStorage.removeItem("auth-store");
+          
+          // Clear session storage too
+          sessionStorage.clear();
+          
           console.log("✅ Auth Store - Logout process completed");
           toast.success("Logged out successfully");
         }
@@ -264,27 +319,59 @@ export const useAuthStore = create<AuthStore>()(
           const { tokens } = get();
 
           if (!tokens?.refresh) {
-            throw new Error("No refresh token available");
-          }
+            // Try to get refresh token from localStorage as fallback
+            const refreshToken = localStorage.getItem("refreshToken");
+            if (!refreshToken) {
+              throw new Error("No refresh token available");
+            }
+            
+            // Update state with token from localStorage
+            set({ 
+              tokens: { 
+                access: localStorage.getItem("accessToken") || "", 
+                refresh: refreshToken 
+              } 
+            });
+            
+            const response = await authApi.refreshToken(refreshToken);
+            
+            if (response.success && response.data) {
+              const newTokens = response.data;
 
-          const response = await authApi.refreshToken(tokens.refresh);
+              set({ tokens: newTokens });
 
-          if (response.success && response.data) {
-            const newTokens = response.data;
-
-            set({ tokens: newTokens });
-
-            // Update localStorage
-            localStorage.setItem("accessToken", newTokens.access);
-            localStorage.setItem("refreshToken", newTokens.refresh);
+              // Update localStorage
+              localStorage.setItem("accessToken", newTokens.access);
+              localStorage.setItem("refreshToken", newTokens.refresh);
+              
+              console.log("✅ Auth Store - Token refresh successful");
+              return true;
+            } else {
+              throw new Error("Token refresh failed");
+            }
           } else {
-            throw new Error("Token refresh failed");
+            const response = await authApi.refreshToken(tokens.refresh);
+
+            if (response.success && response.data) {
+              const newTokens = response.data;
+
+              set({ tokens: newTokens });
+
+              // Update localStorage
+              localStorage.setItem("accessToken", newTokens.access);
+              localStorage.setItem("refreshToken", newTokens.refresh);
+              
+              console.log("✅ Auth Store - Token refresh successful");
+              return true;
+            } else {
+              throw new Error("Token refresh failed");
+            }
           }
         } catch (error) {
           console.error("Token refresh error:", error);
-          // If refresh fails, logout user
-          get().logout();
-          throw error;
+          // Don't automatically logout on refresh failure
+          // Instead, let the component handle the 401 error gracefully
+          return false;
         }
       },
 

@@ -97,9 +97,13 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
                     {cancelText}
                   </button>
                   <button
-                    onClick={() => {
-                      onConfirm();
-                      onClose();
+                    onClick={async () => {
+                      try {
+                        await onConfirm();
+                        onClose();
+                      } catch (error) {
+                        console.error("Error executing confirmation action:", error);
+                      }
                     }}
                     className={`flex-1 px-4 py-2 rounded-lg transition-colors ${getConfirmButtonStyle()}`}
                   >

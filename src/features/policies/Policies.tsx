@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Search, Plus, CheckCircle, Download, Upload, Filter, Eye } from 'lucide-react';
+import { FileText, Search, Plus, Download, Eye } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import BackButton from '../../components/ui/BackButton';
 
@@ -57,13 +57,24 @@ const Policies: React.FC = () => {
                 />
               </div>
               <div className="flex items-center space-x-2">
-                <select value={filter} onChange={(e)=>setFilter(e.target.value)} className="px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg">
+                <label htmlFor="policy-filter" className="sr-only">Filter policies by status</label>
+                <select
+                  id="policy-filter"
+                  value={filter}
+                  onChange={(e)=>setFilter(e.target.value)}
+                  className="px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"
+                  aria-label="Filter policies by status"
+                >
                   <option value="all">All</option>
                   <option value="active">Active</option>
                   <option value="draft">Draft</option>
                   <option value="archived">Archived</option>
                 </select>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2">
+                <button 
+                  type="button" 
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                  aria-label="Create new policy"
+                >
                   <Plus className="w-4 h-4" /><span>New Policy</span>
                 </button>
               </div>
@@ -82,8 +93,20 @@ const Policies: React.FC = () => {
                   <div className="mt-4 flex items-center justify-between text-sm">
                     <span className="text-gray-500">Updated {new Date(p.updatedAt).toLocaleDateString()}</span>
                     <div className="flex items-center space-x-2">
-                      <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"><Eye className="w-4 h-4" /></button>
-                      <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"><Download className="w-4 h-4" /></button>
+                      <button 
+                        type="button" 
+                        aria-label="View Policy" 
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button 
+                        type="button" 
+                        aria-label="Download Policy" 
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 </motion.div>
