@@ -17,6 +17,8 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import Sidebar from './Sidebar';
+import ProfileProgressBar from './ui/ProfileProgressBar';
+import HighlightsWidget from './ui/HighlightsWidget';
 import QuickEmployeeDirectory from './QuickEmployeeDirectory';
 import RecentAnnouncements from './RecentAnnouncements';
 import ScheduleComponent from './ScheduleComponent';
@@ -179,6 +181,9 @@ const HomePage: React.FC = () => {
     }
   };
 
+  // TODO: Replace with real profile completion logic or fetch from API
+  const profileCompletion = 65;
+
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       {/* Sidebar */}
@@ -187,6 +192,7 @@ const HomePage: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="container-responsive py-3 sm:py-4 lg:py-6 space-y-3 sm:space-y-4 lg:space-y-6">
+          {/* Header with Search */}
           {/* Header with Search */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -221,8 +227,9 @@ const HomePage: React.FC = () => {
                 ease: "easeInOut"
               }}
             />
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center relative z-10 space-y-4 sm:space-y-0">
-              <div>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center relative z-10 space-y-4 sm:space-y-0 w-full">
+              <div className="w-full max-w-md">
+                <ProfileProgressBar percent={profileCompletion} />
                 <motion.h1
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -256,8 +263,16 @@ const HomePage: React.FC = () => {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 min-h-[calc(100vh-200px)]">
-        {/* Left Sidebar - Quick Actions & Recent Announcements */}
+        {/* Left Sidebar - Highlights, Quick Actions & Recent Announcements */}
         <div className="space-y-4 lg:space-y-6">
+          {/* Highlights Widget */}
+          <HighlightsWidget
+            highlights={[
+              { type: "birthday", label: "Birthday:", value: "John Doe" },
+              { type: "anniversary", label: "Anniversary:", value: "Jane Smith" },
+              { type: "holiday", label: "Holiday:", value: "Labor Day" }
+            ]}
+          />
           {/* Quick Actions */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -277,7 +292,6 @@ const HomePage: React.FC = () => {
               ))}
             </div>
           </motion.div>
-
           {/* Recent Announcements */}
           <RecentAnnouncements />
         </div>

@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useState } from "react";
+import ProfileProgressBar from "./ui/ProfileProgressBar";
 import { toast } from "react-hot-toast";
 
 interface PersonalInfo {
@@ -313,9 +314,20 @@ const EmployeeProfile: React.FC = () => {
     );
   };
 
+  // Example: Calculate profile completion percentage (replace with real logic)
+  const profileCompletion = (() => {
+    // Example: count filled fields in personalInfo and workInfo
+    const personalFields = Object.values(employeeData.personalInfo).filter(Boolean).length;
+    const workFields = Object.values(employeeData.workInfo).filter(Boolean).length;
+    const totalFields = Object.keys(employeeData.personalInfo).length + Object.keys(employeeData.workInfo).length;
+    return Math.round(((personalFields + workFields) / totalFields) * 100);
+  })();
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Profile Completion Progress Bar */}
+        <ProfileProgressBar percent={profileCompletion} />
         {/* Profile Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
