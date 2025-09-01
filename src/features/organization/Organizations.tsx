@@ -23,7 +23,7 @@ import Sidebar from "../../components/Sidebar";
 import Logo from "../../components/ui/Logo";
 import BackButton from "../../components/ui/BackButton";
 import { organizationAPI } from "../../services/organizationApi";
-import { Organization } from "../types/organization";
+import { Organization } from "../../types/organization";
 
 // Import submodule components
 import OrganizationOverview from "./OrganizationOverview";
@@ -88,7 +88,19 @@ const Organizations: React.FC = () => {
     try {
       setLoading(true);
       const response = await organizationAPI.getOrganizations();
-      setOrganizations(response.data);
+      // Support paginated API: use response.data.results if present
+      let orgs: Organization[] = [];
+      if (Array.isArray(response.data)) {
+        orgs = response.data;
+      } else if (
+        response.data &&
+        typeof response.data === "object" &&
+        "results" in response.data &&
+        Array.isArray((response.data as any).results)
+      ) {
+        orgs = (response.data as any).results;
+      }
+      setOrganizations(orgs);
     } catch (error) {
       console.error("Error fetching organizations:", error);
       toast.error("Failed to fetch organizations");
@@ -104,7 +116,7 @@ const Organizations: React.FC = () => {
 
     try {
       await organizationAPI.deleteOrganization(id);
-      setOrganizations(prev => prev.filter(org => org.id !== id));
+      setOrganizations(prev => prev.filter(org => String(org.id) !== id));
       toast.success("Organization deleted successfully");
     } catch (error) {
       console.error("Error deleting organization:", error);
@@ -121,8 +133,10 @@ const Organizations: React.FC = () => {
     navigate(subModule.path);
   };
 
-  const filteredOrganizations = organizations.filter((org) =>
-    org.company_name.toLowerCase().includes(searchTerm.toLowerCase())
+  // Defensive: ensure organizations is always an array
+  const orgArray = Array.isArray(organizations) ? organizations : [];
+  const filteredOrganizations = orgArray.filter((org) =>
+    org.company_name && org.company_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleViewOrganization = (orgId: number) => {

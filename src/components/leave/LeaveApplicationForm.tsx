@@ -71,9 +71,10 @@ const LeaveApplicationForm: React.FC<{ user: User; onBack: () => void; onSuccess
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 overflow-auto h-screen">
-      <Toast {...toast} onClose={hideToast} />
-      <div className="mb-6">
+    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="flex-1 max-w-4xl mx-auto p-6 overflow-auto">
+  <Toast {...toast} onClose={hideToast} />
+  <div className="mb-6">
         <button onClick={onBack} className="flex items-center text-blue-600 hover:text-blue-800">
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -206,6 +207,7 @@ const LeaveApplicationForm: React.FC<{ user: User; onBack: () => void; onSuccess
           </div>
         </div>
       </Modal>
+      </div>
     </div>
   );
 };

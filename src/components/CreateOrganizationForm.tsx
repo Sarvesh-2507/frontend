@@ -23,6 +23,7 @@ interface CreateOrganizationFormProps {
 
 interface FormData extends CreateOrganizationData {
   // Additional form fields if needed
+  email_domain: string;
 }
 
 const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
@@ -40,7 +41,11 @@ const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
     formState: { errors },
     reset,
     watch,
-  } = useForm<FormData>();
+  } = useForm<FormData>({
+    defaultValues: {
+      email_domain: '',
+    },
+  });
 
   const industryTypes = [
     "Technology",
@@ -175,7 +180,7 @@ const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+  <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
         {/* Success Message */}
         {submitSuccess && (
           <motion.div
@@ -205,7 +210,7 @@ const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
         )}
 
         {/* Company Name */}
-        <div>
+  <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Company Name *
           </label>
@@ -233,8 +238,37 @@ const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
           )}
         </div>
 
-        {/* Alternative Name */}
+        {/* Email Domain */}
         <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Email Domain *
+          </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FileText className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              {...register("email_domain", {
+                required: "Email domain is required",
+                pattern: {
+                  value: /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                  message: "Enter a valid domain (e.g. example.com)",
+                },
+              })}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              placeholder="Enter email domain (e.g. example.com)"
+            />
+          </div>
+          {errors.email_domain && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {errors.email_domain.message}
+            </p>
+          )}
+        </div>
+
+        {/* Alternative Name */}
+  <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Alternative Name
           </label>
@@ -252,7 +286,7 @@ const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
         </div>
 
         {/* Description */}
-        <div>
+  <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Description
           </label>
@@ -270,7 +304,7 @@ const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
         </div>
 
         {/* Location */}
-        <div>
+  <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Location
           </label>
@@ -288,7 +322,7 @@ const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
         </div>
 
         {/* Industry Type */}
-        <div>
+  <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Industry Type
           </label>
@@ -305,8 +339,8 @@ const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
           </select>
         </div>
 
-        {/* Employee Count */}
-        <div>
+  {/* Employee Count */}
+  <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Employee Count
           </label>

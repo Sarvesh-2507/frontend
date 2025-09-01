@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -36,39 +38,61 @@ interface LeaveBalance {
 }
 
 interface LeaveApplication {
-  id?: string;
-  leaveTypeId: string;
-  startDate: string;
-  endDate: string;
-  totalDays: number;
+  employee_id: number;
+  leave_type: string;
+  start_date: string;
+  end_date: string;
+  half_day_session: 'FULL_DAY' | 'FIRST_HALF' | 'SECOND_HALF';
   reason: string;
-  emergencyContact: string;
-  emergencyPhone: string;
-  handoverNotes?: string;
-  attachments?: File[];
+  attachment: File | null;
   status: 'draft' | 'submitted' | 'approved' | 'rejected';
 }
+
 
 const LeaveApplication: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [leaveBalances, setLeaveBalances] = useState<LeaveBalance[]>([]);
-  const [application, setApplication] = useState<LeaveApplication>({
-    leaveTypeId: '',
-    startDate: '',
-    endDate: '',
-    totalDays: 0,
+  const [application, setApplication] = useState<any>({
+    employee_id: 1, // TODO: Replace with real employee id
+    leave_type: '',
+    start_date: '',
+    end_date: '',
+    half_day_session: 'FULL_DAY',
     reason: '',
-    emergencyContact: '',
-    emergencyPhone: '',
-    handoverNotes: '',
+    attachment: null,
     attachments: [],
-    status: 'draft'
+    totalDays: 0
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   const navigate = useNavigate();
+
+  // Helper to get selected leave type object
+  function getSelectedLeaveType() {
+    return leaveTypes.find((type: LeaveType) => type.id === application.leaveTypeId);
+  }
+
+  // Helper to get leave balance for selected type
+  function getLeaveBalance() {
+    return leaveBalances.find((balance: LeaveBalance) => balance.leaveTypeId === application.leaveTypeId);
+  }
+
+  // Save draft handler (mock)
+  async function handleSaveDraft() {
+    setLoading(true);
+    try {
+      // Simulate saving draft
+      await new Promise(resolve => setTimeout(resolve, 500));
+      console.log('Saving draft:', application);
+      // Show success message (could use toast)
+    } catch (error) {
+      console.error('Error saving draft:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   // Mock data
   const mockLeaveTypes: LeaveType[] = [
@@ -141,9 +165,19 @@ const LeaveApplication: React.FC = () => {
     fetchData();
   }, []);
 
+
   useEffect(() => {
-    calculateTotalDays();
-  }, [application.startDate, application.endDate]);
+    // Calculate total days whenever start or end date changes
+    if (application.start_date && application.end_date) {
+      const start = new Date(application.start_date);
+      const end = new Date(application.end_date);
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      setApplication((prev: any) => ({ ...prev, totalDays: diffDays }));
+    } else {
+      setApplication((prev: any) => ({ ...prev, totalDays: 0 }));
+    }
+  }, [application.start_date, application.end_date]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -159,150 +193,94 @@ const LeaveApplication: React.FC = () => {
     }
   };
 
-  const calculateTotalDays = () => {
-    if (application.startDate && application.endDate) {
-      const start = new Date(application.startDate);
-      const end = new Date(application.endDate);
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      
-      setApplication(prev => ({ ...prev, totalDays: diffDays }));
-    }
-  };
 
-  const validateForm = (): boolean => {
+  const validateForm = () => {
     const newErrors: Record<string, string> = {};
-
-    if (!application.leaveTypeId) {
-      newErrors.leaveTypeId = 'Please select a leave type';
+    if (!application.leave_type) {
+      newErrors.leave_type = 'Please select a leave type';
     }
-
-    if (!application.startDate) {
-      newErrors.startDate = 'Start date is required';
+    if (!application.start_date) {
+      newErrors.start_date = 'Start date is required';
     }
-
-    if (!application.endDate) {
-      newErrors.endDate = 'End date is required';
+    if (!application.end_date) {
+      newErrors.end_date = 'End date is required';
     }
-
-    if (application.startDate && application.endDate) {
-      const start = new Date(application.startDate);
-      const end = new Date(application.endDate);
-      
+    if (application.start_date && application.end_date) {
+      const start = new Date(application.start_date);
+      const end = new Date(application.end_date);
       if (end < start) {
-        newErrors.endDate = 'End date must be after start date';
-      }
-
-      // Check advance notice
-      const selectedLeaveType = leaveTypes.find(lt => lt.id === application.leaveTypeId);
-      if (selectedLeaveType) {
-        const today = new Date();
-        const daysDiff = Math.ceil((start.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        
-        if (daysDiff < selectedLeaveType.advanceNotice) {
-          newErrors.startDate = `This leave type requires ${selectedLeaveType.advanceNotice} days advance notice`;
-        }
+        newErrors.end_date = 'End date must be after start date';
       }
     }
-
     if (!application.reason.trim()) {
       newErrors.reason = 'Reason is required';
     }
-
-    if (!application.emergencyContact.trim()) {
-      newErrors.emergencyContact = 'Emergency contact is required';
-    }
-
-    if (!application.emergencyPhone.trim()) {
-      newErrors.emergencyPhone = 'Emergency phone is required';
-    }
-
-    // Check leave balance
-    if (application.leaveTypeId && application.totalDays > 0) {
-      const balance = leaveBalances.find(lb => lb.leaveTypeId === application.leaveTypeId);
-      if (balance && application.totalDays > balance.remainingDays) {
-        newErrors.totalDays = `Insufficient leave balance. Available: ${balance.remainingDays} days`;
-      }
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSaveDraft = async () => {
-    setLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Saving draft:', application);
-      // Show success message
-    } catch (error) {
-      console.error('Error saving draft:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSubmit = async () => {
     if (!validateForm()) return;
-
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Submitting application:', { ...application, status: 'submitted' });
-      
-      // Reset form after successful submission
-      setApplication({
-        leaveTypeId: '',
-        startDate: '',
-        endDate: '',
-        totalDays: 0,
-        reason: '',
-        emergencyContact: '',
-        emergencyPhone: '',
-        handoverNotes: '',
-        attachments: [],
-        status: 'draft'
+      const formData = new FormData();
+      formData.append('employee_id', String(application.employee_id));
+      formData.append('leave_type', application.leave_type);
+      formData.append('start_date', application.start_date);
+      formData.append('end_date', application.end_date);
+      formData.append('half_day_session', application.half_day_session);
+      formData.append('reason', application.reason);
+      if (application.attachment) {
+        formData.append('attachment', application.attachment);
+      }
+      const response = await fetch('http://192.168.1.132:8000/api/leave/leave-requests/', {
+        method: 'POST',
+        body: formData
       });
-      
-      // Navigate to history or show success message
+      if (!response.ok) throw new Error('Failed to submit leave request');
+      setApplication({
+        employee_id: 1,
+        leave_type: '',
+        start_date: '',
+        end_date: '',
+        half_day_session: 'FULL_DAY',
+        reason: '',
+        attachment: null,
+        attachments: [],
+        totalDays: 0
+      });
       navigate('/leave/history');
     } catch (error) {
-      console.error('Error submitting application:', error);
+      console.error('Error submitting leave request:', error);
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    setApplication(prev => ({
+    setApplication((prev: any) => ({
       ...prev,
       attachments: [...(prev.attachments || []), ...files]
     }));
   };
 
+
   const removeAttachment = (index: number) => {
-    setApplication(prev => ({
+    setApplication((prev: any) => ({
       ...prev,
-      attachments: prev.attachments?.filter((_, i) => i !== index) || []
+      attachments: prev.attachments?.filter((_: any, i: number) => i !== index) || []
     }));
   };
 
-  const getSelectedLeaveType = () => {
-    return leaveTypes.find(lt => lt.id === application.leaveTypeId);
-  };
-
-  const getLeaveBalance = () => {
-    return leaveBalances.find(lb => lb.leaveTypeId === application.leaveTypeId);
-  };
+  // No longer needed: getSelectedLeaveType, getLeaveBalance
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+  <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       
-      <div className="flex-1 overflow-hidden">
+  <div className="flex-1 overflow-auto">
         {/* Header */}
         <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between">
@@ -376,31 +354,19 @@ const LeaveApplication: React.FC = () => {
                     Leave Type *
                   </label>
                   <select
-                    value={application.leaveTypeId}
-                    onChange={(e) => setApplication({ ...application, leaveTypeId: e.target.value })}
+                    value={application.leave_type}
+                    onChange={(e) => setApplication((prev: any) => ({ ...prev, leave_type: e.target.value }))}
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${
-                      errors.leaveTypeId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                      errors.leave_type ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                     }`}
                   >
                     <option value="">Select leave type</option>
-                    {leaveTypes.map(type => (
-                      <option key={type.id} value={type.id}>{type.name}</option>
-                    ))}
+                    <option value="SICK">Sick Leave</option>
+                    <option value="CASUAL">Casual Leave</option>
+                    <option value="COMP_OFF">Comp Off</option>
                   </select>
-                  {errors.leaveTypeId && (
-                    <p className="mt-1 text-sm text-red-600">{errors.leaveTypeId}</p>
-                  )}
-                  {getSelectedLeaveType() && (
-                    <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <p className="text-sm text-blue-800 dark:text-blue-200">
-                        {getSelectedLeaveType()?.description}
-                      </p>
-                      {getSelectedLeaveType()?.advanceNotice > 0 && (
-                        <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                          Requires {getSelectedLeaveType()?.advanceNotice} days advance notice
-                        </p>
-                      )}
-                    </div>
+                  {errors.leave_type && (
+                    <p className="mt-1 text-sm text-red-600">{errors.leave_type}</p>
                   )}
                 </div>
 
@@ -414,8 +380,8 @@ const LeaveApplication: React.FC = () => {
                       <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input
                         type="date"
-                        value={application.startDate}
-                        onChange={(e) => setApplication({ ...application, startDate: e.target.value })}
+                        value={application.start_date}
+                        onChange={(e) => setApplication((prev: any) => ({ ...prev, start_date: e.target.value }))}
                         className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${
                           errors.startDate ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                         }`}
@@ -434,8 +400,8 @@ const LeaveApplication: React.FC = () => {
                       <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input
                         type="date"
-                        value={application.endDate}
-                        onChange={(e) => setApplication({ ...application, endDate: e.target.value })}
+                        value={application.end_date}
+                        onChange={(e) => setApplication((prev: any) => ({ ...prev, end_date: e.target.value }))}
                         className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${
                           errors.endDate ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                         }`}
@@ -476,7 +442,7 @@ const LeaveApplication: React.FC = () => {
                   </label>
                   <textarea
                     value={application.reason}
-                    onChange={(e) => setApplication({ ...application, reason: e.target.value })}
+                    onChange={(e) => setApplication((prev: any) => ({ ...prev, reason: e.target.value }))}
                     rows={4}
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${
                       errors.reason ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
@@ -488,61 +454,25 @@ const LeaveApplication: React.FC = () => {
                   )}
                 </div>
 
-                {/* Emergency Contact */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Emergency Contact Name *
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input
-                        type="text"
-                        value={application.emergencyContact}
-                        onChange={(e) => setApplication({ ...application, emergencyContact: e.target.value })}
-                        className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${
-                          errors.emergencyContact ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                        }`}
-                        placeholder="Emergency contact name"
-                      />
-                    </div>
-                    {errors.emergencyContact && (
-                      <p className="mt-1 text-sm text-red-600">{errors.emergencyContact}</p>
-                    )}
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Emergency Contact Phone *
-                    </label>
-                    <input
-                      type="tel"
-                      value={application.emergencyPhone}
-                      onChange={(e) => setApplication({ ...application, emergencyPhone: e.target.value })}
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${
-                        errors.emergencyPhone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                      }`}
-                      placeholder="Emergency contact phone"
-                    />
-                    {errors.emergencyPhone && (
-                      <p className="mt-1 text-sm text-red-600">{errors.emergencyPhone}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Handover Notes */}
+                {/* Leave Day Type */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Work Handover Notes
+                    Leave Day Type
                   </label>
-                  <textarea
-                    value={application.handoverNotes}
-                    onChange={(e) => setApplication({ ...application, handoverNotes: e.target.value })}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                    placeholder="Describe any work handover arrangements or important tasks to be covered..."
-                  />
+                  <select
+                    value={application.half_day_session}
+                    onChange={(e) => setApplication((prev: any) => ({ ...prev, half_day_session: e.target.value }))}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600"
+                  >
+                    <option value="FULL_DAY">Full Day</option>
+                    <option value="FIRST_HALF">First Half</option>
+                    <option value="SECOND_HALF">Second Half</option>
+                  </select>
                 </div>
+
+
+                {/* No Work Handover Notes field */}
 
                 {/* File Attachments */}
                 <div>
@@ -574,7 +504,7 @@ const LeaveApplication: React.FC = () => {
                     
                     {application.attachments && application.attachments.length > 0 && (
                       <div className="mt-4 space-y-2">
-                        {application.attachments.map((file, index) => (
+                        {application.attachments.map((file: File, index: number) => (
                           <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                             <div className="flex items-center space-x-2">
                               <FileText className="w-4 h-4 text-gray-500" />

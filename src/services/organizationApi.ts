@@ -311,7 +311,7 @@ export const organizationAPI = {
   createOrganization: async (
     data: CreateOrganizationData
   ): Promise<AxiosResponse<Organization>> => {
-    const url = `http://192.168.1.132:8000/api/organizations/create/`;
+  const url = `http://192.168.1.132:8000/api/organizations/`;
     console.log("🏢 API - Creating organization at:", url);
     console.log("📝 API - Organization data:", data);
 
@@ -697,8 +697,6 @@ export const organizationAPI = {
 
     return {
       data: mockManagers,
-      message: "Reporting managers fetched successfully",
-      success: true,
     };
   },
 };
