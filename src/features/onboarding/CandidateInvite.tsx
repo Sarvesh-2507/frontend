@@ -23,13 +23,13 @@ interface CandidateWithUIProps extends CandidateProfile {
 const CandidateInvite: React.FC = () => {
   // Form states
   const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
-    email: "",
-    position: "",
-    joining_date: "",
-    organization: 0,
-    organization_name_for_email: ""
+  first_name: "",
+  last_name: "",
+  email: "",
+  phone_number: "",
+  joining_date: "",
+  organization: 0,
+  organization_name_for_email: ""
   });
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
@@ -140,7 +140,7 @@ const CandidateInvite: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.first_name || !formData.last_name || !formData.email || !formData.organization) {
+    if (!formData.first_name || !formData.last_name || !formData.email || !formData.organization || !formData.phone_number) {
       setError("Please fill in all required fields");
       return;
     }
@@ -159,7 +159,7 @@ const CandidateInvite: React.FC = () => {
         email: formData.email,
         organization: formData.organization,
         organization_name_for_email: formData.organization_name_for_email || undefined,
-        position: formData.position || undefined,
+        phone_number: formData.phone_number,
         joining_date: formData.joining_date || undefined
       };
       
@@ -170,7 +170,7 @@ const CandidateInvite: React.FC = () => {
         first_name: "",
         last_name: "",
         email: "",
-        position: "",
+        phone_number: "",
         joining_date: "",
         organization: 0,
         organization_name_for_email: ""
@@ -238,12 +238,11 @@ const CandidateInvite: React.FC = () => {
 
   const [showModal, setShowModal] = useState(false);
   const [newCandidate, setNewCandidate] = useState<Partial<CandidateProfile>>({
-    first_name: "",
-    last_name: "",
-    email: "",
-    phone_number: "",
-    position: "",
-    department: ""
+  first_name: "",
+  last_name: "",
+  email: "",
+  phone_number: "",
+  department: ""
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<"all" | "pending" | "invited" | "accepted" | "expired">("all");
@@ -263,7 +262,8 @@ const CandidateInvite: React.FC = () => {
         first_name: candidate.first_name,
         last_name: candidate.last_name,
         email: candidate.email,
-        position: candidate.position,
+        phone_number: candidate.phone_number,
+        organization: (candidate as any).organization || formData.organization || 0,
         joining_date: candidate.joining_date
       };
       
@@ -307,7 +307,8 @@ const CandidateInvite: React.FC = () => {
         first_name: candidate.first_name,
         last_name: candidate.last_name,
         email: candidate.email,
-        position: candidate.position,
+        phone_number: candidate.phone_number,
+        organization: (candidate as any).organization || formData.organization || 0,
         joining_date: candidate.joining_date
       };
       
@@ -703,16 +704,16 @@ const CandidateInvite: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <label htmlFor="position" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Position (Optional)
+                  <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Phone Number
                   </label>
                   <input
-                    id="position"
-                    name="position"
-                    type="text"
-                    placeholder="Software Engineer"
+                    id="phone_number"
+                    name="phone_number"
+                    type="tel"
+                    placeholder="555-123-4567"
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    value={formData.position}
+                    value={formData.phone_number}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -1091,16 +1092,16 @@ const CandidateInvite: React.FC = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="position" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Position
+                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Phone Number
                     </label>
                     <input
-                      type="text"
-                      id="position"
+                      type="tel"
+                      id="phoneNumber"
                       className="block w-full mt-1 border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      placeholder="Software Engineer"
-                      value={newCandidate.position}
-                      onChange={(e) => setNewCandidate({...newCandidate, position: e.target.value})}
+                      placeholder="555-123-4567"
+                      value={newCandidate.phone_number}
+                      onChange={(e) => setNewCandidate({...newCandidate, phone_number: e.target.value})}
                     />
                   </div>
                   

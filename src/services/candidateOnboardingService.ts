@@ -27,9 +27,9 @@ export interface SendInvitePayload {
   first_name: string;
   last_name: string;
   email: string;
+  phone_number: string;
   organization: number;
   organization_name_for_email?: string;
-  position?: string;
   joining_date?: string;
 }
 
