@@ -19,22 +19,27 @@ import {
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 
+// Use the backend structure for leave application
 interface LeaveApplication {
-  id: string;
-  leaveType: string;
-  startDate: string;
-  endDate: string;
-  totalDays: number;
+  id: number;
+  employee_id: number;
+  leave_type: string;
+  leave_type_display: string;
+  start_date: string;
+  end_date: string;
+  half_day_session: string;
+  half_day_session_display: string;
   reason: string;
-  status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'cancelled';
-  appliedDate: string;
-  approvedBy?: string;
-  approvedDate?: string;
-  rejectionReason?: string;
-  emergencyContact: string;
-  emergencyPhone: string;
-  handoverNotes?: string;
-  attachments?: string[];
+  attachment?: string;
+  status: string;
+  status_display: string;
+  rejection_reason?: string;
+  total_days: string;
+  approved_by_tl?: number;
+  approved_by_hr?: number;
+  created_at: string;
+  updated_at: string;
+  logs?: any[];
 }
 
 const LeaveApplicationHistory: React.FC = () => {
@@ -67,77 +72,7 @@ const LeaveApplicationHistory: React.FC = () => {
     { value: 'last-year', label: 'Last Year' }
   ];
 
-  // Mock data
-  const mockApplications: LeaveApplication[] = [
-    {
-      id: '1',
-      leaveType: 'Annual Leave',
-      startDate: '2024-02-15',
-      endDate: '2024-02-19',
-      totalDays: 5,
-      reason: 'Family vacation',
-      status: 'approved',
-      appliedDate: '2024-01-20',
-      approvedBy: 'John Manager',
-      approvedDate: '2024-01-22',
-      emergencyContact: 'Jane Doe',
-      emergencyPhone: '+1234567890',
-      handoverNotes: 'All tasks delegated to team members',
-      attachments: ['vacation-itinerary.pdf']
-    },
-    {
-      id: '2',
-      leaveType: 'Sick Leave',
-      startDate: '2024-01-10',
-      endDate: '2024-01-12',
-      totalDays: 3,
-      reason: 'Medical treatment',
-      status: 'approved',
-      appliedDate: '2024-01-09',
-      approvedBy: 'HR Department',
-      approvedDate: '2024-01-09',
-      emergencyContact: 'John Smith',
-      emergencyPhone: '+1234567891',
-      attachments: ['medical-certificate.pdf']
-    },
-    {
-      id: '3',
-      leaveType: 'Personal Leave',
-      startDate: '2024-03-01',
-      endDate: '2024-03-01',
-      totalDays: 1,
-      reason: 'Personal appointment',
-      status: 'submitted',
-      appliedDate: '2024-02-20',
-      emergencyContact: 'Jane Doe',
-      emergencyPhone: '+1234567890'
-    },
-    {
-      id: '4',
-      leaveType: 'Annual Leave',
-      startDate: '2023-12-25',
-      endDate: '2023-12-29',
-      totalDays: 5,
-      reason: 'Christmas holidays',
-      status: 'rejected',
-      appliedDate: '2023-12-15',
-      rejectionReason: 'Insufficient advance notice during peak season',
-      emergencyContact: 'Emergency Contact',
-      emergencyPhone: '+1234567892'
-    },
-    {
-      id: '5',
-      leaveType: 'Annual Leave',
-      startDate: '2024-04-15',
-      endDate: '2024-04-19',
-      totalDays: 5,
-      reason: 'Spring break vacation',
-      status: 'draft',
-      appliedDate: '2024-02-25',
-      emergencyContact: 'Jane Doe',
-      emergencyPhone: '+1234567890'
-    }
-  ];
+
 
   useEffect(() => {
     fetchApplications();
@@ -150,11 +85,11 @@ const LeaveApplicationHistory: React.FC = () => {
   const fetchApplications = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setApplications(mockApplications);
+      const response = await fetch('http://192.168.1.132:8000/api/leave/leave-requests/');
+      const data = await response.json();
+      setApplications(Array.isArray(data.results) ? data.results : []);
     } catch (error) {
-      console.error('Error fetching applications:', error);
+      console.error('Error fetching leave applications:', error);
     } finally {
       setLoading(false);
     }
@@ -166,7 +101,7 @@ const LeaveApplicationHistory: React.FC = () => {
     // Search filter
     if (searchTerm) {
       filtered = filtered.filter(app =>
-        app.leaveType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  app.leave_type_display?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         app.reason.toLowerCase().includes(searchTerm.toLowerCase()) ||
         app.status.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -184,7 +119,7 @@ const LeaveApplicationHistory: React.FC = () => {
       const currentMonth = now.getMonth();
 
       filtered = filtered.filter(app => {
-        const appDate = new Date(app.appliedDate);
+  const appDate = new Date(app.created_at);
         
         switch (dateFilter) {
           case 'this-month':
@@ -243,7 +178,7 @@ const LeaveApplicationHistory: React.FC = () => {
       try {
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 500));
-        setApplications(prev => prev.filter(app => app.id !== applicationId));
+  setApplications(prev => prev.filter(app => app.id !== Number(applicationId)));
       } catch (error) {
         console.error('Error deleting application:', error);
       }
@@ -253,7 +188,7 @@ const LeaveApplicationHistory: React.FC = () => {
   const exportToCSV = () => {
     const csvContent = `Leave Type,Start Date,End Date,Total Days,Status,Applied Date,Reason
 ${filteredApplications.map(app => 
-  `${app.leaveType},${app.startDate},${app.endDate},${app.totalDays},${app.status},${app.appliedDate},"${app.reason}"`
+  `${app.leave_type_display},${app.start_date},${app.end_date},${app.total_days},${app.status_display},${app.created_at},"${app.reason}"`
 ).join('\n')}`;
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -425,7 +360,7 @@ ${filteredApplications.map(app =>
                           <td className="px-6 py-4">
                             <div>
                               <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                {application.leaveType}
+                                {application.leave_type_display}
                               </div>
                               <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">
                                 {application.reason}
@@ -434,11 +369,11 @@ ${filteredApplications.map(app =>
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-sm text-gray-900 dark:text-white">
-                              {new Date(application.startDate).toLocaleDateString()} - {new Date(application.endDate).toLocaleDateString()}
+                              {new Date(application.start_date).toLocaleDateString()} - {new Date(application.end_date).toLocaleDateString()}
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                            {application.totalDays}
+                            {application.total_days}
                           </td>
                           <td className="px-6 py-4">
                             <span className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
@@ -447,7 +382,7 @@ ${filteredApplications.map(app =>
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                            {new Date(application.appliedDate).toLocaleDateString()}
+                            {new Date(application.created_at).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-2">
@@ -460,7 +395,7 @@ ${filteredApplications.map(app =>
                               </button>
                               {(application.status === 'draft' || application.status === 'submitted') && (
                                 <button
-                                  onClick={() => handleEditApplication(application.id)}
+                                  onClick={() => handleEditApplication(application.id.toString())}
                                   className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
                                   title="Edit"
                                 >
@@ -469,7 +404,7 @@ ${filteredApplications.map(app =>
                               )}
                               {application.status === 'draft' && (
                                 <button
-                                  onClick={() => handleDeleteApplication(application.id)}
+                                  onClick={() => handleDeleteApplication(application.id.toString())}
                                   className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
                                   title="Delete"
                                 >
@@ -513,7 +448,7 @@ ${filteredApplications.map(app =>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Leave Type</label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedApplication.leaveType}</p>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedApplication.leave_type_display}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
@@ -524,19 +459,19 @@ ${filteredApplications.map(app =>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{new Date(selectedApplication.startDate).toLocaleDateString()}</p>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{new Date(selectedApplication.start_date).toLocaleDateString()}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{new Date(selectedApplication.endDate).toLocaleDateString()}</p>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{new Date(selectedApplication.end_date).toLocaleDateString()}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Total Days</label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedApplication.totalDays}</p>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedApplication.total_days}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Applied Date</label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{new Date(selectedApplication.appliedDate).toLocaleDateString()}</p>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{new Date(selectedApplication.created_at).toLocaleDateString()}</p>
                 </div>
               </div>
               
@@ -545,56 +480,21 @@ ${filteredApplications.map(app =>
                 <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedApplication.reason}</p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Emergency Contact</label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedApplication.emergencyContact}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Emergency Phone</label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedApplication.emergencyPhone}</p>
-                </div>
-              </div>
-              
-              {selectedApplication.handoverNotes && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Handover Notes</label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedApplication.handoverNotes}</p>
-                </div>
-              )}
-              
-              {selectedApplication.approvedBy && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Approved By</label>
-                    <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedApplication.approvedBy}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Approved Date</label>
-                    <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                      {selectedApplication.approvedDate ? new Date(selectedApplication.approvedDate).toLocaleDateString() : 'N/A'}
-                    </p>
-                  </div>
-                </div>
-              )}
-              
-              {selectedApplication.rejectionReason && (
+              {/* Emergency Contact, Emergency Phone, Handover Notes, Approved By, Approved Date are not present in backend structure */}
+              {selectedApplication.rejection_reason && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Rejection Reason</label>
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{selectedApplication.rejectionReason}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{selectedApplication.rejection_reason}</p>
                 </div>
               )}
-              
-              {selectedApplication.attachments && selectedApplication.attachments.length > 0 && (
+              {selectedApplication.attachment && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Attachments</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Attachment</label>
                   <div className="mt-1 space-y-1">
-                    {selectedApplication.attachments.map((attachment, index) => (
-                      <div key={index} className="flex items-center space-x-2 text-sm text-blue-600 dark:text-blue-400">
-                        <FileText className="w-4 h-4" />
-                        <span>{attachment}</span>
-                      </div>
-                    ))}
+                    <div className="flex items-center space-x-2 text-sm text-blue-600 dark:text-blue-400">
+                      <FileText className="w-4 h-4" />
+                      <a href={selectedApplication.attachment} target="_blank" rel="noopener noreferrer">{selectedApplication.attachment}</a>
+                    </div>
                   </div>
                 </div>
               )}
@@ -611,7 +511,7 @@ ${filteredApplications.map(app =>
                 <button
                   onClick={() => {
                     setShowDetailsModal(false);
-                    handleEditApplication(selectedApplication.id);
+                    handleEditApplication(selectedApplication.id.toString());
                   }}
                   className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
