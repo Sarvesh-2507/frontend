@@ -139,7 +139,7 @@ const CandidateDocumentManager: React.FC = () => {
         }
 
         console.log("🔍 Refreshing candidates from backend...");
-        const response = await fetch(`http://192.168.1.132:8000/api/profiles/api/candidate-onboarding/candidate_status`, {
+        const response = await fetch(`http://192.168.1.132:8000/api/onboarding/candidates/`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
