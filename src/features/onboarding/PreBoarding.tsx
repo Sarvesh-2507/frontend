@@ -59,21 +59,13 @@ const PreBoarding: React.FC = () => {
           name: "Residential Proof",
           type: "Address Proof",
           status: "verified",
-          uploadedAt: "2025-08-10T10:35:00",
-          verifiedAt: "2025-08-12T14:25:00"
+          uploadedAt: "2025-08-10T10:35:00"
         },
         {
           id: "d3",
-          name: "Bachelor's Degree",
-          type: "Educational Certificates",
-          status: "uploaded",
-          uploadedAt: "2025-08-10T10:40:00"
-        },
-        {
-          id: "d4",
-          name: "Previous Job Offer",
+          name: "Offer Letter",
           type: "Previous Employment Documents",
-          status: "rejected",
+          status: "pending",
           uploadedAt: "2025-08-10T10:45:00",
           comments: "Document is incomplete. Please upload the complete offer letter."
         },

@@ -214,7 +214,7 @@ const HomePage: React.FC = () => {
               scale: 1.005,
               boxShadow: "0 10px 30px rgba(59, 130, 246, 0.2)"
             }}
-            className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 dark:from-blue-700 dark:via-blue-800 dark:to-blue-900 rounded-xl p-4 sm:p-6 lg:p-8 text-white relative overflow-hidden cursor-pointer"
+            className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 dark:from-blue-700 dark:via-blue-800 dark:to-blue-900 rounded-xl p-2 sm:p-3 lg:p-4 text-white relative overflow-hidden cursor-pointer w-full md:w-full"
           >
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
@@ -234,7 +234,7 @@ const HomePage: React.FC = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2, duration: 0.6 }}
-                  className="text-responsive-xl font-bold mb-2"
+                  className="text-lg font-bold mb-1"
                 >
                   Welcome to MH-HR, Tamil
                 </motion.h1>
@@ -242,21 +242,29 @@ const HomePage: React.FC = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.4, duration: 0.6 }}
-                  className="text-blue-100 text-responsive-base"
+                  className="text-blue-100 text-sm"
                 >
                   Hope you are having a great day.
                 </motion.p>
               </div>
-              <div className="text-right">
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3, duration: 0.6 }}
-                  className="text-blue-100"
-                >
-                  <div className="text-sm font-medium">{getCurrentDateTime()}</div>
-                  <div className="text-xs mt-1">Last punch: {lastPunchTime}</div>
-                </motion.div>
+              <div className="flex items-center gap-6">
+                <div className="text-right">
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3, duration: 0.6 }}
+                    className="text-blue-100"
+                  >
+                    <div className="text-sm font-medium">{getCurrentDateTime()}</div>
+                    <div className="text-xs mt-1">Last punch: {lastPunchTime}</div>
+                  </motion.div>
+                </div>
+                <div className="flex-shrink-0">
+                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg">
+                    {/* Replace with actual avatar image if available */}
+                    <span className="text-blue-600 text-2xl font-bold">T</span>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>

@@ -148,6 +148,8 @@ const LeaveApplicationForm: React.FC<{ user: User; onBack: () => void; onSuccess
               onChange={(e) => setFormData({ ...formData, attachment: e.target.files?.[0] || null })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+              placeholder="Upload supporting document"
+              title="Upload supporting document"
             />
             <p className="text-xs text-gray-500 mt-1">Accepted formats: PDF, JPG, PNG, DOC, DOCX</p>
           </div>
