@@ -34,10 +34,16 @@ export interface ActionLog {
 }
 
 export interface LeaveBalance {
+  id: number;
+  employee: User;
   leave_type: string;
-  used: number;
-  total: number;
-  remaining: number;
+  leave_type_display: string;
+  year: number;
+  total_allocated: number | string;
+  used: number | string;
+  pending: number | string;
+  carried_forward: number | string;
+  available: number | string;
 }
 
 export interface Holiday {

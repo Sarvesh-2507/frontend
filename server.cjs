@@ -119,7 +119,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Login endpoint
-  if (pathname === '/api/login' && method === 'POST') {
+  if (pathname === '/api/login/' && method === 'POST') {
     const body = await parseBody(req);
     const { email, password } = body;
 
@@ -154,7 +154,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Register endpoint
-  if (pathname === '/api/register' && method === 'POST') {
+  if (pathname === '/api/register/' && method === 'POST') {
     const body = await parseBody(req);
     const { email, username, password } = body;
 
@@ -204,7 +204,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Refresh token endpoint
-  if (pathname === '/api/refresh' && method === 'POST') {
+  if (pathname === '/api/refresh/' && method === 'POST') {
     const body = await parseBody(req);
     const { refresh } = body;
 
@@ -243,7 +243,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Logout endpoint
-  if (pathname === '/api/logout' && method === 'POST') {
+  if (pathname === '/api/logout/' && method === 'POST') {
     return sendJSON(res, 200, {
       success: true,
       message: 'Logged out successfully'
@@ -251,7 +251,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Forgot password endpoint
-  if (pathname === '/api/forgot-password' && method === 'POST') {
+  if (pathname === '/api/forgot-password/' && method === 'POST') {
     const body = await parseBody(req);
     const { email } = body;
 

@@ -6,7 +6,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
+.marscode/
+.playwright/
 node_modules
 dist
 dist-ssr
@@ -22,7 +23,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
+easwar/
 # Duplicate/temporary files in the onboarding feature
 src/features/onboarding/CandidateUploads.clean.tsx
 src/features/onboarding/CandidateUploads.final.tsx

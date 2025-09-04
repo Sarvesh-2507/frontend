@@ -9,26 +9,9 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-const MOCK_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...';
-const MOCK_USERS = {
-  employee: { id: 1, username: 'john.doe', email: 'john@company.com', role: 'employee' as const, first_name: 'John', last_name: 'Doe' },
-  manager: { id: 2, username: 'jane.manager', email: 'jane@company.com', role: 'manager' as const, first_name: 'Jane', last_name: 'Manager' },
-  hr: { id: 3, username: 'hr.admin', email: 'hr@company.com', role: 'hr' as const, first_name: 'HR', last_name: 'Admin' }
-};
-
 class ApiService {
   private setAuthHeader(token: string) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  }
-
-  mockLogin(role: 'employee' | 'manager' | 'hr'): Promise<{ user: User; token: string }> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const user = MOCK_USERS[role];
-        this.setAuthHeader(MOCK_TOKEN);
-        resolve({ user, token: MOCK_TOKEN });
-      }, 500);
-    });
   }
 
   async getLeaveRequests(): Promise<LeaveRequest[]> {
@@ -36,7 +19,11 @@ class ApiService {
     return response.data;
   }
 
-  async createLeaveRequest(data: any): Promise<LeaveRequest> {
+  async createLeaveRequest(data: any, token?: string): Promise<LeaveRequest> {
+    if (!token) {
+      throw new Error('Authentication token required for leave request');
+    }
+    this.setAuthHeader(token);
     const response = await api.post('/leave/leave-requests/', data);
     return response.data;
   }
@@ -71,8 +58,14 @@ class ApiService {
     await api.patch(`/leave/leave-requests/${id}/hr_reject/`, { rejection_reason });
   }
 
-  async getLeaveBalances(): Promise<LeaveBalance[]> {
-    const response = await api.get('/leave-balances/');
+  async getLeaveBalances(id: number, token?: string): Promise<LeaveBalance[]> {
+    // Always set the token if provided, else throw error
+    if (!token) {
+      throw new Error('Authentication token required for leave balance requests');
+    }
+    this.setAuthHeader(token);
+    // Use employeeId in the endpoint as per backend spec
+    const response = await api.get(`/leave/leave-balances/${id}/`);
     return response.data;
   }
 
