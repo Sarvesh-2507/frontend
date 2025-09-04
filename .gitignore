@@ -35,3 +35,15 @@ src/features/onboarding/clean-CandidateUploads.tsx
 src/features/onboarding/CandidateUploads.tsx
 .bat
 .md
+
+# History and version control files
+.history/
+.vscode/history/
+src/versions/v1.*/
+src/versions/v2.0.*/
+
+# Temporary and backup files
+*.backup
+*.bak
+*.tmp
+*~
