@@ -20,6 +20,7 @@ import BackButton from "../../components/ui/BackButton";
 import { getApiUrl } from "../../config";
 import { apiService } from "../../services/leaveApi";
 import { LeaveBalance } from "../../types/leave";
+import { useAuthStore } from "../../context/authStore";
 
 interface LeaveType {
   id: string;
@@ -46,7 +47,7 @@ const LeaveApplication: React.FC = () => {
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [leaveBalances, setLeaveBalances] = useState<LeaveBalance[]>([]);
   const [application, setApplication] = useState<any>({
-    employee_id: 1, // TODO: Replace with real employee id
+    employee_id: null, // Will be set from logged-in user
     leave_type: "",
     start_date: "",
     end_date: "",
@@ -58,8 +59,10 @@ const LeaveApplication: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   const navigate = useNavigate();
+  const { getCurrentUser, isAuthenticated } = useAuthStore();
 
   // Save draft handler (mock)
   async function handleSaveDraft() {
@@ -85,10 +88,31 @@ const LeaveApplication: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
-      if (!token) throw new Error("No authentication token found");
+      const user = getCurrentUser();
+      
+      if (!token) {
+        console.error("No authentication token found");
+        navigate("/login");
+        return;
+      }
+
+      if (!user) {
+        console.error("No user data found");
+        navigate("/login");
+        return;
+      }
+
+      setCurrentUser(user);
+      
+      // Update application with logged-in user's employee_id
+      setApplication((prev: any) => ({
+        ...prev,
+        employee_id: parseInt(user.id)
+      }));
+
       // Fetch leave balance for the logged-in employee
       const balance = await apiService.getLeaveBalances(
-        application.employee_id,
+        parseInt(user.id),
         token
       );
       // If the response is a single object, wrap it in an array
@@ -163,10 +187,24 @@ const LeaveApplication: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
+    
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      console.error("No authentication token found");
+      navigate("/login");
+      return;
+    }
+
+    if (!currentUser) {
+      console.error("No user data found");
+      navigate("/login");
+      return;
+    }
+
     setLoading(true);
     try {
       const formData = new FormData();
-      formData.append("employee_id", String(application.employee_id));
+      formData.append("employee_id", String(parseInt(currentUser.id)));
       formData.append("leave_type", application.leave_type);
       formData.append("start_date", application.start_date);
       formData.append("end_date", application.end_date);
@@ -175,13 +213,22 @@ const LeaveApplication: React.FC = () => {
       if (application.attachment) {
         formData.append("attachment", application.attachment);
       }
+      
       const response = await fetch(getApiUrl("leave/leave-requests/"), {
         method: "POST",
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData,
       });
-      if (!response.ok) throw new Error("Failed to submit leave request");
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to submit leave request");
+      }
+      
       setApplication({
-        employee_id: 1,
+        employee_id: parseInt(currentUser.id),
         leave_type: "",
         start_date: "",
         end_date: "",
@@ -352,10 +399,11 @@ const LeaveApplication: React.FC = () => {
               <div className="space-y-6">
                 {/* Leave Type */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="leave-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Leave Type *
                   </label>
                   <select
+                    id="leave-type"
                     value={application.leave_type}
                     onChange={(e) =>
                       setApplication((prev: any) => ({
@@ -394,6 +442,8 @@ const LeaveApplication: React.FC = () => {
                         value={application.start_date}
                         onChange={handleStartDateChange}
                         min={new Date().toISOString().split("T")[0]}
+                        placeholder="Select start date"
+                        title="Select start date"
                         className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${
                           errors.start_date
                             ? "border-red-500"
@@ -427,6 +477,8 @@ const LeaveApplication: React.FC = () => {
                             ? "border-red-500"
                             : "border-gray-300 dark:border-gray-600"
                         }`}
+                        title="Select end date"
+                        placeholder="Select end date"
                       />
                     </div>
                     {errors.end_date && (
@@ -449,7 +501,7 @@ const LeaveApplication: React.FC = () => {
                       </div>
                       {getLeaveBalance() && (
                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                          Remaining balance: {getLeaveBalance()?.remainingDays}{" "}
+                          Remaining balance: {getLeaveBalance()?.available}{" "}
                           days
                         </div>
                       )}
@@ -490,10 +542,11 @@ const LeaveApplication: React.FC = () => {
 
                 {/* Leave Day Type */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="leave-day-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Leave Day Type
                   </label>
                   <select
+                    id="leave-day-type"
                     value={application.half_day_session}
                     onChange={(e) =>
                       setApplication((prev: any) => ({
@@ -529,6 +582,8 @@ const LeaveApplication: React.FC = () => {
                         className="hidden"
                         id="file-upload"
                         accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                        title="Upload supporting documents"
+                        placeholder="Choose files to upload"
                       />
                       <label
                         htmlFor="file-upload"
@@ -558,6 +613,8 @@ const LeaveApplication: React.FC = () => {
                                   </span>
                                 </div>
                                 <button
+                                  type="button"
+                                  title="Remove attachment"
                                   onClick={() => removeAttachment(index)}
                                   className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
                                 >

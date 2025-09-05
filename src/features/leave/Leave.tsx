@@ -502,7 +502,11 @@ const Leave: React.FC = () => {
                                 </button>
                               </>
                             )}
-                            <button className="p-1 text-blue-600 hover:text-blue-700 dark:text-blue-400">
+                            <button
+                              className="p-1 text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                              aria-label="View leave request"
+                              title="View leave request"
+                            >
                               <Eye className="w-4 h-4" />
                             </button>
                           </div>

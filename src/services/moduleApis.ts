@@ -5,10 +5,18 @@ import { getApiUrl } from "../config";
 const API_BASE_URL = getApiUrl();
 
 // Common headers
-const getAuthHeaders = () => ({
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-});
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('accessToken');
+  const headers: { [key: string]: string } = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
+};
 
 // Types
 export interface Employee {

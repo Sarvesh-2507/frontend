@@ -86,11 +86,34 @@ const LeaveApplicationHistory: React.FC = () => {
   const fetchApplications = async () => {
     setLoading(true);
     try {
-      const response = await fetch(getApiUrl('leave/leave-requests'));
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.error('No authentication token found');
+        navigate('/login');
+        return;
+      }
+
+      const response = await fetch(getApiUrl('leave/leave-requests'), {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.error('Authentication failed');
+          navigate('/login');
+          return;
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
-      setApplications(Array.isArray(data.results) ? data.results : []);
+      setApplications(Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching leave applications:', error);
+      setApplications([]);
     } finally {
       setLoading(false);
     }

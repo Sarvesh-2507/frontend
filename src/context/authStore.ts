@@ -50,7 +50,17 @@ const setStoredTokens = (accessToken: string, refreshToken?: string) => {
 const clearStoredTokens = () => {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
-  localStorage.removeItem("user");
+  localStorage.removeItem("currentUser");
+};
+
+const getCurrentUser = () => {
+  try {
+    const userStr = localStorage.getItem("currentUser");
+    return userStr ? JSON.parse(userStr) : null;
+  } catch (error) {
+    console.error("Error parsing user data from localStorage:", error);
+    return null;
+  }
 };
 
 export const useAuthStore = create<AuthStore>()(
@@ -198,11 +208,12 @@ export const useAuthStore = create<AuthStore>()(
               error: null,
             });
 
-            // Store tokens in localStorage for API calls
+            // Store tokens and user data in localStorage for API calls
             localStorage.setItem("accessToken", tokens.access);
             if (tokens.refresh) {
               localStorage.setItem("refreshToken", tokens.refresh);
             }
+            localStorage.setItem("currentUser", JSON.stringify(user));
 
             toast.success("Login successful!");
           } else {
@@ -474,6 +485,36 @@ export const useAuthStore = create<AuthStore>()(
 
       setLoading: (loading: boolean) => {
         set({ isLoading: loading });
+      },
+
+      getCurrentUser: () => {
+        return getCurrentUser();
+      },
+
+      // Initialize store from localStorage
+      initializeFromStorage: () => {
+        const { accessToken, refreshToken } = getStoredTokens();
+        const user = getCurrentUser();
+        
+        if (accessToken && user) {
+          console.log("Auth Store - Initializing from localStorage");
+          set({
+            user,
+            tokens: { access: accessToken, refresh: refreshToken || "" },
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+          });
+        } else {
+          console.log("Auth Store - No valid localStorage data found");
+          set({
+            user: null,
+            tokens: null,
+            isAuthenticated: false,
+            isLoading: false,
+            error: null,
+          });
+        }
       },
     }),
     {

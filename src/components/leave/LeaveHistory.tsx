@@ -32,10 +32,21 @@ const LeaveHistory: React.FC<{ user: User; onBack: () => void }> = ({ user, onBa
   useEffect(() => {
     const fetchRequests = async () => {
       try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          showToast('Authentication token not found. Please login again.', 'error');
+          return;
+        }
+        
         const requests = await apiService.getLeaveRequests();
         setLeaveRequests(requests);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching leave requests:', error);
+        if (error?.response?.status === 401) {
+          showToast('Authentication failed. Please login again.', 'error');
+        } else {
+          showToast('Error fetching leave requests', 'error');
+        }
       } finally {
         setLoading(false);
       }
@@ -46,11 +57,22 @@ const LeaveHistory: React.FC<{ user: User; onBack: () => void }> = ({ user, onBa
   const handleCancel = async (id: number) => {
     if (window.confirm('Are you sure you want to cancel this leave request?')) {
       try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          showToast('Authentication token not found. Please login again.', 'error');
+          return;
+        }
+        
         await apiService.cancelLeaveRequest(id);
         setLeaveRequests(prev => prev.map(req => req.id === id ? { ...req, status: 'Cancelled' } : req));
         showToast('Leave request cancelled successfully', 'success');
-      } catch (error) {
-        showToast('Error cancelling leave request', 'error');
+      } catch (error: any) {
+        console.error('Error cancelling leave request:', error);
+        if (error?.response?.status === 401) {
+          showToast('Authentication failed. Please login again.', 'error');
+        } else {
+          showToast('Error cancelling leave request', 'error');
+        }
       }
     }
   };

@@ -45,6 +45,7 @@ import CandidateInvite from "./features/onboarding/CandidateInvite";
 import CandidateInvites from "./features/onboarding/CandidateInvites";
 import AssetAllocation from "./features/onboarding/AssetAllocation";
 // Employee Features
+import EmployeeProfile from "./components/EmployeeProfile";
 import EmployeeProfileModern from "./features/employee/EmployeeProfileModern";
 import EmployeeDirectory from "./features/employee/EmployeeDirectory";
 import ProfileManagement from "./features/employee/ProfileManagement";
@@ -106,7 +107,7 @@ import { AuthProvider } from "./auth/AuthProvider";
 import { useAuthStore } from "./context/authStore";
 
 const App: React.FC = () => {
-  const { isAuthenticated, refreshToken, checkSession } = useAuthStore();
+  const { isAuthenticated, refreshToken, checkSession, initializeFromStorage } = useAuthStore();
 
   // Apply theme
   useEffect(() => {
@@ -117,6 +118,12 @@ const App: React.FC = () => {
       document.documentElement.classList.remove("dark");
     }
   }, []);
+  
+  // Initialize auth store from localStorage on app start
+  useEffect(() => {
+    console.log("🚀 App - Initializing auth store from localStorage");
+    initializeFromStorage();
+  }, [initializeFromStorage]);
   
   // Set up API interceptor for token refresh
   useEffect(() => {
@@ -300,7 +307,7 @@ const App: React.FC = () => {
             path="/employee-profile"
             element={
               <ProtectedRoute>
-                <EmployeeProfileModern />
+                <EmployeeProfile />
               </ProtectedRoute>
             }
           />

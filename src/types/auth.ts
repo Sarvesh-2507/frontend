@@ -87,6 +87,8 @@ export interface AuthActions {
   clearError: () => void;
   setLoading: (loading: boolean) => void;
   checkSession: () => Promise<boolean>;
+  getCurrentUser: () => User | null;
+  initializeFromStorage: () => void;
 }
 
 export type AuthStore = AuthState & AuthActions;

@@ -7,11 +7,12 @@ import ErrorBoundary from './components/ErrorBoundary'
 import './style.css'
 
 createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+  // Temporarily disable StrictMode to prevent double API calls during development
+  // <React.StrictMode>
     <Provider store={store}>
       <ErrorBoundary>
         <App />
       </ErrorBoundary>
     </Provider>
-  </React.StrictMode>,
+  // </React.StrictMode>,
 )

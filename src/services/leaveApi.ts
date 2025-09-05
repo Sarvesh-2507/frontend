@@ -14,58 +14,83 @@ class ApiService {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   }
 
+  private getAuthHeader(): { [key: string]: string } {
+    const token = localStorage.getItem('accessToken');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  }
+
   async getLeaveRequests(): Promise<LeaveRequest[]> {
-    const response = await api.get('/leave/leave-requests/');
+    const response = await api.get('/leave/leave-requests/', {
+      headers: this.getAuthHeader()
+    });
     return response.data;
   }
 
   async createLeaveRequest(data: any, token?: string): Promise<LeaveRequest> {
-    if (!token) {
+    const authToken = token || localStorage.getItem('accessToken');
+    if (!authToken) {
       throw new Error('Authentication token required for leave request');
     }
-    this.setAuthHeader(token);
-    const response = await api.post('/leave/leave-requests/', data);
+    
+    const response = await api.post('/leave/leave-requests/', data, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
     return response.data;
   }
 
   async getTeamRequests(): Promise<LeaveRequest[]> {
-    const response = await api.get('/leave/leave-requests/my_team_requests/');
+    const response = await api.get('/leave/leave-requests/my_team_requests/', {
+      headers: this.getAuthHeader()
+    });
     return response.data;
   }
 
   async getPendingApprovals(): Promise<LeaveRequest[]> {
-    const response = await api.get('/leave/leave-requests/pending_approvals/');
+    const response = await api.get('/leave/leave-requests/pending_approvals/', {
+      headers: this.getAuthHeader()
+    });
     return response.data;
   }
 
   async cancelLeaveRequest(id: number): Promise<void> {
-    await api.patch(`/leave/leave-requests/${id}/cancel/`);
+    await api.patch(`/leave/leave-requests/${id}/cancel/`, {}, {
+      headers: this.getAuthHeader()
+    });
   }
 
   async tlApprove(id: number): Promise<void> {
-    await api.patch(`/leave/leave-requests/${id}/tl_approve/`);
+    await api.patch(`/leave/leave-requests/${id}/tl_approve/`, {}, {
+      headers: this.getAuthHeader()
+    });
   }
 
   async tlReject(id: number, rejection_reason: string): Promise<void> {
-    await api.patch(`/leave/leave-requests/${id}/tl_reject/`, { rejection_reason });
+    await api.patch(`/leave/leave-requests/${id}/tl_reject/`, { rejection_reason }, {
+      headers: this.getAuthHeader()
+    });
   }
 
   async hrApprove(id: number): Promise<void> {
-    await api.patch(`/leave/leave-requests/${id}/hr_approve/`);
+    await api.patch(`/leave/leave-requests/${id}/hr_approve/`, {}, {
+      headers: this.getAuthHeader()
+    });
   }
 
   async hrReject(id: number, rejection_reason: string): Promise<void> {
-    await api.patch(`/leave/leave-requests/${id}/hr_reject/`, { rejection_reason });
+    await api.patch(`/leave/leave-requests/${id}/hr_reject/`, { rejection_reason }, {
+      headers: this.getAuthHeader()
+    });
   }
 
   async getLeaveBalances(id: number, token?: string): Promise<LeaveBalance[]> {
-    // Always set the token if provided, else throw error
-    if (!token) {
+    const authToken = token || localStorage.getItem('accessToken');
+    if (!authToken) {
       throw new Error('Authentication token required for leave balance requests');
     }
-    this.setAuthHeader(token);
-    // Use employeeId in the endpoint as per backend spec
-    const response = await api.get(`/leave/leave-balances/${id}/`);
+    
+    const response = await api.get(`/leave/leave-balances/${id}/`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
     return response.data;
   }
 

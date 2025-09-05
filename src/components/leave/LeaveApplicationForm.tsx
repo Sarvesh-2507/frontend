@@ -47,6 +47,12 @@ const LeaveApplicationForm: React.FC<{ user: User; onBack: () => void; onSuccess
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        showToast('Authentication token not found. Please login again.', 'error');
+        return;
+      }
+
       const requestData = {
         employee_id: user.id,
         leave_type: formData.leave_type,
@@ -56,14 +62,15 @@ const LeaveApplicationForm: React.FC<{ user: User; onBack: () => void; onSuccess
                          formData.half_day_option === 'First Half' ? 'FIRST_HALF' : 'SECOND_HALF',
         reason: formData.reason
       };
-      await apiService.createLeaveRequest(requestData);
+      await apiService.createLeaveRequest(requestData, token);
       showToast('Leave request submitted successfully!', 'success');
       setTimeout(() => {
         onSuccess();
         onBack();
       }, 2000);
-    } catch (error) {
-      showToast('Error submitting leave request. Please try again.', 'error');
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || 'Error submitting leave request. Please try again.';
+      showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
       setShowPreview(false);
