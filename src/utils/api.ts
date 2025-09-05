@@ -197,7 +197,7 @@ export const authApi = {
       localStorage.getItem("accessToken");
 
     try {
-      const response = await fetch(getApiUrl('logout'), {
+      const response = await fetch(getApiUrl('logout/'), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

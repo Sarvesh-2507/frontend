@@ -224,7 +224,7 @@ export const sendCandidateInvite = async (inviteData: SendInviteData): Promise<A
       includeOnboardingUrl: inviteData.includeOnboardingUrl !== false
     };
     
-    const response = await apiClient.post('/profiles/candidate-onboarding/send-invite/', dataToSend);
+    const response = await apiClient.post('api/onboarding/candidates/send-invite/', dataToSend);
     
     // For development mocking - creates a valid invite URL 
     if (process.env.NODE_ENV === 'development' && !response.data.inviteUrl) {

@@ -41,14 +41,19 @@ export interface FormSubmissionPayload {
 }
 
 // API Configuration using environment variables
-const API_BASE_URL = getApiUrl('profiles/api/candidate-onboarding');
+const API_BASE_URL = getApiUrl('/onboarding/candidates');
 
 /**
  * Fetch all candidates who are in onboarding
  */
 export const getAllCandidates = async (): Promise<CandidateProfile[]> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/`);
+    const response = await axios.get(`${API_BASE_URL}/`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching candidates:', error);
@@ -61,7 +66,12 @@ export const getAllCandidates = async (): Promise<CandidateProfile[]> => {
  */
 export const createCandidate = async (candidateData: CandidateProfile): Promise<CandidateProfile> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/`, candidateData);
+    const response = await axios.post(`${API_BASE_URL}/`, candidateData, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
     return response.data;
   } catch (error) {
     console.error('Error creating candidate:', error);
@@ -74,7 +84,12 @@ export const createCandidate = async (candidateData: CandidateProfile): Promise<
  */
 export const getCandidateById = async (id: string): Promise<CandidateProfile> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/${id}/`);
+    const response = await axios.get(`${API_BASE_URL}/${id}/`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
     return response.data;
   } catch (error) {
     console.error(`Error fetching candidate with ID ${id}:`, error);
@@ -87,7 +102,12 @@ export const getCandidateById = async (id: string): Promise<CandidateProfile> =>
  */
 export const updateCandidate = async (id: string, candidateData: CandidateProfile): Promise<CandidateProfile> => {
   try {
-    const response = await axios.put(`${API_BASE_URL}/${id}/`, candidateData);
+    const response = await axios.put(`${API_BASE_URL}/${id}/`, candidateData, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
     return response.data;
   } catch (error) {
     console.error(`Error updating candidate with ID ${id}:`, error);
@@ -100,7 +120,12 @@ export const updateCandidate = async (id: string, candidateData: CandidateProfil
  */
 export const patchCandidate = async (id: string, partialData: Partial<CandidateProfile>): Promise<CandidateProfile> => {
   try {
-    const response = await axios.patch(`${API_BASE_URL}/${id}/`, partialData);
+    const response = await axios.patch(`${API_BASE_URL}/${id}/`, partialData, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
     return response.data;
   } catch (error) {
     console.error(`Error patching candidate with ID ${id}:`, error);
@@ -113,7 +138,12 @@ export const patchCandidate = async (id: string, partialData: Partial<CandidateP
  */
 export const deleteCandidate = async (id: string): Promise<void> => {
   try {
-    await axios.delete(`${API_BASE_URL}/${id}/`);
+    await axios.delete(`${API_BASE_URL}/${id}/`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
   } catch (error) {
     console.error(`Error deleting candidate with ID ${id}:`, error);
     throw error;
@@ -126,7 +156,12 @@ export const deleteCandidate = async (id: string): Promise<void> => {
  */
 export const sendCredentials = async (id: string, payload: SendCredentialsPayload): Promise<void> => {
   try {
-    await axios.post(`${API_BASE_URL}/${id}/send-credentials/`, payload);
+    await axios.post(`${API_BASE_URL}/${id}/send-credentials/`, payload, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
   } catch (error) {
     console.error(`Error sending credentials to candidate with ID ${id}:`, error);
     throw error;
@@ -138,7 +173,12 @@ export const sendCredentials = async (id: string, payload: SendCredentialsPayloa
  */
 export const viewCandidateForm = async (id: string): Promise<any> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/${id}/view-form/`);
+    const response = await axios.get(`${API_BASE_URL}/${id}/view-form/`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
     return response.data;
   } catch (error) {
     console.error(`Error viewing form for candidate with ID ${id}:`, error);
@@ -151,7 +191,12 @@ export const viewCandidateForm = async (id: string): Promise<any> => {
  */
 export const assignCandidateDetails = async (payload: any): Promise<any> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/assign-details/`, payload);
+    const response = await axios.post(`${API_BASE_URL}/assign-details/`, payload, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
     return response.data;
   } catch (error) {
     console.error('Error assigning details to candidate:', error);
@@ -164,7 +209,12 @@ export const assignCandidateDetails = async (payload: any): Promise<any> => {
  */
 export const bulkCreateCandidates = async (candidates: CandidateProfile[]): Promise<CandidateProfile[]> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/create-profiles/`, candidates);
+    const response = await axios.post(`${API_BASE_URL}/create-profiles/`, candidates, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
     return response.data;
   } catch (error) {
     console.error('Error bulk creating candidates:', error);
@@ -177,7 +227,12 @@ export const bulkCreateCandidates = async (candidates: CandidateProfile[]): Prom
  */
 export const getCandidateFormByToken = async (token: string): Promise<any> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/form/${token}/`);
+    const response = await axios.get(`${API_BASE_URL}/form/${token}/`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
     return response.data;
   } catch (error) {
     console.error(`Error retrieving form with token ${token}:`, error);
@@ -190,7 +245,12 @@ export const getCandidateFormByToken = async (token: string): Promise<any> => {
  */
 export const getPendingCandidates = async (): Promise<CandidateProfile[]> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/pending-candidates/`);
+    const response = await axios.get(`${API_BASE_URL}/pending-candidates/`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching pending candidates:', error);
@@ -238,11 +298,17 @@ export const submitCandidateForm = async (token: string, formData: FormSubmissio
       await axios.post(`${API_BASE_URL}/submit-form/${token}/`, formDataObj, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         },
       });
     } else {
       // No files, just send JSON
-      await axios.post(`${API_BASE_URL}/submit-form/${token}/`, formData);
+      await axios.post(`${API_BASE_URL}/submit-form/${token}/`, formData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
     }
   } catch (error) {
     console.error(`Error submitting form with token ${token}:`, error);
