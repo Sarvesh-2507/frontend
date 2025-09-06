@@ -28,7 +28,7 @@ export interface SendInvitePayload {
   last_name: string;
   email: string;
   phone_number: string;
-  organization: number;
+  assigned_organization: number;
   organization_name_for_email?: string;
   joining_date?: string;
 }
@@ -264,7 +264,7 @@ export const getPendingCandidates = async (): Promise<CandidateProfile[]> => {
  */
 export const sendCandidateInvite = async (payload: SendInvitePayload): Promise<void> => {
   try {
-    console.log(`🚀 Sending invite to ${payload.email} at organization ${payload.organization}`, payload);
+  console.log(`🚀 Sending invite to ${payload.email} at organization ${payload.assigned_organization}`, payload);
     console.log(`📤 API URL: ${API_BASE_URL}/send-invite/`);
     
     await axios.post(`${API_BASE_URL}/send-invite/`, payload, {

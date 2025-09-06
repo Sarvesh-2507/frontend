@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 interface Highlight {
   type: "celebration" | "birthday" | "anniversary" | "holiday";
@@ -13,13 +14,23 @@ interface HighlightsWidgetProps {
 const HighlightsWidget: React.FC<HighlightsWidgetProps> = ({ highlights }) => {
   if (!highlights.length) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 mb-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 mb-4"
+      >
         <p className="text-gray-700 dark:text-white text-center">No highlights today</p>
-      </div>
+      </motion.div>
     );
   }
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 mb-4">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+      className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 mb-4"
+    >
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Today's Highlights</h3>
       <ul className="space-y-1">
         {highlights.map((h, i) => (
@@ -30,7 +41,7 @@ const HighlightsWidget: React.FC<HighlightsWidgetProps> = ({ highlights }) => {
           </li>
         ))}
       </ul>
-    </div>
+    </motion.div>
   );
 };
 

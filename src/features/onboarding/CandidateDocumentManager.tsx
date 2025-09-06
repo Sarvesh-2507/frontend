@@ -84,11 +84,11 @@ const CandidateDocumentManager: React.FC = () => {
         }
 
         console.log("🔍 Fetching candidates from backend...");
-        const response = await fetch(`${getApiUrl()}/profiles/api/candidate-onboarding/candidates_status/`, {
+        const response = await fetch(`${getApiUrl()}/onboarding/candidates/`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Token ${token}`,  // Changed from Bearer to Token
+            "Authorization": `Token ${token}`,
           },
         });
 
@@ -103,17 +103,14 @@ const CandidateDocumentManager: React.FC = () => {
         const candidatesArray = Array.isArray(data) ? data : [];
         const transformedCandidates = candidatesArray.map((candidate: any) => ({
           ...candidate,
-          // Use the name from backend if available
-          name: candidate.name || `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim(),
+          name: `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim(),
           phoneNumber: candidate.phone_number,
-          position: "Not specified",
-          department: "Not specified",
-          address: "Not specified",
-          joinDate: candidate.invited_at ? new Date(candidate.invited_at).toISOString().split('T')[0] : undefined,
-          salary: "Not specified",
-          offerStatus: candidate.status === "profile_created" ? "accepted" : "pending",
-          verificationStatus: candidate.status === "profile_created" ? "completed" : "pending",
-          uploadedDocuments: []
+          organization: candidate.assigned_organization_name || '',
+          invitedBy: candidate.invited_by_name || '',
+          joinDate: candidate.invited_at ? new Date(candidate.invited_at).toLocaleDateString() : '',
+          email: candidate.email,
+          status: candidate.status,
+          uploadedDocuments: [],
         }));
 
         setCandidates(transformedCandidates);
@@ -407,267 +404,188 @@ const CandidateDocumentManager: React.FC = () => {
     : null;
 
   return (
-    <ModulePage 
-      title="Candidate Documents" 
-      description="Manage candidate document uploads and verification"
+    <ModulePage
+      title="Uploaded Candidates"
+      description="Browse, search, and manage candidate uploads."
       icon={File}
       comingSoon={false}
     >
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Candidate Document Management</h2>
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  type="text"
-                  placeholder="Search candidates..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                />
-              </div>
-              <button
-                onClick={refreshCandidates}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
-                disabled={loading}
-              >
-                {loading ? "Refreshing..." : "Refresh"}
-              </button>
-            </div>
+      {/* Top Bar with Tabs */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center space-x-2">
+          <button className="px-4 py-2 rounded-t-lg text-sm font-medium bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none">Uploaded Candidates</button>
+          <button className="px-4 py-2 rounded-t-lg text-sm font-medium text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none">Onboarding Invite</button>
+        </div>
+        <div className="flex items-center space-x-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
+            <input
+              type="text"
+              placeholder="Search candidates..."
+              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
           </div>
+          <button
+            onClick={refreshCandidates}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+            disabled={loading}
+          >
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
+        </div>
+      </div>
 
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-              <span className="ml-3 text-lg text-gray-600">Loading candidates...</span>
-            </div>
-          ) : error ? (
-            <div className="text-center py-10">
-              <AlertCircle className="w-12 h-12 mx-auto text-red-500 mb-3" />
-              <p className="text-lg text-red-600">{error}</p>
-              <button 
-                onClick={refreshCandidates} 
-                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-                disabled={loading}
-              >
-                {loading ? "Retrying..." : "Try Again"}
-              </button>
+      {/* Main Content */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center h-64">
+          <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+          <span className="mt-3 text-lg text-gray-600 dark:text-gray-300">Loading candidates...</span>
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-16">
+          <AlertCircle className="w-12 h-12 text-red-500 mb-3" />
+          <p className="text-lg text-red-600 dark:text-red-400">{error}</p>
+          <button
+            onClick={refreshCandidates}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            disabled={loading}
+          >
+            {loading ? "Retrying..." : "Try Again"}
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+          {filteredCandidates.length === 0 ? (
+            <div className="col-span-full text-center py-16">
+              <p className="text-gray-500 dark:text-gray-400 text-lg">No candidates found matching your search criteria.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Candidates List */}
-              <div className="md:col-span-1 border-r border-gray-200 pr-6">
-                <h3 className="text-lg font-semibold text-gray-700 mb-4">Candidates</h3>
-                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
-                  {filteredCandidates.length === 0 ? (
-                    <p className="text-gray-500 text-center py-8">No candidates found matching your search criteria.</p>
-                  ) : (
-                    filteredCandidates.map(candidate => (
-                      <motion.div
-                        key={candidate.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                          selectedCandidate === candidate.id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-blue-300"
-                        }`}
-                        onClick={() => setSelectedCandidate(candidate.id)}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-medium text-gray-900">{candidate.name}</h4>
-                            <p className="text-sm text-gray-600">{candidate.email}</p>
-                            <div className="flex items-center mt-2">
-                              <span className="text-xs text-gray-500">{candidate.position}</span>
-                              <span className="mx-2 text-gray-300">•</span>
-                              <span className="text-xs text-gray-500">{candidate.department}</span>
-                            </div>
-                          </div>
-                          <span className={`text-xs px-2 py-1 rounded-full ${getCandidateStatusClass(candidate.status)}`}>
-                            {candidate.status.charAt(0).toUpperCase() + candidate.status.slice(1)}
-                          </span>
-                        </div>
-                        <div className="mt-3">
-                          <div className="flex items-center text-sm text-gray-500">
-                            <File className="w-4 h-4 mr-1" />
-                            <span>{candidate.uploadedDocuments?.length || 0} documents</span>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Documents */}
-              <div className="md:col-span-2">
-                {selectedCandidateData ? (
-                  <>
-                    <div className="flex justify-between items-center mb-6">
+            filteredCandidates.map(candidate => (
+              <motion.div
+                key={candidate.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-between min-h-[320px]"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-3">
+                      <User className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                       <div>
-                        <h3 className="text-xl font-semibold text-gray-800">{selectedCandidateData.name}'s Documents</h3>
-                        <p className="text-sm text-gray-600">{selectedCandidateData.position} • {selectedCandidateData.department}</p>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{candidate.name}</h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{candidate.email}</p>
                       </div>
-                      <button
-                        onClick={() => {
-                          setCurrentCandidateId(selectedCandidateData.id);
-                          setShowUploadModal(true);
-                        }}
-                        className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                      >
-                        <Upload size={16} />
-                        <span>Upload Document</span>
-                      </button>
                     </div>
-
-                    {selectedCandidateData.uploadedDocuments && selectedCandidateData.uploadedDocuments.length > 0 ? (
-                      <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-                        {selectedCandidateData.uploadedDocuments.map(doc => (
-                          <motion.div
-                            key={doc.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="p-4 border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                          >
-                            <div className="flex justify-between items-start">
-                              <div className="flex items-center">
-                                <div className="bg-blue-100 p-2 rounded-md mr-4">
-                                  <File className="w-6 h-6 text-blue-600" />
-                                </div>
-                                <div>
-                                  <h4 className="font-medium text-gray-900">{doc.name}</h4>
-                                  <div className="flex items-center text-sm text-gray-500 mt-1">
-                                    <span>{doc.type}</span>
-                                    <span className="mx-2">•</span>
-                                    <span>{doc.size}</span>
-                                    <span className="mx-2">•</span>
-                                    <span>Uploaded on {doc.uploadDate}</span>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(doc.status)}`}>
-                                  {getStatusIcon(doc.status)}
-                                  <span className="ml-1">{doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}</span>
-                                </span>
+                    <span className={`text-xs px-2 py-1 rounded-full font-semibold ${getCandidateStatusClass(candidate.status)}`}>{candidate.status.charAt(0).toUpperCase() + candidate.status.slice(1)}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    <span>{candidate.position}</span>
+                    <span className="mx-2">•</span>
+                    <span>{candidate.department}</span>
+                  </div>
+                  <div className="flex items-center text-xs text-gray-400 dark:text-gray-500 mb-4">
+                    <Clock className="w-4 h-4 mr-1" />
+                    <span>Invited: {candidate.joinDate || 'N/A'}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 mb-4">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                      <File className="w-4 h-4 mr-1" />
+                      {candidate.uploadedDocuments?.length || 0} documents
+                    </span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                      <Check className="w-4 h-4 mr-1 text-green-500" />
+                      {candidate.verificationStatus === 'completed' ? 'Verified' : 'Pending'}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-auto flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setSelectedCandidate(candidate.id)}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow"
+                  >
+                    View Details
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCurrentCandidateId(candidate.id);
+                      setShowUploadModal(true);
+                    }}
+                    className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium shadow flex items-center justify-center"
+                  >
+                    <Upload size={16} className="mr-2" />
+                    Upload
+                  </button>
+                </div>
+                {/* Expanded details for selected candidate */}
+                {selectedCandidate === candidate.id && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="mt-6 bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
+                  >
+                    <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-2">Uploaded Documents</h4>
+                    {candidate.uploadedDocuments && candidate.uploadedDocuments.length > 0 ? (
+                      <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                        {candidate.uploadedDocuments.map(doc => (
+                          <div key={doc.id} className="flex items-center justify-between bg-white dark:bg-gray-900 rounded-lg p-3 border border-gray-100 dark:border-gray-800 shadow-sm">
+                            <div className="flex items-center space-x-3">
+                              <File className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                              <div>
+                                <div className="font-medium text-gray-900 dark:text-white">{doc.name}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">{doc.type} • {doc.size} • {doc.uploadDate}</div>
                               </div>
                             </div>
-
-                            {doc.notes && (
-                              <div className="mt-3 text-sm text-gray-600 bg-gray-50 p-2 rounded-md">
-                                <span className="font-medium">Notes:</span> {doc.notes}
-                              </div>
-                            )}
-
-                            <div className="mt-4 flex justify-end space-x-2">
+                            <div className="flex items-center space-x-2">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(doc.status)}`}>{getStatusIcon(doc.status)}<span className="ml-1">{doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}</span></span>
                               {doc.url && (
-                                <button className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                                  <Eye size={16} className="mr-1" />
-                                  View
+                                <button className="inline-flex items-center px-2 py-1 border border-gray-300 dark:border-gray-700 text-xs rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                  <Eye size={14} className="mr-1" />View
                                 </button>
                               )}
-                              <button className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                                <Download size={16} className="mr-1" />
-                                Download
+                              <button className="inline-flex items-center px-2 py-1 border border-gray-300 dark:border-gray-700 text-xs rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                <Download size={14} className="mr-1" />Download
                               </button>
-                              <div className="relative group">
-                                <button className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                                  Status
-                                </button>
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg overflow-hidden z-20 hidden group-hover:block">
-                                  <div className="py-1">
-                                    <button
-                                      onClick={() => !updateInProgress && handleUpdateDocumentStatus(selectedCandidateData.id, doc.id, "verified")}
-                                      className="flex items-center w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100"
-                                      disabled={updateInProgress}
-                                    >
-                                      <Check className="w-4 h-4 mr-2 text-green-500" />
-                                      Mark as Verified
-                                    </button>
-                                    <button
-                                      onClick={() => !updateInProgress && handleUpdateDocumentStatus(selectedCandidateData.id, doc.id, "pending")}
-                                      className="flex items-center w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100"
-                                      disabled={updateInProgress}
-                                    >
-                                      <Clock className="w-4 h-4 mr-2 text-yellow-500" />
-                                      Mark as Pending
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        if (!updateInProgress) {
-                                          const notes = prompt("Please provide a reason for rejection:");
-                                          if (notes !== null) {
-                                            handleUpdateDocumentStatus(selectedCandidateData.id, doc.id, "rejected", notes);
-                                          }
-                                        }
-                                      }}
-                                      className="flex items-center w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100"
-                                      disabled={updateInProgress}
-                                    >
-                                      <X className="w-4 h-4 mr-2 text-red-500" />
-                                      Mark as Rejected
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
                               <button
-                                onClick={() => !updateInProgress && handleDeleteDocument(selectedCandidateData.id, doc.id)}
-                                className="inline-flex items-center px-3 py-1 border border-red-300 text-sm rounded-md text-red-700 bg-white hover:bg-red-50 transition-colors"
+                                onClick={() => !updateInProgress && handleDeleteDocument(candidate.id, doc.id)}
+                                className="inline-flex items-center px-2 py-1 border border-red-300 text-xs rounded-md text-red-700 bg-white dark:bg-gray-900 hover:bg-red-50 dark:hover:bg-red-900 transition-colors"
                                 disabled={updateInProgress}
                               >
-                                <Trash2 size={16} className="mr-1" />
-                                Delete
+                                <Trash2 size={14} className="mr-1" />Delete
                               </button>
                             </div>
-                          </motion.div>
+                          </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                        <File className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No documents uploaded</h3>
-                        <p className="text-gray-600 mb-4">Upload some documents to get started</p>
-                        <button
-                          onClick={() => {
-                            setCurrentCandidateId(selectedCandidateData.id);
-                            setShowUploadModal(true);
-                          }}
-                          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                        >
-                          <Upload size={16} className="mr-2" />
-                          Upload First Document
-                        </button>
+                      <div className="text-center py-6">
+                        <File className="w-10 h-10 text-gray-400 dark:text-gray-600 mx-auto mb-2" />
+                        <div className="text-gray-600 dark:text-gray-400 text-sm">No documents uploaded</div>
                       </div>
                     )}
-                  </>
-                ) : (
-                  <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                    <User className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No candidate selected</h3>
-                    <p className="text-gray-600">Select a candidate from the list to view their documents</p>
-                  </div>
+                  </motion.div>
                 )}
-              </div>
-            </div>
+              </motion.div>
+            ))
           )}
         </div>
-      </div>
+      )}
 
       {/* Upload Modal */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Upload Document</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 w-full max-w-md border border-gray-200 dark:border-gray-700 shadow-xl">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Upload Document</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Document Type</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Document Type</label>
                 <select
                   value={documentType}
                   onChange={(e) => setDocumentType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   aria-label="Document Type"
                   title="Select document type"
                 >
@@ -677,11 +595,11 @@ const CandidateDocumentManager: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">File</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">File</label>
                 <input
                   type="file"
                   onChange={handleFileUpload}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   aria-label="Upload Document"
                   title="Select a file to upload"
                 />
@@ -692,7 +610,7 @@ const CandidateDocumentManager: React.FC = () => {
                     setShowUploadModal(false);
                     setFileToUpload(null);
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   disabled={uploadingFile}
                 >
                   Cancel

@@ -528,11 +528,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
                     navigate(item.path);
                   }
                 }}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
+                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-left ${
                   isActive || childActive
                     ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
+                style={{ justifyContent: 'flex-start' }}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
                 <AnimatePresence mode="wait">
@@ -571,7 +572,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="ml-8 mt-1 space-y-1"
+                    className="ml-8 mt-1 space-y-1 text-left"
                   >
                     {item.children?.filter(child => {
                       if (!child.roles) return true;
@@ -586,14 +587,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
                           whileHover={{ scale: 1.01 }}
                           whileTap={{ scale: 0.99 }}
                           onClick={() => child.path && navigate(child.path)}
-                          className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sm ${
+                          className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sm text-left ${
                             childIsActive
                               ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
                               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                           }`}
+                          style={{ justifyContent: 'flex-start' }}
                         >
                           <ChildIcon className="w-4 h-4 flex-shrink-0" />
-                          <span className="whitespace-normal">{child.label}</span>
+                          <span className="whitespace-normal text-left">{child.label}</span>
                         </motion.button>
                       );
                     })}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -114,6 +114,8 @@ const QuickActionButton: React.FC<QuickActionProps> = ({ title, icon: Icon, onCl
 const HomePage: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showEmployeeDirectory, setShowEmployeeDirectory] = useState(false);
+  const [profilePic, setProfilePic] = useState<string | null>(null);
+  const [profileDetails, setProfileDetails] = useState<any>(null);
   const navigate = useNavigate();
 
   const toggleSidebar = () => {
@@ -157,6 +159,23 @@ const HomePage: React.FC = () => {
     { title: 'Payroll Management', icon: DollarSign, path: '/payroll' },
     { title: 'Performance Reviews', icon: BarChart3, path: '/performance' }
   ];
+
+    useEffect(() => {
+      const fetchProfile = async () => {
+        try {
+          const token = localStorage.getItem("accessToken") || localStorage.getItem("authToken");
+          if (!token) return;
+          const res = await fetch("http://192.168.1.132:8000/api/profiles/profiles/me/", {
+            headers: { "Authorization": `Token ${token}` }
+          });
+          if (!res.ok) return;
+          const data = await res.json();
+          if (data && data.passport_photo) setProfilePic(data.passport_photo);
+          setProfileDetails(data);
+        } catch (e) {}
+      };
+      fetchProfile();
+    }, []);
 
   // Get current date and time
   const getCurrentDateTime = () => {
@@ -236,13 +255,19 @@ const HomePage: React.FC = () => {
                   transition={{ delay: 0.2, duration: 0.6 }}
                   className="text-lg font-bold mb-1"
                 >
-                  Welcome to MH-HR, Tamil
+                  {profileDetails && (profileDetails.first_name || profileDetails.last_name)
+                    ? `Welcome ${
+                        ((profileDetails.first_name ? profileDetails.first_name : '') +
+                        (profileDetails.last_name ? ' ' + profileDetails.last_name : '')
+                        ).replace(/\b\w/g, c => c.toUpperCase()).trim()
+                      }`
+                    : 'Welcome'}
                 </motion.h1>
                 <motion.p
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.4, duration: 0.6 }}
-                  className="text-blue-100 text-sm"
+                  className="text-blue-100 text-sm mb-2"
                 >
                   Hope you are having a great day.
                 </motion.p>
@@ -260,9 +285,22 @@ const HomePage: React.FC = () => {
                   </motion.div>
                 </div>
                 <div className="flex-shrink-0">
-                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg">
-                    {/* Replace with actual avatar image if available */}
-                    <span className="text-blue-600 text-2xl font-bold">T</span>
+                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg overflow-hidden">
+                    {profilePic ? (
+                      <img
+                        src={profilePic}
+                        alt="Profile"
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <span className="text-blue-600 text-2xl font-bold">
+                        {profileDetails && (profileDetails.first_name || profileDetails.last_name)
+                          ? (((profileDetails.first_name ? profileDetails.first_name : '') +
+                              (profileDetails.last_name ? ' ' + profileDetails.last_name : '')
+                            ).trim()[0] || 'T').toUpperCase()
+                          : 'T'}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -274,12 +312,22 @@ const HomePage: React.FC = () => {
         {/* Left Sidebar - Highlights, Quick Actions & Recent Announcements */}
         <div className="space-y-4 lg:space-y-6">
           {/* Highlights Widget */}
+          {/* Deduplicate highlights by type: only one of each */}
           <HighlightsWidget
-            highlights={[
-              { type: "birthday", label: "Birthday:", value: "John Doe" },
-              { type: "anniversary", label: "Anniversary:", value: "Jane Smith" },
-              { type: "holiday", label: "Holiday:", value: "Labor Day" }
-            ]}
+            highlights={(() => {
+              const all = [
+                { type: "birthday" as const, label: "", value: "John Doe" },
+                { type: "birthday" as const, label: "", value: "John Doe" },
+                { type: "anniversary" as const, label: "", value: "Jane Smith" },
+                { type: "anniversary" as const, label: "", value: "Jane Smith" }
+              ];
+              const seen = new Set<string>();
+              return all.filter(h => {
+                if (seen.has(h.type)) return false;
+                seen.add(h.type);
+                return true;
+              });
+            })()}
           />
           {/* Quick Actions */}
           <motion.div

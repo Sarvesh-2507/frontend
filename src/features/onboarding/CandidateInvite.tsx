@@ -24,13 +24,13 @@ interface CandidateWithUIProps extends CandidateProfile {
 const CandidateInvite: React.FC = () => {
   // Form states
   const [formData, setFormData] = useState({
-  first_name: "",
-  last_name: "",
-  email: "",
-  phone_number: "",
-  joining_date: "",
-  organization: 0,
-  organization_name_for_email: ""
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone_number: "",
+    joining_date: "",
+    assigned_organization: 0,
+    organization_name_for_email: ""
   });
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
@@ -58,7 +58,7 @@ const CandidateInvite: React.FC = () => {
     const { name, value } = e.target;
     
     // For organization, convert to number
-    if (name === 'organization') {
+    if (name === 'assigned_organization') {
       setFormData({
         ...formData,
         [name]: parseInt(value) || 0
@@ -159,7 +159,7 @@ const CandidateInvite: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.first_name || !formData.last_name || !formData.email || !formData.organization || !formData.phone_number) {
+    if (!formData.first_name || !formData.last_name || !formData.email || !formData.assigned_organization || !formData.phone_number) {
       setError("Please fill in all required fields");
       return;
     }
@@ -176,7 +176,7 @@ const CandidateInvite: React.FC = () => {
         first_name: formData.first_name,
         last_name: formData.last_name,
         email: formData.email,
-        organization: formData.organization,
+        assigned_organization: formData.assigned_organization,
         organization_name_for_email: formData.organization_name_for_email || undefined,
         phone_number: formData.phone_number,
         joining_date: formData.joining_date || undefined
@@ -191,7 +191,7 @@ const CandidateInvite: React.FC = () => {
         email: "",
         phone_number: "",
         joining_date: "",
-        organization: 0,
+        assigned_organization: 0,
         organization_name_for_email: ""
       });
       setIsEmailVerified(false);
@@ -282,7 +282,7 @@ const CandidateInvite: React.FC = () => {
         last_name: candidate.last_name,
         email: candidate.email,
         phone_number: candidate.phone_number,
-        organization: (candidate as any).organization || formData.organization || 0,
+        assigned_organization: (candidate as any).assigned_organization || formData.assigned_organization || 0,
         joining_date: candidate.joining_date
       };
       
@@ -327,7 +327,7 @@ const CandidateInvite: React.FC = () => {
         last_name: candidate.last_name,
         email: candidate.email,
         phone_number: candidate.phone_number,
-        organization: (candidate as any).organization || formData.organization || 0,
+        assigned_organization: (candidate as any).assigned_organization || formData.assigned_organization || 0,
         joining_date: candidate.joining_date
       };
       
@@ -680,14 +680,14 @@ const CandidateInvite: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <label htmlFor="organization" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label htmlFor="assigned_organization" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Organization *
                   </label>
                   <select
-                    id="organization"
-                    name="organization"
+                    id="assigned_organization"
+                    name="assigned_organization"
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    value={formData.organization}
+                    value={formData.assigned_organization}
                     onChange={handleInputChange}
                     required
                   >
