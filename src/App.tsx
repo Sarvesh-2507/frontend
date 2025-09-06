@@ -105,6 +105,7 @@ import { AuthProvider } from "./auth/AuthProvider";
 
 // Auth Store
 import { useAuthStore } from "./context/authStore";
+import CandidateProfileCreation from "./pages/CandidateProfileCreation";
 
 const App: React.FC = () => {
   const { isAuthenticated, refreshToken, checkSession, initializeFromStorage } = useAuthStore();
@@ -264,7 +265,7 @@ const App: React.FC = () => {
           
           <Route
             path="/onboarding/candidate-uploads"
-            element={<CandidateDocumentManager />}
+            element={<CandidateProfileCreation />}
           />
           
           <Route

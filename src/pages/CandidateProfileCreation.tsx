@@ -1,7 +1,40 @@
-import React, { useState } from "react";
-import { Eye, Search, RefreshCw, PlusCircle, CheckCircle, User, Building, Calendar, Shield } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Eye, Search, RefreshCw, PlusCircle, CheckCircle, User, Building, Calendar, Shield, Mail } from "lucide-react";
 
-// Interface for candidates ready for profile creation
+// Backend API interfaces
+interface CandidateDetails {
+  id: number;
+  assigned_organization_name: string;
+  assigned_department_name: string;
+  invited_by_name: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  assigned_role: string | null;
+  date_of_joining: string | null;
+  invite_token: string;
+  form_data: any | null;
+  invited_at: string | null;
+  submitted_at: string | null;
+  status: "pending" | "invited" | "submitted" | "assigned" | "completed" | "expired";
+  generated_emp_id: string | null;
+  company_email: string | null;
+  temp_password: string | null;
+  assigned_organization: number;
+  assigned_department: number | null;
+  reporting_manager: number | null;
+  invited_by: number | null;
+}
+
+interface CandidateApiResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: CandidateDetails[];
+}
+
+// Frontend interface for easier handling
 interface CandidateProfile {
   id: number;
   candidateName: string;
@@ -11,6 +44,7 @@ interface CandidateProfile {
   inviteDate: string;
   status: "Pending" | "Submitted";
   selected?: boolean;
+  backendData?: CandidateDetails; // Store original backend data
 }
 
 // Interface for role assignment form
@@ -39,50 +73,106 @@ const CandidateProfileCreation: React.FC = () => {
   const [selectedCandidates, setSelectedCandidates] = useState<CandidateProfile[]>([]);
   const [createdUsers, setCreatedUsers] = useState<CreatedUser[]>([]);
   const [emailSent, setEmailSent] = useState<boolean>(false);
+  const [candidates, setCandidates] = useState<CandidateProfile[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
-  // Mock data for candidates (matching your image)
-  const [candidates, setCandidates] = useState<CandidateProfile[]>([
-    {
-      id: 1,
-      candidateName: "Shiva",
-      email: "Shiva@gmail.com",
-      mobileNumber: "+9109876565",
-      organization: "Mh cognition",
-      inviteDate: "22/03/2025",
-      status: "Pending",
+  // API base URL
+  const API_BASE_URL = "http://192.168.1.132:8000/api/onboarding/candidates/";
+
+  // Transform backend data to frontend format
+  const transformCandidateData = (backendCandidate: CandidateDetails): CandidateProfile => {
+    const fullName = `${backendCandidate.first_name || ''} ${backendCandidate.last_name || ''}`.trim();
+    const inviteDate = backendCandidate.invited_at 
+      ? new Date(backendCandidate.invited_at).toLocaleDateString('en-GB')
+      : '';
+    
+    // Map backend status to frontend status
+    const status = backendCandidate.status === "submitted" ? "Submitted" : "Pending";
+
+    return {
+      id: backendCandidate.id,
+      candidateName: fullName || 'Unknown',
+      email: backendCandidate.email,
+      mobileNumber: backendCandidate.phone_number || '',
+      organization: backendCandidate.assigned_organization_name || '',
+      inviteDate,
+      status,
       selected: false,
-    },
-    {
-      id: 2,
-      candidateName: "Shiva",
-      email: "Shiva@gmail.com",
-      mobileNumber: "+9109876565",
-      organization: "Mh cognition",
-      inviteDate: "22/03/2025",
-      status: "Pending",
-      selected: false,
-    },
-    {
-      id: 3,
-      candidateName: "Shiva",
-      email: "Shiva@gmail.com",
-      mobileNumber: "+9109876565",
-      organization: "Mh cognition",
-      inviteDate: "22/03/2025",
-      status: "Submitted",
-      selected: false,
-    },
-    {
-      id: 4,
-      candidateName: "Shiva",
-      email: "Shiva@gmail.com",
-      mobileNumber: "+9109876565",
-      organization: "Mh cognition",
-      inviteDate: "22/03/2025",
-      status: "Submitted",
-      selected: false,
-    },
-  ]);
+      backendData: backendCandidate,
+    };
+  };
+
+  // Fetch candidates from API
+  const fetchCandidates = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(API_BASE_URL, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add authorization header if needed
+          // 'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: CandidateApiResponse = await response.json();
+      
+      // Transform backend data to frontend format
+      const transformedCandidates = data.results.map(transformCandidateData);
+      setCandidates(transformedCandidates);
+      
+    } catch (err) {
+      console.error('Error fetching candidates:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch candidates');
+      
+      // Fallback to mock data for development
+      const mockCandidates: CandidateProfile[] = [
+        {
+          id: 1,
+          candidateName: "Shiva Kumar",
+          email: "shiva@gmail.com",
+          mobileNumber: "+9109876565",
+          organization: "Mh cognition",
+          inviteDate: "22/03/2025",
+          status: "Pending",
+          selected: false,
+        },
+        {
+          id: 2,
+          candidateName: "Raj Patel",
+          email: "raj@gmail.com",
+          mobileNumber: "+9109876566",
+          organization: "Mh cognition",
+          inviteDate: "23/03/2025",
+          status: "Submitted",
+          selected: false,
+        },
+      ];
+      setCandidates(mockCandidates);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load candidates on component mount
+  useEffect(() => {
+    fetchCandidates();
+  }, []);
+
+  // Filter candidates based on search term
+  const filteredCandidates = candidates.filter(candidate =>
+    candidate.candidateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    candidate.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    candidate.organization.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const [roleAssignments, setRoleAssignments] = useState<RoleAssignment[]>([]);
 
@@ -97,7 +187,7 @@ const CandidateProfileCreation: React.FC = () => {
   };
 
   const handleSelectAll = () => {
-    const submittedCandidates = candidates.filter(c => c.status === "Submitted");
+    const submittedCandidates = filteredCandidates.filter(c => c.status === "Submitted");
     const allSelected = submittedCandidates.every(c => c.selected);
     
     setCandidates(prev => 
@@ -107,6 +197,10 @@ const CandidateProfileCreation: React.FC = () => {
           : candidate
       )
     );
+  };
+
+  const handleRefresh = () => {
+    fetchCandidates();
   };
 
   const handleCreateProfile = () => {
@@ -155,7 +249,7 @@ const CandidateProfileCreation: React.FC = () => {
     };
   };
 
-  const handleCreateUsers = () => {
+  const handleCreateUsers = async () => {
     // Validate all assignments are complete
     const incompleteAssignments = roleAssignments.filter(
       assignment => !assignment.role || !assignment.department || !assignment.accessLevel || !assignment.dateOfJoining
@@ -166,20 +260,72 @@ const CandidateProfileCreation: React.FC = () => {
       return;
     }
 
-    // Generate user credentials
-    const newUsers = selectedCandidates.map(candidate => {
-      const assignment = roleAssignments.find(a => a.candidateId === candidate.id)!;
-      return generateUserCredentials(candidate, assignment);
-    });
+    try {
+      setLoading(true);
+      
+      // Generate user credentials for display
+      const newUsers = selectedCandidates.map(candidate => {
+        const assignment = roleAssignments.find(a => a.candidateId === candidate.id)!;
+        return generateUserCredentials(candidate, assignment);
+      });
 
-    setCreatedUsers(newUsers);
-    setCurrentStep("created");
+      // Here you would typically make API calls to create users in the backend
+      // Example API call structure:
+      /*
+      for (const candidate of selectedCandidates) {
+        const assignment = roleAssignments.find(a => a.candidateId === candidate.id)!;
+        const updatePayload = {
+          assigned_role: assignment.role,
+          assigned_department: assignment.department, // This would be department ID
+          date_of_joining: assignment.dateOfJoining,
+          status: 'assigned'
+        };
+        
+        await fetch(`${API_BASE_URL}${candidate.id}/`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            // 'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify(updatePayload),
+        });
+      }
+      */
+
+      setCreatedUsers(newUsers);
+      setCurrentStep("created");
+      
+    } catch (error) {
+      console.error('Error creating users:', error);
+      alert('Failed to create users. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSendEmail = async () => {
     // Simulate sending emails
     try {
-      // Here you would call your backend API to send emails
+      setLoading(true);
+      
+      // Here you would call your backend API to send credential emails
+      // Example API call:
+      /*
+      const emailPayload = {
+        user_ids: createdUsers.map(user => user.empId),
+        send_credentials: true
+      };
+      
+      await fetch(`${API_BASE_URL}send-credentials/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // 'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(emailPayload),
+      });
+      */
+      
       console.log("Sending credential emails to:", createdUsers);
       
       // Simulate API call
@@ -188,9 +334,174 @@ const CandidateProfileCreation: React.FC = () => {
       setEmailSent(true);
       alert("Credential emails sent successfully to all new users!");
     } catch (error) {
+      console.error('Error sending emails:', error);
       alert("Failed to send emails. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
+
+  const renderCandidatesStep = () => (
+    <div className="p-6">
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center">
+            <div className="text-red-600 mr-3">⚠️</div>
+            <div>
+              <h3 className="text-red-800 font-medium">API Connection Error</h3>
+              <p className="text-red-700 text-sm">
+                {error}. Using fallback data for development.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Search and Refresh Bar */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Search candidates..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+        <button 
+          onClick={handleRefresh}
+          disabled={loading}
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+        >
+          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+          {loading ? "Loading..." : "Refresh"}
+        </button>
+      </div>
+
+      {/* Loading State */}
+      {loading ? (
+        <div className="flex justify-center items-center py-12">
+          <div className="text-gray-500">Loading candidates...</div>
+        </div>
+      ) : (
+        <>
+          {/* Candidates Table */}
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-4 text-left">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      onChange={handleSelectAll}
+                      checked={filteredCandidates.filter(c => c.status === "Submitted").every(c => c.selected)}
+                      aria-label="Select all candidates"
+                    />
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                    Candidate Name
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                    Email Id
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                    Mobile Number
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                    Organization
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredCandidates.map((candidate) => (
+                  <tr key={candidate.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        checked={candidate.selected || false}
+                        onChange={() => handleCandidateSelection(candidate.id)}
+                        disabled={candidate.status === "Pending"}
+                        aria-label={`Select ${candidate.candidateName}`}
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {candidate.candidateName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {candidate.email}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {candidate.mobileNumber || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {candidate.organization}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center space-x-3">
+                        {candidate.status === "Pending" ? (
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-red-100 text-red-800 border border-red-200">
+                            Pending
+                          </span>
+                        ) : (
+                          <>
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-green-100 text-green-800 border border-green-200">
+                              Submitted
+                            </span>
+                            <button
+                              className="text-gray-600 hover:text-gray-800 p-1"
+                              title={`View details for ${candidate.candidateName}`}
+                              aria-label={`View details for ${candidate.candidateName}`}
+                            >
+                              <Eye size={18} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* No Results Message */}
+          {filteredCandidates.length === 0 && !loading && (
+            <div className="text-center py-12">
+              <p className="text-gray-500">
+                {searchTerm ? "No candidates found matching your search criteria." : "No candidates available."}
+              </p>
+            </div>
+          )}
+
+          {/* Create Profile Button */}
+          <div className="mt-8 flex justify-between items-center">
+            <div className="text-sm text-gray-600">
+              Total: {filteredCandidates.length} candidates | 
+              Submitted: {filteredCandidates.filter(c => c.status === "Submitted").length} | 
+              Selected: {filteredCandidates.filter(c => c.selected).length}
+            </div>
+            <button 
+              onClick={handleCreateProfile}
+              disabled={filteredCandidates.filter(c => c.selected).length === 0}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-md font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <User size={16} />
+              Create Profile ({filteredCandidates.filter(c => c.selected).length})
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
 
   const renderAssignmentStep = () => (
     <div className="p-6">
@@ -222,6 +533,7 @@ const CandidateProfileCreation: React.FC = () => {
                   value={assignment.role}
                   onChange={(e) => handleRoleAssignmentChange(assignment.candidateId, "role", e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  aria-label="Select role"
                 >
                   <option value="">Select Role</option>
                   <option value="Software Engineer">Software Engineer</option>
@@ -242,6 +554,7 @@ const CandidateProfileCreation: React.FC = () => {
                   value={assignment.department}
                   onChange={(e) => handleRoleAssignmentChange(assignment.candidateId, "department", e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  aria-label="Select department"
                 >
                   <option value="">Select Department</option>
                   <option value="Engineering">Engineering</option>
@@ -262,6 +575,7 @@ const CandidateProfileCreation: React.FC = () => {
                   value={assignment.accessLevel}
                   onChange={(e) => handleRoleAssignmentChange(assignment.candidateId, "accessLevel", e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  aria-label="Select access level"
                 >
                   <option value="">Select Access Level</option>
                   <option value="Basic">Basic</option>
@@ -281,6 +595,7 @@ const CandidateProfileCreation: React.FC = () => {
                   value={assignment.dateOfJoining}
                   onChange={(e) => handleRoleAssignmentChange(assignment.candidateId, "dateOfJoining", e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  aria-label="Select date of joining"
                 />
               </div>
             </div>
@@ -297,10 +612,11 @@ const CandidateProfileCreation: React.FC = () => {
         </button>
         <button
           onClick={handleCreateUsers}
-          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+          disabled={loading}
+          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50"
         >
           <CheckCircle size={16} />
-          Create Users
+          {loading ? "Creating Users..." : "Create Users"}
         </button>
       </div>
     </div>
@@ -415,15 +731,15 @@ const CandidateProfileCreation: React.FC = () => {
         
         <button
           onClick={handleSendEmail}
-          disabled={emailSent}
+          disabled={emailSent || loading}
           className={`px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-            emailSent 
+            emailSent || loading
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
               : 'bg-blue-600 text-white hover:bg-blue-700'
           }`}
         >
-          <PlusCircle size={16} />
-          {emailSent ? 'Emails Sent' : 'Send Email'}
+          <Mail size={16} />
+          {loading ? 'Sending...' : emailSent ? 'Emails Sent' : 'Send Email'}
         </button>
       </div>
     </div>
@@ -454,5 +770,3 @@ const CandidateProfileCreation: React.FC = () => {
 };
 
 export default CandidateProfileCreation;
-
-
