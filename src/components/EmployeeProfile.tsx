@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import ProfileProgressBar from "./ui/ProfileProgressBar";
 import { toast } from "react-hot-toast";
 import { Profile } from "../types/profile";
@@ -47,6 +48,7 @@ type WorkInfoField = keyof Pick<Profile,
 >;
 
 const EmployeeProfile: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("about");
   const [editingPersonal, setEditingPersonal] = useState(false);
   const [editingWork, setEditingWork] = useState(false);
@@ -702,6 +704,18 @@ const EmployeeProfile: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate("/")}
+          className="mb-6 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md flex items-center"
+          style={{ fontWeight: 500 }}
+          aria-label="Back to Home"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 mr-2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+          Back to Home
+        </button>
         {/* Profile Completion Progress Bar */}
         <ProfileProgressBar percent={profileCompletion} />
         

@@ -424,12 +424,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
     <motion.div
       initial={false}
       animate={{
-        width: isCollapsed ? 100 : window.innerWidth < 768 ? 300 : 340
+  width: isCollapsed ? 90 : 300
       }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
       className="sidebar-modern flex flex-col h-full relative z-20"
       style={{
-        minWidth: isCollapsed ? '100px' : window.innerWidth < 768 ? '300px' : '340px'
+  minWidth: isCollapsed ? '90px' : '300px'
       }}
     >
       {/* Header */}
