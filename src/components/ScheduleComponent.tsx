@@ -79,24 +79,23 @@ const ScheduleComponent: React.FC = () => {
 
     // Days of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      const isToday = new Date().getDate() === day && 
-                     new Date().getMonth() === currentDate.getMonth() && 
-                     new Date().getFullYear() === currentDate.getFullYear();
-      const isSelected = selectedDate.getDate() === day && 
-                        selectedDate.getMonth() === currentDate.getMonth() && 
-                        selectedDate.getFullYear() === currentDate.getFullYear();
+      const isToday = new Date().getDate() === day &&
+        new Date().getMonth() === currentDate.getMonth() &&
+        new Date().getFullYear() === currentDate.getFullYear();
+      const isSelected = selectedDate.getDate() === day &&
+        selectedDate.getMonth() === currentDate.getMonth() &&
+        selectedDate.getFullYear() === currentDate.getFullYear();
 
       days.push(
         <button
           key={day}
           onClick={() => setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))}
-          className={`h-8 w-8 rounded-lg text-sm font-medium transition-colors ${
-            isToday
-              ? 'bg-blue-600 text-white'
-              : isSelected
+          className={`h-8 w-8 rounded-lg text-sm font-medium transition-colors ${isToday
+            ? 'bg-blue-600 text-white'
+            : isSelected
               ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
               : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-          }`}
+            }`}
         >
           {day}
         </button>
@@ -161,8 +160,8 @@ const ScheduleComponent: React.FC = () => {
       <div className="mb-6">
         {/* Day headers */}
         <div className="grid grid-cols-7 gap-1 mb-2">
-          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day) => (
-            <div key={day} className="h-8 flex items-center justify-center text-xs font-medium text-gray-500">
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
+            <div key={day + idx} className="h-8 flex items-center justify-center text-xs font-medium text-gray-500">
               {day}
             </div>
           ))}

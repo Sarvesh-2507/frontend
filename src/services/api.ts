@@ -1,3 +1,10 @@
+// User API for searching users by email/username
+export const userAPI = {
+  getUsers: async (params?: { search?: string }) => {
+    // Adjust endpoint as per your backend
+    return apiClient.get("/users/", { params });
+  },
+};
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { EmployeeProfile } from "../store/slices/employeeSlice";
 import { LoginCredentials, RegisterCredentials, User } from "../types/auth";
