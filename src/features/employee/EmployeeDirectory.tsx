@@ -1,247 +1,223 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import {
-  Users,
-  Search,
-  Filter,
-  Download,
-  Eye,
-  Edit,
-  Mail,
-  Phone,
-  MapPin,
-  Building,
-  Calendar,
-  ArrowLeft
-} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Eye, PencilLine, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { EmployeeProfile, EmployeeListResponse } from '../../types/employee';
 import Sidebar from '../../components/Sidebar';
 
-interface Employee {
-  id: string;
+interface Department {
+  id: number;
   name: string;
-  email: string;
-  phone: string;
-  department: string;
-  position: string;
-  location: string;
-  joinDate: string;
-  status: 'active' | 'inactive';
-  avatar?: string;
 }
 
-const EmployeeDirectory: React.FC = () => {
-  const navigate = useNavigate();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterDepartment, setFilterDepartment] = useState('');
-  const [loading, setLoading] = useState(true);
+const departments: Department[] = [
+  { id: 1, name: "HR" },
+  { id: 2, name: "Engineering" },
+  { id: 3, name: "Finance" },
+  { id: 4, name: "Marketing" },
+  { id: 5, name: "Operations" },
+  // Add more departments as needed
+];
 
-  // Mock data
+const EmployeeDirectory: React.FC = () => {
+  const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState<number | 'all'>('all');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const navigate = useNavigate();
+
   useEffect(() => {
-    const mockEmployees: Employee[] = [
-      {
-        id: '1',
-        name: 'John Doe',
-        email: 'john.doe@company.com',
-        phone: '+1 234 567 8900',
-        department: 'Engineering',
-        position: 'Senior Developer',
-        location: 'New York',
-        joinDate: '2023-01-15',
-        status: 'active'
-      },
-      {
-        id: '2',
-        name: 'Jane Smith',
-        email: 'jane.smith@company.com',
-        phone: '+1 234 567 8901',
-        department: 'Marketing',
-        position: 'Marketing Manager',
-        location: 'California',
-        joinDate: '2022-11-20',
-        status: 'active'
-      },
-      {
-        id: '3',
-        name: 'Mike Johnson',
-        email: 'mike.johnson@company.com',
-        phone: '+1 234 567 8902',
-        department: 'HR',
-        position: 'HR Specialist',
-        location: 'Texas',
-        joinDate: '2023-03-10',
-        status: 'active'
-      }
-    ];
-    
-    setTimeout(() => {
-      setEmployees(mockEmployees);
-      setLoading(false);
-    }, 1000);
+    fetchEmployees();
   }, []);
 
+  const fetchEmployees = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://192.168.1.132:8000/api/profiles/profiles/');
+      if (!response.ok) {
+        throw new Error('Failed to fetch employees');
+      }
+      const data: EmployeeListResponse = await response.json();
+      setEmployees(data.results);
+    } catch (error) {
+      setError('Failed to load employees');
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDepartmentName = (departmentId: number) => {
+    return departments.find(d => d.id === departmentId)?.name || 'Unknown Department';
+  };
+
   const filteredEmployees = employees.filter(employee => {
-    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         employee.department.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = !filterDepartment || employee.department === filterDepartment;
+    const matchesSearch = (
+      employee.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employee.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employee.email_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      getDepartmentName(employee.department_ref).toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const matchesDepartment = selectedDepartment === 'all' || employee.department_ref === selectedDepartment;
+
     return matchesSearch && matchesDepartment;
   });
 
-  const departments = [...new Set(employees.map(emp => emp.department))];
+  const handleViewProfile = (empId: string) => {
+    navigate(`/employee/view/${empId}`);
+  };
+
+  const handleEditProfile = (empId: string) => {
+    navigate(`/employee/edit/${empId}`);
+  };
+
+  const content = (
+    <div className="p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          Employee Directory
+        </h1>
+
+        {/* Search and Filter */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                type="text"
+                placeholder="Search by name, email, or department..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
+            </div>
+          </div>
+          <div className="w-full md:w-48">
+            <select
+              value={selectedDepartment}
+              onChange={(e) => setSelectedDepartment(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            >
+              <option value="all">All Departments</option>
+              {departments.map(dept => (
+                <option key={dept.id} value={dept.id}>{dept.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Employee Table */}
+        <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reports To</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+              {filteredEmployees.map((employee) => (
+                <tr key={employee.emp_id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{employee.emp_id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    {employee.first_name} {employee.last_name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    {getDepartmentName(employee.department_ref)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    {employee.designation}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    {employee.reporting_manager || 'N/A'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    {employee.email_id}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    {employee.phone_number}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    <div className="flex space-x-2">
+                      <button 
+                        onClick={() => handleViewProfile(employee.emp_id)}
+                        className="text-blue-600 hover:text-blue-800 transition-colors"
+                        title="View Profile"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleEditProfile(employee.emp_id)}
+                        className="text-gray-600 hover:text-gray-800 transition-colors"
+                        title="Edit Profile"
+                      >
+                        <PencilLine className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredEmployees.length === 0 && (
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+            No employees found matching your search criteria.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <div className="flex h-screen">
+        <Sidebar 
+          isCollapsed={sidebarCollapsed} 
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+        />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <span className="ml-3 text-lg text-gray-700">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen">
+        <Sidebar 
+          isCollapsed={sidebarCollapsed} 
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+        />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <strong className="font-bold">Error! </strong>
+            <span className="block sm:inline">{error}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/employee-profile')}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Employee Directory</h1>
-                <p className="text-gray-600 dark:text-gray-400">Manage and view all employee information</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                <Download className="w-4 h-4" />
-                <span>Export</span>
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {/* Content */}
-        <main className="flex-1 overflow-auto p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
-            {/* Search and Filters */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="Search employees..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-                <select
-                  value={filterDepartment}
-                  onChange={(e) => setFilterDepartment(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="">All Departments</option>
-                  {departments.map(dept => (
-                    <option key={dept} value={dept}>{dept}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Employee Grid */}
-            {loading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredEmployees.map((employee) => (
-                  <motion.div
-                    key={employee.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow p-6"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                          <span className="text-blue-600 dark:text-blue-400 font-semibold text-lg">
-                            {employee.name.charAt(0)}
-                          </span>
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                            {employee.name}
-                          </h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {employee.position}
-                          </p>
-                        </div>
-                      </div>
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        employee.status === 'active' 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                          : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                      }`}>
-                        {employee.status}
-                      </span>
-                    </div>
-
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                        <Mail className="w-4 h-4" />
-                        <span>{employee.email}</span>
-                      </div>
-                      <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                        <Phone className="w-4 h-4" />
-                        <span>{employee.phone}</span>
-                      </div>
-                      <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                        <Building className="w-4 h-4" />
-                        <span>{employee.department}</span>
-                      </div>
-                      <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                        <MapPin className="w-4 h-4" />
-                        <span>{employee.location}</span>
-                      </div>
-                      <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                        <Calendar className="w-4 h-4" />
-                        <span>Joined {new Date(employee.joinDate).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <button className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
-                        <Eye className="w-4 h-4" />
-                        <span>View</span>
-                      </button>
-                      <button className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
-                        <Edit className="w-4 h-4" />
-                        <span>Edit</span>
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-
-            {filteredEmployees.length === 0 && !loading && (
-              <div className="text-center py-12">
-                <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  No employees found
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  {searchTerm || filterDepartment
-                    ? "Try adjusting your search terms"
-                    : "No employees in the directory"}
-                </p>
-              </div>
-            )}
-          </div>
-        </main>
+      <Sidebar 
+        isCollapsed={sidebarCollapsed} 
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+      />
+      <div className="flex-1 overflow-auto">
+        {content}
       </div>
     </div>
   );

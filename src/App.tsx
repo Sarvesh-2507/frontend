@@ -48,6 +48,7 @@ import AssetAllocation from "./features/onboarding/AssetAllocation";
 import EmployeeProfile from "./components/EmployeeProfile";
 import EmployeeProfileModern from "./features/employee/EmployeeProfileModern";
 import EmployeeDirectory from "./features/employee/EmployeeDirectory";
+import EmployeeView from "./features/employee/EmployeeView";
 import ProfileManagement from "./features/employee/ProfileManagement";
 import DocumentManagement from "./features/employee/DocumentManagement";
 import AccessControl from "./features/employee/AccessControl";
@@ -318,6 +319,14 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <EmployeeDirectory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/employee/view/:empId"
+            element={
+              <ProtectedRoute>
+                <EmployeeView />
               </ProtectedRoute>
             }
           />
