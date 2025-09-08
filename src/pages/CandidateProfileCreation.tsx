@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { useThemeStore } from "../context/themeStore";
 import { Eye, Search, RefreshCw, PlusCircle, CheckCircle, User, Building, Calendar, Shield, Mail } from "lucide-react";
+import { makeAuthenticatedRequest, refreshAuthToken } from "../utils/auth";
+import Sidebar from "../components/Sidebar";
 
 // Backend API interfaces
 interface CandidateDetails {
@@ -57,8 +60,40 @@ interface RoleAssignment {
   dateOfJoining: string;
 }
 
+// Backend interfaces for dropdown APIs
+interface Role {
+  id: number;
+  role_name: string;
+  organization_id: number;
+}
+
+interface Department {
+  id: number;
+  department_name: string;
+  organization_id: number;
+}
+
+interface AccessLevel {
+  value: string;
+  label: string;
+}
+
+// Dropdown API response interfaces
+interface RolesApiResponse {
+  roles: Role[];
+}
+
+interface DepartmentsApiResponse {
+  departments: Department[];
+}
+
+interface AccessLevelsApiResponse {
+  access_levels: AccessLevel[];
+}
+
 // Interface for created user
 interface CreatedUser {
+  candidateId: number; // Original candidate ID for API calls
   empId: string;
   email: string;
   username: string;
@@ -69,6 +104,11 @@ interface CreatedUser {
 }
 
 const CandidateProfileCreation: React.FC = () => {
+  // Assignment state
+  const [assignmentDone, setAssignmentDone] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+  // Use global dark mode from theme store
+  const isDark = useThemeStore((state) => state.isDark);
   const [currentStep, setCurrentStep] = useState<"candidates" | "assignment" | "created">("candidates");
   const [selectedCandidates, setSelectedCandidates] = useState<CandidateProfile[]>([]);
   const [createdUsers, setCreatedUsers] = useState<CreatedUser[]>([]);
@@ -77,9 +117,23 @@ const CandidateProfileCreation: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  
+  // Sidebar state
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
+  
+  // New state for roles, departments, and access levels
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [accessLevels, setAccessLevels] = useState<AccessLevel[]>([]);
+  const [rolesLoading, setRolesLoading] = useState<boolean>(false);
+  const [departmentsLoading, setDepartmentsLoading] = useState<boolean>(false);
+  const [accessLevelsLoading, setAccessLevelsLoading] = useState<boolean>(false);
 
-  // API base URL
+  // API base URLs
   const API_BASE_URL = "http://192.168.1.132:8000/api/onboarding/candidates/";
+  const ROLES_API_URL = "http://192.168.1.132:8000/api/dropdown/roles/";
+  const DEPARTMENTS_API_URL = "http://192.168.1.132:8000/api/dropdown/departments/";
+  const ACCESS_LEVELS_API_URL = "http://192.168.1.132:8000/api/dropdown/access-levels/";
 
   // Transform backend data to frontend format
   const transformCandidateData = (backendCandidate: CandidateDetails): CandidateProfile => {
@@ -103,20 +157,23 @@ const CandidateProfileCreation: React.FC = () => {
       backendData: backendCandidate,
     };
   };
-
-  // Fetch candidates from API
-  const fetchCandidates = async () => {
+  const fetchCandidates = async (useRefreshToken: boolean = false) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(API_BASE_URL, {
+      // If explicitly requested to use refresh token, refresh it first
+      if (useRefreshToken) {
+        console.log('🔄 Refreshing token before fetching candidates...');
+        const refreshSuccess = await refreshAuthToken();
+        if (!refreshSuccess) {
+          throw new Error('Failed to refresh authentication token');
+        }
+        console.log('✅ Token refreshed successfully');
+      }
+
+      const response = await makeAuthenticatedRequest(API_BASE_URL, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          // Add authorization header if needed
-          // 'Authorization': `Bearer ${token}`,
-        },
       });
 
       if (!response.ok) {
@@ -128,6 +185,8 @@ const CandidateProfileCreation: React.FC = () => {
       // Transform backend data to frontend format
       const transformedCandidates = data.results.map(transformCandidateData);
       setCandidates(transformedCandidates);
+
+      console.log(`✅ Successfully fetched ${transformedCandidates.length} candidates${useRefreshToken ? ' (with token refresh)' : ''}`);
       
     } catch (err) {
       console.error('Error fetching candidates:', err);
@@ -167,6 +226,90 @@ const CandidateProfileCreation: React.FC = () => {
     fetchCandidates();
   }, []);
 
+  // Fetch roles from backend (from roles dropdown API)
+  const fetchRoles = async () => {
+    try {
+      setRolesLoading(true);
+      console.log('🔄 Fetching roles from dropdown API...');
+
+      const response = await makeAuthenticatedRequest(ROLES_API_URL, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: RolesApiResponse = await response.json();
+      setRoles(data.roles);
+      
+      console.log(`✅ Successfully fetched ${data.roles.length} roles from dropdown API`);
+      
+    } catch (err) {
+      console.error('Error fetching roles:', err);
+      setRoles([]);
+      console.log('⚠️ No fallback data used as requested');
+    } finally {
+      setRolesLoading(false);
+    }
+  };
+
+  // Fetch departments from backend (from departments dropdown API)
+  const fetchDepartments = async () => {
+    try {
+      setDepartmentsLoading(true);
+      console.log('🔄 Fetching departments from dropdown API...');
+
+      const response = await makeAuthenticatedRequest(DEPARTMENTS_API_URL, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: DepartmentsApiResponse = await response.json();
+      setDepartments(data.departments);
+      
+      console.log(`✅ Successfully fetched ${data.departments.length} departments from dropdown API`);
+      
+    } catch (err) {
+      console.error('Error fetching departments:', err);
+      setDepartments([]);
+      console.log('⚠️ No fallback data used as requested');
+    } finally {
+      setDepartmentsLoading(false);
+    }
+  };
+
+  // Fetch access levels from backend (from access levels dropdown API)
+  const fetchAccessLevels = async () => {
+    try {
+      setAccessLevelsLoading(true);
+      console.log('🔄 Fetching access levels from dropdown API...');
+
+      const response = await makeAuthenticatedRequest(ACCESS_LEVELS_API_URL, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: AccessLevelsApiResponse = await response.json();
+      setAccessLevels(data.access_levels);
+      
+      console.log(`✅ Successfully fetched ${data.access_levels.length} access levels from dropdown API`);
+      
+    } catch (err) {
+      console.error('Error fetching access levels:', err);
+      setAccessLevels([]);
+      console.log('⚠️ No fallback data used as requested');
+    } finally {
+      setAccessLevelsLoading(false);
+    }
+  };
+
   // Filter candidates based on search term
   const filteredCandidates = candidates.filter(candidate =>
     candidate.candidateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -199,11 +342,7 @@ const CandidateProfileCreation: React.FC = () => {
     );
   };
 
-  const handleRefresh = () => {
-    fetchCandidates();
-  };
-
-  const handleCreateProfile = () => {
+  const handleCreateProfile = async () => {
     const selected = candidates.filter(c => c.selected && c.status === "Submitted");
     if (selected.length === 0) {
       alert("Please select at least one submitted candidate");
@@ -219,6 +358,15 @@ const CandidateProfileCreation: React.FC = () => {
       accessLevel: "",
       dateOfJoining: "",
     })));
+    
+    // Fetch roles, departments, and access levels when moving to assignment step
+    console.log('🔄 Fetching roles, departments, and access levels for assignment step...');
+    await Promise.all([
+      fetchRoles(),
+      fetchDepartments(),
+      fetchAccessLevels()
+    ]);
+    
     setCurrentStep("assignment");
   };
 
@@ -239,6 +387,7 @@ const CandidateProfileCreation: React.FC = () => {
     const tempPassword = `Temp${Math.random().toString(36).slice(-8)}`;
 
     return {
+      candidateId: candidate.id, // Store original candidate ID
       empId,
       email: companyEmail,
       username,
@@ -254,98 +403,155 @@ const CandidateProfileCreation: React.FC = () => {
     const incompleteAssignments = roleAssignments.filter(
       assignment => !assignment.role || !assignment.department || !assignment.accessLevel || !assignment.dateOfJoining
     );
-
     if (incompleteAssignments.length > 0) {
       alert("Please complete all role assignments before creating users");
       return;
     }
-
     try {
       setLoading(true);
-      
-      // Generate user credentials for display
-      const newUsers = selectedCandidates.map(candidate => {
-        const assignment = roleAssignments.find(a => a.candidateId === candidate.id)!;
-        return generateUserCredentials(candidate, assignment);
-      });
-
-      // Here you would typically make API calls to create users in the backend
-      // Example API call structure:
-      /*
+      const createdUsersFromApi = [];
       for (const candidate of selectedCandidates) {
-        const assignment = roleAssignments.find(a => a.candidateId === candidate.id)!;
-        const updatePayload = {
-          assigned_role: assignment.role,
-          assigned_department: assignment.department, // This would be department ID
-          date_of_joining: assignment.dateOfJoining,
-          status: 'assigned'
-        };
-        
-        await fetch(`${API_BASE_URL}${candidate.id}/`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            // 'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify(updatePayload),
+        // POST to /onboarding/candidates/{id}/create-user/
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}${candidate.id}/create-user/`, {
+          method: 'POST',
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Failed to create user for candidate ${candidate.candidateName}: ${errorData.detail || response.statusText}`);
+        }
+        const userData = await response.json();
+        createdUsersFromApi.push({
+          candidateId: userData.id,
+          empId: userData.generated_emp_id || '',
+          email: userData.company_email || userData.email,
+          username: userData.email?.split('@')[0] || '',
+          candidateName: `${userData.first_name} ${userData.last_name}`.trim(),
+          role: userData.assigned_role || '',
+          department: userData.assigned_department_name || '',
+          tempPassword: userData.temp_password || '',
         });
       }
-      */
-
-      setCreatedUsers(newUsers);
+      setCreatedUsers(createdUsersFromApi);
       setCurrentStep("created");
-      
     } catch (error) {
       console.error('Error creating users:', error);
-      alert('Failed to create users. Please try again.');
+      alert(`Failed to create users: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
   };
 
+  // Assignment API handler
+  const handleAssign = async () => {
+    // Validate all assignments are complete
+    const incompleteAssignments = roleAssignments.filter(
+      assignment => !assignment.role || !assignment.department || !assignment.accessLevel || !assignment.dateOfJoining
+    );
+    if (incompleteAssignments.length > 0) {
+      alert("Please complete all role assignments before assigning");
+      return;
+    }
+    setAssigning(true);
+    try {
+      // POST to /onboarding/candidates/{id}/assign/ for each candidate individually
+      for (const assignment of roleAssignments) {
+        const payload = {
+          role: assignment.role,
+          department: assignment.department,
+          access_level: assignment.accessLevel,
+          date_of_joining: assignment.dateOfJoining,
+        };
+        
+        const response = await makeAuthenticatedRequest(
+          `http://192.168.1.132:8000/api/onboarding/candidates/${assignment.candidateId}/assign/`, 
+          {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Failed to assign role for ${assignment.candidateName}: ${errorData.detail || response.statusText}`);
+        }
+      }
+      setAssignmentDone(true);
+    } catch (error) {
+      alert(`Failed to assign roles: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setAssigning(false);
+    }
+  };
+
   const handleSendEmail = async () => {
-    // Simulate sending emails
     try {
       setLoading(true);
       
-      // Here you would call your backend API to send credential emails
-      // Example API call:
-      /*
-      const emailPayload = {
-        user_ids: createdUsers.map(user => user.empId),
-        send_credentials: true
-      };
+      console.log('📧 Sending credential emails to individual candidates...');
       
-      await fetch(`${API_BASE_URL}send-credentials/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(emailPayload),
-      });
-      */
+      // Send credentials to each candidate individually using the new API format
+      const results = [];
       
-      console.log("Sending credential emails to:", createdUsers);
+      for (const user of createdUsers) {
+        try {
+          console.log(`📧 Sending credentials to candidate ID: ${user.candidateId}`);
+          
+          const response = await makeAuthenticatedRequest(
+            `${API_BASE_URL}${user.candidateId}/send-credentials/`, 
+            {
+              method: 'POST',
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`Failed to send email to ${user.candidateName}: ${errorData.detail || response.statusText}`);
+          }
+          
+          results.push({ success: true, candidate: user.candidateName });
+          console.log(`✅ Credentials sent successfully to: ${user.candidateName}`);
+          
+        } catch (error) {
+          console.error(`❌ Failed to send email to ${user.candidateName}:`, error);
+          results.push({ 
+            success: false, 
+            candidate: user.candidateName, 
+            error: error instanceof Error ? error.message : 'Unknown error' 
+          });
+        }
+      }
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Check results
+      const successCount = results.filter(r => r.success).length;
+      const failureCount = results.filter(r => !r.success).length;
       
-      setEmailSent(true);
-      alert("Credential emails sent successfully to all new users!");
+      if (successCount === createdUsers.length) {
+        console.log("✅ All credential emails sent successfully");
+        setEmailSent(true);
+        alert(`Credential emails sent successfully to all ${successCount} users!`);
+      } else if (successCount > 0) {
+        console.log(`⚠️ Partial success: ${successCount}/${createdUsers.length} emails sent`);
+        alert(`Emails sent to ${successCount} users. ${failureCount} failed. Check console for details.`);
+        setEmailSent(true); // Mark as sent even if partial success
+      } else {
+        console.log("❌ All email sends failed");
+        alert("Failed to send any credential emails. Please try again.");
+      }
+      
     } catch (error) {
-      console.error('Error sending emails:', error);
-      alert("Failed to send emails. Please try again.");
+      console.error('Error in email sending process:', error);
+      alert(`Failed to send emails: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
   };
 
   const renderCandidatesStep = () => (
-    <div className="p-6">
+  <div className={"p-6 transition-colors duration-300 " + (isDark ? "bg-gray-900" : "bg-white") }>
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <div className="bg-red-100 border border-red-200 text-red-800 rounded-lg p-4 mb-6 dark:bg-red-900 dark:border-red-700 dark:text-red-200">
           <div className="flex items-center">
             <div className="text-red-600 mr-3">⚠️</div>
             <div>
@@ -358,8 +564,9 @@ const CandidateProfileCreation: React.FC = () => {
         </div>
       )}
 
-      {/* Search and Refresh Bar */}
+      {/* Search Bar */}
       <div className="flex items-center justify-between mb-6">
+
         <div className="flex items-center gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -368,18 +575,10 @@ const CandidateProfileCreation: React.FC = () => {
               placeholder="Search candidates..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 transition-colors"
             />
           </div>
         </div>
-        <button 
-          onClick={handleRefresh}
-          disabled={loading}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-        >
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-          {loading ? "Loading..." : "Refresh"}
-        </button>
       </div>
 
       {/* Loading State */}
@@ -390,9 +589,9 @@ const CandidateProfileCreation: React.FC = () => {
       ) : (
         <>
           {/* Candidates Table */}
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-white dark:bg-gray-900">
                 <tr>
                   <th className="px-6 py-4 text-left">
                     <input
@@ -403,7 +602,7 @@ const CandidateProfileCreation: React.FC = () => {
                       aria-label="Select all candidates"
                     />
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-900 dark:text-gray-100">
                     Candidate Name
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
@@ -420,9 +619,9 @@ const CandidateProfileCreation: React.FC = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
                 {filteredCandidates.map((candidate) => (
-                  <tr key={candidate.id} className="hover:bg-gray-50">
+                  <tr key={candidate.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                     <td className="px-6 py-4">
                       <input
                         type="checkbox"
@@ -433,31 +632,31 @@ const CandidateProfileCreation: React.FC = () => {
                         aria-label={`Select ${candidate.candidateName}`}
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                       {candidate.candidateName}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                       {candidate.email}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                       {candidate.mobileNumber || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                       {candidate.organization}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-3">
                         {candidate.status === "Pending" ? (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-red-100 text-red-800 border border-red-200">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-red-100 text-red-800 border border-red-200 dark:bg-red-700 dark:text-white dark:border-red-600">
                             Pending
                           </span>
                         ) : (
                           <>
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-green-100 text-green-800 border border-green-200">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-green-100 text-green-800 border border-green-200 dark:bg-green-700 dark:text-white dark:border-green-600">
                               Submitted
                             </span>
                             <button
-                              className="text-gray-600 hover:text-gray-800 p-1"
+                              className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white p-1"
                               title={`View details for ${candidate.candidateName}`}
                               aria-label={`View details for ${candidate.candidateName}`}
                             >
@@ -484,7 +683,7 @@ const CandidateProfileCreation: React.FC = () => {
 
           {/* Create Profile Button */}
           <div className="mt-8 flex justify-between items-center">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 dark:text-gray-300">
               Total: {filteredCandidates.length} candidates | 
               Submitted: {filteredCandidates.filter(c => c.status === "Submitted").length} | 
               Selected: {filteredCandidates.filter(c => c.selected).length}
@@ -492,10 +691,10 @@ const CandidateProfileCreation: React.FC = () => {
             <button 
               onClick={handleCreateProfile}
               disabled={filteredCandidates.filter(c => c.selected).length === 0}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-md font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-blue-500 dark:bg-blue-700 hover:bg-blue-600 dark:hover:bg-blue-800 text-white px-8 py-3 rounded-md font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <User size={16} />
-              Create Profile ({filteredCandidates.filter(c => c.selected).length})
+              Next ({filteredCandidates.filter(c => c.selected).length})
             </button>
           </div>
         </>
@@ -514,6 +713,31 @@ const CandidateProfileCreation: React.FC = () => {
         </button>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Role Assignment</h2>
         <p className="text-gray-600">Assign roles and departments to selected candidates</p>
+        
+        {/* Retry button for roles and departments */}
+        {(roles.length === 0 || departments.length === 0) && !rolesLoading && !departmentsLoading && (
+          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-yellow-800 font-medium">Missing Data</h3>
+                <p className="text-yellow-700 text-sm">
+                  {roles.length === 0 && "Roles not loaded. "}
+                  {departments.length === 0 && "Departments not loaded. "}
+                  {accessLevels.length === 0 && "Access levels not loaded. "}
+                  Try refreshing the data.
+                </p>
+              </div>
+              <button
+                onClick={async () => {
+                  await Promise.all([fetchRoles(), fetchDepartments(), fetchAccessLevels()]);
+                }}
+                className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+              >
+                Retry Loading
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="space-y-6">
@@ -534,15 +758,20 @@ const CandidateProfileCreation: React.FC = () => {
                   onChange={(e) => handleRoleAssignmentChange(assignment.candidateId, "role", e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   aria-label="Select role"
+                  disabled={rolesLoading}
                 >
-                  <option value="">Select Role</option>
-                  <option value="Software Engineer">Software Engineer</option>
-                  <option value="Senior Software Engineer">Senior Software Engineer</option>
-                  <option value="Team Lead">Team Lead</option>
-                  <option value="Project Manager">Project Manager</option>
-                  <option value="HR Executive">HR Executive</option>
-                  <option value="Business Analyst">Business Analyst</option>
+                  <option value="">
+                    {rolesLoading ? "Loading roles..." : "Select Role"}
+                  </option>
+                  {roles.map((role) => (
+                    <option key={role.id} value={role.role_name}>
+                      {role.role_name}
+                    </option>
+                  ))}
                 </select>
+                {rolesLoading && (
+                  <p className="text-sm text-gray-500 mt-1">Fetching roles from backend...</p>
+                )}
               </div>
 
               <div>
@@ -555,15 +784,20 @@ const CandidateProfileCreation: React.FC = () => {
                   onChange={(e) => handleRoleAssignmentChange(assignment.candidateId, "department", e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   aria-label="Select department"
+                  disabled={departmentsLoading}
                 >
-                  <option value="">Select Department</option>
-                  <option value="Engineering">Engineering</option>
-                  <option value="Human Resources">Human Resources</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Sales">Sales</option>
-                  <option value="Finance">Finance</option>
-                  <option value="Operations">Operations</option>
+                  <option value="">
+                    {departmentsLoading ? "Loading departments..." : "Select Department"}
+                  </option>
+                  {departments.map((department) => (
+                    <option key={department.id} value={department.department_name}>
+                      {department.department_name}
+                    </option>
+                  ))}
                 </select>
+                {departmentsLoading && (
+                  <p className="text-sm text-gray-500 mt-1">Fetching departments from backend...</p>
+                )}
               </div>
 
               <div>
@@ -576,13 +810,20 @@ const CandidateProfileCreation: React.FC = () => {
                   onChange={(e) => handleRoleAssignmentChange(assignment.candidateId, "accessLevel", e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   aria-label="Select access level"
+                  disabled={accessLevelsLoading}
                 >
-                  <option value="">Select Access Level</option>
-                  <option value="Basic">Basic</option>
-                  <option value="Standard">Standard</option>
-                  <option value="Advanced">Advanced</option>
-                  <option value="Admin">Admin</option>
+                  <option value="">
+                    {accessLevelsLoading ? "Loading access levels..." : "Select Access Level"}
+                  </option>
+                  {accessLevels.map((level) => (
+                    <option key={level.value} value={level.value}>
+                      {level.label}
+                    </option>
+                  ))}
                 </select>
+                {accessLevelsLoading && (
+                  <p className="text-sm text-gray-500 mt-1">Fetching access levels from backend...</p>
+                )}
               </div>
 
               <div>
@@ -611,8 +852,15 @@ const CandidateProfileCreation: React.FC = () => {
           Cancel
         </button>
         <button
+          onClick={handleAssign}
+          disabled={assignmentDone || assigning}
+          className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 ${assignmentDone || assigning ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          {assigning ? 'Assigning...' : assignmentDone ? 'Assigned' : 'Assign'}
+        </button>
+        <button
           onClick={handleCreateUsers}
-          disabled={loading}
+          disabled={!assignmentDone || loading}
           className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50"
         >
           <CheckCircle size={16} />
@@ -746,27 +994,35 @@ const CandidateProfileCreation: React.FC = () => {
   );
 
   return (
-    <div className="bg-white min-h-screen">
-      <div className="border-b border-gray-200 bg-white">
-        <div className="px-6 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">
-            {currentStep === "candidates" && "Candidate Profile Creation"}
-            {currentStep === "assignment" && "Role Assignment"}
-            {currentStep === "created" && "User Management"}
-          </h1>
-          <p className="text-gray-600 mt-1">
-            {currentStep === "candidates" && "Select submitted candidates to create their profiles"}
-            {currentStep === "assignment" && "Assign roles and departments to new employees"}
-            {currentStep === "created" && "Manage created user accounts and send credentials"}
-          </p>
+    <div className={"flex h-screen transition-colors duration-300 " + (isDark ? "bg-gray-900" : "bg-gray-50") }>
+      <Sidebar 
+        isCollapsed={sidebarCollapsed} 
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+      />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className={"border-b border-gray-200 dark:border-gray-700 " + (isDark ? "bg-gray-800" : "bg-white") }>
+          <div className="px-6 py-4">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {currentStep === "candidates" && "Candidate Profile Creation"}
+              {currentStep === "assignment" && "Role Assignment"}
+              {currentStep === "created" && "User Management"}
+            </h1>
+            <p className="text-gray-600 dark:text-gray-200 mt-1">
+              {currentStep === "candidates" && "Select submitted candidates to create their profiles"}
+              {currentStep === "assignment" && "Assign roles and departments to new employees"}
+              {currentStep === "created" && "Manage created user accounts and send credentials"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-auto">
+          {currentStep === "candidates" && renderCandidatesStep()}
+          {currentStep === "assignment" && renderAssignmentStep()}
+          {currentStep === "created" && renderCreatedUsersStep()}
         </div>
       </div>
-
-      {currentStep === "candidates" && renderCandidatesStep()}
-      {currentStep === "assignment" && renderAssignmentStep()}
-      {currentStep === "created" && renderCreatedUsersStep()}
     </div>
   );
 };
-
+  
 export default CandidateProfileCreation;
