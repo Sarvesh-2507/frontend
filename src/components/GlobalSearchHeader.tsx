@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useThemeStore } from '../context/themeStore';
+import { Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Clock, Users, Calendar, FileText, Building2, X, BarChart3, Bell } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -154,10 +156,19 @@ const GlobalSearchHeader: React.FC<GlobalSearchHeaderProps> = ({ onNavigate }) =
     }
   }, [isSearchFocused]);
 
+  const { isDark, toggleTheme } = useThemeStore();
   return (
     <div ref={searchContainerRef} className="relative w-full max-w-2xl mx-auto">
       {/* Search Input */}
       <div className="relative">
+        {/* Theme Toggle Button */}
+        <button
+          className="absolute right-16 top-1/2 -translate-y-1/2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors z-10"
+          aria-label="Toggle theme"
+          onClick={toggleTheme}
+        >
+          {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </button>
         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         <input
           type="text"

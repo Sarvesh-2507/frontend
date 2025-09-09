@@ -14,9 +14,13 @@ import {
   Building2,
   DollarSign,
   Search,
-  ArrowLeft
+  ArrowLeft,
+  ArrowUp,
+  ArrowDown,
+  X
 } from 'lucide-react';
 import Sidebar from './Sidebar';
+import { getSidebarQuickActions, SidebarQuickAction } from './sidebarQuickActionsUtil';
 import ProfileProgressBar from './ui/ProfileProgressBar';
 import HighlightsWidget from './ui/HighlightsWidget';
 import QuickEmployeeDirectory from './QuickEmployeeDirectory';
@@ -111,54 +115,126 @@ const QuickActionButton: React.FC<QuickActionProps> = ({ title, icon: Icon, onCl
   );
 };
 
+// Only include sub-features with working UI (update this list as needed)
+const WORKING_SUBFEATURES = [
+  'Leave Application',
+  'Leave Approval',
+  'View Attendance',
+  'Manage Holidays',
+  'Employee Directory',
+  'Payroll Reports & Analytics',
+  'Payslip Generation & Distribution',
+  'Schedule Performance Reviews',
+  'Policy Documents',
+  'Profile Management',
+  'Manual Attendance Update',
+  'Create Support Ticket',
+  'Training Programs',
+  'Exit Initiation & Approval',
+  'Asset Request & Credential Access',
+  'Benefits Enrollment',
+  'Knowledge Base',
+];
+
+const allQuickActions: SidebarQuickAction[] = getSidebarQuickActions().filter(a => WORKING_SUBFEATURES.includes(a.title));
+
+
+const QUICK_ACTIONS_KEY = 'customQuickActionsV2';
+
 const HomePage: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showEmployeeDirectory, setShowEmployeeDirectory] = useState(false);
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [profileDetails, setProfileDetails] = useState<any>(null);
+  const [showQuickActionsModal, setShowQuickActionsModal] = useState(false);
+  // Load from localStorage, or show none by default
+  const [customQuickActions, setCustomQuickActions] = useState<string[]>(() => {
+    const saved = localStorage.getItem(QUICK_ACTIONS_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
+  // Always show all available actions in modal, but preserve order and selection
+  const [modalActions, setModalActions] = useState<string[]>(() => allQuickActions.map(a => a.title));
+  const [modalSelected, setModalSelected] = useState<Set<string>>(() => new Set(customQuickActions));
   const navigate = useNavigate();
 
+  // Restore toggleSidebar function
   const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
+    setSidebarCollapsed((prev) => !prev);
   };
+
 
   const quickStats = [
     {
       title: 'Total Employees',
       value: '352',
       icon: Users,
-      color: 'bg-blue-500'
+      color: 'bg-blue-500',
     },
     {
       title: 'Active Projects',
       value: '24',
       icon: BarChart3,
-      color: 'bg-green-500'
+      color: 'bg-green-500',
     },
     {
       title: 'Pending Leaves',
       value: '8',
       icon: Calendar,
-      color: 'bg-orange-500'
+      color: 'bg-orange-500',
     },
     {
       title: 'Open Tickets',
       value: '12',
       icon: AlertCircle,
-      color: 'bg-red-500'
-    }
+      color: 'bg-red-500',
+    },
   ];
 
 
 
-  const quickActions = [
-    { title: 'Leave Management', icon: Plus, path: '/leave' },
-    { title: 'View Attendance', icon: Eye, path: '/attendance' },
-    { title: 'Manage Organizations', icon: Building2, path: '/organizations' },
-    { title: 'Employee Directory', icon: Users, path: '/employee-profile' },
-    { title: 'Payroll Management', icon: DollarSign, path: '/payroll' },
-    { title: 'Performance Reviews', icon: BarChart3, path: '/performance' }
-  ];
+  const quickActions = allQuickActions.filter(a => customQuickActions.includes(a.title)).sort((a, b) => customQuickActions.indexOf(a.title) - customQuickActions.indexOf(b.title));
+  // Modal handlers
+  const openQuickActionsModal = () => {
+    // Always show all available actions, but keep the last saved order
+    setModalActions(prev => {
+      const allTitles = allQuickActions.map(a => a.title);
+      const prevSet = new Set(prev);
+      const missing = allTitles.filter(t => !prevSet.has(t));
+      return [...prev.filter(t => allTitles.includes(t)), ...missing];
+    });
+    setModalSelected(new Set(customQuickActions));
+    setShowQuickActionsModal(true);
+  };
+  const closeQuickActionsModal = () => setShowQuickActionsModal(false);
+  const handleModalToggle = (title: string) => {
+    setModalSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(title)) next.delete(title); else next.add(title);
+      return next;
+    });
+  };
+  const handleModalMove = (idx: number, dir: -1 | 1) => {
+    setModalActions(prev => {
+      const arr = [...prev];
+      const swapIdx = idx + dir;
+      if (swapIdx < 0 || swapIdx >= arr.length) return arr;
+      [arr[idx], arr[swapIdx]] = [arr[swapIdx], arr[idx]];
+      return arr;
+    });
+  };
+  const handleModalSave = () => {
+    const newCustom = modalActions.filter(title => modalSelected.has(title));
+    setCustomQuickActions(newCustom);
+    localStorage.setItem(QUICK_ACTIONS_KEY, JSON.stringify(newCustom));
+    setShowQuickActionsModal(false);
+  };
 
     useEffect(() => {
       const fetchProfile = async () => {
@@ -334,11 +410,22 @@ const HomePage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-4 lg:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+            className="bg-white dark:bg-gray-800 rounded-xl p-4 lg:p-6 shadow-sm border border-gray-200 dark:border-gray-700 relative"
           >
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 lg:mb-4">Quick Actions</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 lg:mb-4 flex items-center justify-between">
+              <span>Quick Actions</span>
+              <button
+                aria-label="Customize Quick Actions"
+                className="ml-2 p-1 rounded-full bg-blue-50 dark:bg-blue-900 hover:bg-blue-100 dark:hover:bg-blue-800 transition-all shadow-sm border border-blue-100 dark:border-blue-800"
+                onClick={openQuickActionsModal}
+              >
+                <Plus className="w-5 h-5 text-blue-600 dark:text-blue-300" />
+              </button>
+            </h3>
             <div className="space-y-2 lg:space-y-3">
-              {quickActions.map((action, index) => (
+              {quickActions.length === 0 ? (
+                <div className="text-gray-400 text-sm italic">No quick actions selected.</div>
+              ) : quickActions.map((action, index) => (
                 <QuickActionButton
                   key={index}
                   title={action.title}
@@ -347,6 +434,86 @@ const HomePage: React.FC = () => {
                 />
               ))}
             </div>
+            {/* Modal for customizing quick actions */}
+            {showQuickActionsModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all duration-300" onClick={closeQuickActionsModal} />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 40 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 40 }}
+                  transition={{ duration: 0.25 }}
+                  className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-blue-100 dark:border-blue-800 p-6 w-[95vw] max-w-md mx-auto flex flex-col gap-4"
+                  style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)' }}
+                >
+                  <button
+                    className="absolute top-3 right-3 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                    onClick={closeQuickActionsModal}
+                    aria-label="Close"
+                  >
+                    <X className="w-5 h-5 text-gray-400" />
+                  </button>
+                  <h4 className="text-lg font-semibold text-blue-700 dark:text-blue-200 mb-2">Customize Quick Actions</h4>
+                  <div className="flex flex-col gap-2 max-h-72 overflow-y-auto">
+                    {modalActions.map((title, idx) => {
+                      const action = allQuickActions.find(a => a.title === title);
+                      if (!action) return null;
+                      return (
+                        <motion.div
+                          key={title}
+                          layout
+                          className={`flex items-center justify-between bg-blue-50/60 dark:bg-blue-900/40 rounded-lg px-3 py-2 gap-2 border border-blue-100 dark:border-blue-800 transition-all`}
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <input
+                              type="checkbox"
+                              checked={modalSelected.has(title)}
+                              onChange={() => handleModalToggle(title)}
+                              className="accent-blue-600 w-4 h-4 mr-2"
+                              id={`quick-action-checkbox-${idx}`}
+                              title={`Toggle ${title}`}
+                            />
+                            <label htmlFor={`quick-action-checkbox-${idx}`} className="sr-only">
+                              Toggle {title}
+                            </label>
+                            <action.icon className="w-5 h-5 text-blue-600 dark:text-blue-300 flex-shrink-0" />
+                            <span className="text-sm font-medium text-gray-900 dark:text-white truncate">{title}</span>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <button
+                              className="p-1 rounded hover:bg-blue-100 dark:hover:bg-blue-800"
+                              onClick={() => handleModalMove(idx, -1)}
+                              disabled={idx === 0}
+                              aria-label="Move Up"
+                            >
+                              <ArrowUp className={`w-4 h-4 ${idx === 0 ? 'text-gray-300' : 'text-blue-500'}`} />
+                            </button>
+                            <button
+                              className="p-1 rounded hover:bg-blue-100 dark:hover:bg-blue-800"
+                              onClick={() => handleModalMove(idx, 1)}
+                              disabled={idx === modalActions.length - 1}
+                              aria-label="Move Down"
+                            >
+                              <ArrowDown className={`w-4 h-4 ${idx === modalActions.length - 1 ? 'text-gray-300' : 'text-blue-500'}`} />
+                            </button>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex justify-end gap-2 mt-2">
+                    <button
+                      className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                      onClick={closeQuickActionsModal}
+                    >Cancel</button>
+                    <button
+                      className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow"
+                      onClick={handleModalSave}
+                    >Save</button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
           </motion.div>
           {/* Recent Announcements */}
           <RecentAnnouncements />

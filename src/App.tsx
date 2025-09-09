@@ -107,6 +107,10 @@ import { AuthProvider } from "./auth/AuthProvider";
 // Auth Store
 import { useAuthStore } from "./context/authStore";
 import CandidateProfileCreation from "./pages/CandidateProfileCreation";
+import EmployeeRoutes from './employee/pages/EmployeeRoutes';
+import EmployeeLoginPage from './employee/pages/LoginPage';
+import EmployeeLogoutPage from './employee/pages/LogoutPage';
+import PoliciesPage from './employee/pages/PoliciesPage';
 
 const App: React.FC = () => {
   const { isAuthenticated, refreshToken, checkSession, initializeFromStorage } = useAuthStore();
@@ -761,6 +765,11 @@ const App: React.FC = () => {
           
           {/* Test Announcements Route - No Auth */}
           <Route path="/test-announcements" element={<Announcements />} />
+
+          {/* Employee Routes - No Auth */}
+          <Route path="/emp-home/*" element={<EmployeeRoutes />} />
+          <Route path="/emp-login" element={<EmployeeLoginPage />} />
+          <Route path="/emp-logout" element={<EmployeeLogoutPage />} />
 
           {/* Default Routes */}
           <Route

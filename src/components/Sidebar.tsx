@@ -69,7 +69,7 @@ interface MenuItem {
   hasSubmenu?: boolean;
 }
 
-const menuItems: MenuItem[] = [
+export const menuItems: MenuItem[] = [
   {
     id: 'home',
     label: 'Home',
