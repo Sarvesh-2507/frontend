@@ -82,12 +82,6 @@ const menuItems: MenuItem[] = [
     label: 'Organization',
     icon: Building2,
     path: '/organizations',
-    hasSubmenu: true,
-    children: [
-      { id: 'org-overview', label: 'Overview', icon: BarChart3, path: '/organizations/overview' },
-      { id: 'org-list', label: 'All Companies', icon: Building2, path: '/organizations' },
-      { id: 'domains', label: 'Domains', icon: Globe, path: '/organizations/domains' },
-    ]
   },
   {
     id: 'recruitment',
