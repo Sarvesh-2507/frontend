@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useThemeStore } from "../context/themeStore";
-import { Eye, Search, RefreshCw, PlusCircle, CheckCircle, User, Building, Calendar, Shield, Mail } from "lucide-react";
+import { Eye, Search, RefreshCw, PlusCircle, CheckCircle, User, Building, Calendar, Shield, Mail, Briefcase } from "lucide-react";
 import { makeAuthenticatedRequest, refreshAuthToken } from "../utils/auth";
 import Sidebar from "../components/Sidebar";
 
@@ -56,6 +56,7 @@ interface RoleAssignment {
   candidateName: string;
   role: string;
   department: string;
+  designation: string;
   accessLevel: string;
   dateOfJoining: string;
 }
@@ -355,6 +356,7 @@ const CandidateProfileCreation: React.FC = () => {
       candidateName: candidate.candidateName,
       role: "",
       department: "",
+      designation: "",
       accessLevel: "",
       dateOfJoining: "",
     })));
@@ -401,7 +403,7 @@ const CandidateProfileCreation: React.FC = () => {
   const handleCreateUsers = async () => {
     // Validate all assignments are complete
     const incompleteAssignments = roleAssignments.filter(
-      assignment => !assignment.role || !assignment.department || !assignment.accessLevel || !assignment.dateOfJoining
+      assignment => !assignment.role || !assignment.department || !assignment.designation || !assignment.accessLevel || !assignment.dateOfJoining
     );
     if (incompleteAssignments.length > 0) {
       alert("Please complete all role assignments before creating users");
@@ -411,9 +413,37 @@ const CandidateProfileCreation: React.FC = () => {
       setLoading(true);
       const createdUsersFromApi = [];
       for (const candidate of selectedCandidates) {
+        // Find the corresponding role assignment for this candidate
+        const assignment = roleAssignments.find(a => a.candidateId === candidate.id);
+        if (!assignment) {
+          throw new Error(`No role assignment found for candidate ${candidate.candidateName}`);
+        }
+
+        // Generate company email based on candidate name
+        const sanitizedName = candidate.candidateName
+          .toLowerCase()
+          .replace(/[^a-z\s]/g, '') // Remove special characters
+          .replace(/\s+/g, '.') // Replace spaces with dots
+          .replace(/\.+/g, '.') // Replace multiple dots with single dot
+          .replace(/^\.+|\.+$/g, ''); // Remove leading/trailing dots
+        
+        const companyEmail = `${sanitizedName}@mhcognition.com`;
+
+        // Prepare payload with assignment data and company email
+        const payload = {
+          role: assignment.role,
+          department: assignment.department,
+          designation: assignment.designation,
+          access_level: assignment.accessLevel,
+          date_of_joining: assignment.dateOfJoining,
+          company_email: companyEmail,
+        };
+
         // POST to /onboarding/candidates/{id}/create-user/
         const response = await makeAuthenticatedRequest(`${API_BASE_URL}${candidate.id}/create-user/`, {
           method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
         });
         if (!response.ok) {
           const errorData = await response.json();
@@ -445,7 +475,7 @@ const CandidateProfileCreation: React.FC = () => {
   const handleAssign = async () => {
     // Validate all assignments are complete
     const incompleteAssignments = roleAssignments.filter(
-      assignment => !assignment.role || !assignment.department || !assignment.accessLevel || !assignment.dateOfJoining
+      assignment => !assignment.role || !assignment.department || !assignment.designation || !assignment.accessLevel || !assignment.dateOfJoining
     );
     if (incompleteAssignments.length > 0) {
       alert("Please complete all role assignments before assigning");
@@ -458,6 +488,7 @@ const CandidateProfileCreation: React.FC = () => {
         const payload = {
           role: assignment.role,
           department: assignment.department,
+          designation: assignment.designation,
           access_level: assignment.accessLevel,
           date_of_joining: assignment.dateOfJoining,
         };
@@ -798,6 +829,21 @@ const CandidateProfileCreation: React.FC = () => {
                 {departmentsLoading && (
                   <p className="text-sm text-gray-500 mt-1">Fetching departments from backend...</p>
                 )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Briefcase size={16} className="inline mr-2" />
+                  Designation
+                </label>
+                <input
+                  type="text"
+                  value={assignment.designation}
+                  onChange={(e) => handleRoleAssignmentChange(assignment.candidateId, "designation", e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter designation"
+                  aria-label="Enter designation"
+                />
               </div>
 
               <div>
