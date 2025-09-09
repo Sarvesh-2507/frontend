@@ -431,10 +431,10 @@ const CandidateProfileCreation: React.FC = () => {
 
         // Prepare payload with assignment data and company email
         const payload = {
-          role: assignment.role,
-          department: assignment.department,
+          assigned_role: assignment.role,
+          assigned_department: assignment.department,
           designation: assignment.designation,
-          access_level: assignment.accessLevel,
+          assigned_access_level: assignment.accessLevel,
           date_of_joining: assignment.dateOfJoining,
           company_email: companyEmail,
         };
@@ -451,13 +451,13 @@ const CandidateProfileCreation: React.FC = () => {
         }
         const userData = await response.json();
         createdUsersFromApi.push({
-          candidateId: userData.id,
-          empId: userData.generated_emp_id || '',
+          candidateId: userData.candidate_id || userData.id,
+          empId: userData.emp_id || userData.profile_id || '',
           email: userData.company_email || userData.email,
-          username: userData.email?.split('@')[0] || '',
-          candidateName: `${userData.first_name} ${userData.last_name}`.trim(),
-          role: userData.assigned_role || '',
-          department: userData.assigned_department_name || '',
+          username: userData.company_email?.split('@')[0] || '',
+          candidateName: candidate.candidateName,
+          role: assignment.role,
+          department: assignment.department,
           tempPassword: userData.temp_password || '',
         });
       }
@@ -486,10 +486,10 @@ const CandidateProfileCreation: React.FC = () => {
       // POST to /onboarding/candidates/{id}/assign/ for each candidate individually
       for (const assignment of roleAssignments) {
         const payload = {
-          role: assignment.role,
-          department: assignment.department,
+          assigned_role: assignment.role,
+          assigned_department: assignment.department,
+          assigned_access_level: assignment.accessLevel,
           designation: assignment.designation,
-          access_level: assignment.accessLevel,
           date_of_joining: assignment.dateOfJoining,
         };
         
