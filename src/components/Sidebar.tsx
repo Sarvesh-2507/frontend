@@ -119,13 +119,13 @@ export const menuItems: MenuItem[] = [
     hasSubmenu: true,
     roles: ['admin', 'hr'],
     children: [
+       { id: 'candidate-invite', label: 'Candidate Invite', icon: User, path: '/onboarding/candidate-invite' },
+      { id: 'candidate-uploads', label: 'Candidate Uploads', icon: Upload, path: '/onboarding/candidate-uploads' },
   { id: 'offer-letter', label: 'Offer Letter Management', icon: FileText, path: '/onboarding/offer-letter' },
   { id: 'pre-boarding', label: 'Pre-boarding Documentation', icon: ClipboardList, path: '/onboarding/pre-boarding' },
   { id: 'background-verification', label: 'Background Verification', icon: Shield, path: '/onboarding/background-verification' },
   { id: 'joining-formalities', label: 'Joining Formalities', icon: CheckCircle, path: '/onboarding/joining-formalities' },
-  { id: 'candidate-uploads', label: 'Candidate Uploads', icon: Upload, path: '/onboarding/candidate-uploads' },
   { id: 'task-checklist', label: 'Task & Checklist Tracking', icon: ClipboardList, path: '/onboarding/tasks' },
-  { id: 'candidate-invite', label: 'Candidate Invite', icon: User, path: '/onboarding/candidate-invite' },
   { id: 'asset-allocation', label: 'Asset Allocation', icon: Package, path: '/onboarding/asset-allocation' },
     ]
   },
