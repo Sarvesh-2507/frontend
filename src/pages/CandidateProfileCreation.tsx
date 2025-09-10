@@ -137,14 +137,33 @@ const CandidateProfileCreation: React.FC = () => {
   const ACCESS_LEVELS_API_URL = "http://192.168.1.132:8000/api/dropdown/access-levels/";
 
   // Transform backend data to frontend format
-  const transformCandidateData = (backendCandidate: CandidateDetails): CandidateProfile => {
+  const transformCandidateData = (backendCandidate: CandidateDetails): CandidateProfile | null => {
     const fullName = `${backendCandidate.first_name || ''} ${backendCandidate.last_name || ''}`.trim();
     const inviteDate = backendCandidate.invited_at 
       ? new Date(backendCandidate.invited_at).toLocaleDateString('en-GB')
       : '';
-    
-    // Map backend status to frontend status
-    const status = backendCandidate.status === "submitted" ? "Submitted" : "Pending";
+
+    // Map backend status to display status
+    let status: string;
+    switch (backendCandidate.status) {
+      case "invited":
+        status = "Invited";
+        break;
+      case "pending":
+        status = "Pending";
+        break;
+      case "submitted":
+        status = "Submitted";
+        break;
+      case "assigned":
+        status = "Assigned";
+        break;
+      case "completed":
+        // Do not show completed candidates in this page
+        return null;
+      default:
+        status = backendCandidate.status;
+    }
 
     return {
       id: backendCandidate.id,
@@ -183,9 +202,9 @@ const CandidateProfileCreation: React.FC = () => {
 
       const data: CandidateApiResponse = await response.json();
       
-      // Transform backend data to frontend format
-      const transformedCandidates = data.results.map(transformCandidateData);
-      setCandidates(transformedCandidates);
+  // Transform backend data to frontend format, filter out nulls (completed)
+  const transformedCandidates = data.results.map(transformCandidateData).filter(Boolean) as CandidateProfile[];
+  setCandidates(transformedCandidates);
 
       console.log(`✅ Successfully fetched ${transformedCandidates.length} candidates${useRefreshToken ? ' (with token refresh)' : ''}`);
       
