@@ -77,22 +77,22 @@ export const menuItems: MenuItem[] = [
     path: '/home',
   },
 
- //{
-   // id: 'recruitment',
-    //label: 'Recruitment',
-    //icon: Search,
-    //path: '/recruitment',
-    //hasSubmenu: true,
-    //children: [
-      //{ id: 'job-requisition', label: 'Job Requisition Management', icon: FileText, path: '/recruitment/job-requisition' },
-      //{ id: 'job-posting', label: 'Job Posting & Advertisement', icon: Plus, path: '/recruitment/job-posting' },
-      //{ id: 'application-tracking', label: 'Application Tracking System', icon: Search, path: '/recruitment/ats' },
-      //{ id: 'interview-management', label: 'Interview Management', icon: Calendar, path: '/recruitment/interviews' },
-      //{ id: 'candidate-registration', label: 'Candidate Registration', icon: UserPlus, path: '/recruitment/candidates' },
-      //{ id: 'hiring-analytics', label: 'Hiring Analytics Dashboard', icon: BarChart3, path: '/recruitment/analytics' },
-      //{ id: 'recruitment-budget', label: 'Recruitment Budget Tracker', icon: DollarSign, path: '/recruitment/budget' },
-    //]
-  //},
+ {
+   id: 'recruitment',
+    label: 'Recruitment',
+    icon: Search,
+    path: '/recruitment',
+    hasSubmenu: true,
+    children: [
+      { id: 'job-requisition', label: 'Job Requisition Management', icon: FileText, path: '/recruitment/job-requisition' },
+      { id: 'job-posting', label: 'Job Posting & Advertisement', icon: Plus, path: '/recruitment/job-posting' },
+      { id: 'application-tracking', label: 'Application Tracking System', icon: Search, path: '/recruitment/ats' },
+      { id: 'interview-management', label: 'Interview Management', icon: Calendar, path: '/recruitment/interviews' },
+      { id: 'candidate-registration', label: 'Candidate Registration', icon: UserPlus, path: '/recruitment/candidates' },
+      { id: 'hiring-analytics', label: 'Hiring Analytics Dashboard', icon: BarChart3, path: '/recruitment/analytics' },
+      { id: 'recruitment-budget', label: 'Recruitment Budget Tracker', icon: DollarSign, path: '/recruitment/budget' },
+    ]
+  },
   
   {
     id: 'employee',
