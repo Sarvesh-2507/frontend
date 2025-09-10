@@ -52,6 +52,13 @@ class ApiService {
     return response.data;
   }
 
+  async getHRDashboardRequests(): Promise<LeaveRequest[]> {
+    const response = await api.get('/leave/leave-requests/hr_dashboard/', {
+      headers: this.getAuthHeader()
+    });
+    return response.data;
+  }
+
   async cancelLeaveRequest(id: number): Promise<void> {
     await api.patch(`/leave/leave-requests/${id}/cancel/`, {}, {
       headers: this.getAuthHeader()

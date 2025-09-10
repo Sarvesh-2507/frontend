@@ -170,14 +170,16 @@ const Recruitment: React.FC = () => {
       setLoading(true);
       // Fetch recruitment statistics from backend
       const response = await dashboardAPI.getStats();
-      if (response.data) {
+      // Assuming the actual stats are inside response.data.stats
+      const statsData = response.data?.stats ?? response.data;
+      if (statsData) {
         setStats({
-          totalJobs: response.data.totalJobs || jobPostings.length,
-          activeJobs: response.data.activeJobs || jobPostings.filter(job => job.status === 'active').length,
-          totalCandidates: response.data.totalCandidates || candidates.length,
-          interviewsScheduled: response.data.interviewsScheduled || candidates.filter(c => c.status === 'interview').length,
-          offersExtended: response.data.offersExtended || candidates.filter(c => c.status === 'offer').length,
-          hiredThisMonth: response.data.hiredThisMonth || candidates.filter(c => c.status === 'hired').length,
+          totalJobs: statsData?.totalJobs ?? jobPostings.length,
+          activeJobs: statsData?.activeJobs ?? jobPostings.filter(job => job.status === 'active').length,
+          totalCandidates: statsData?.totalCandidates ?? candidates.length,
+          interviewsScheduled: statsData?.interviewsScheduled ?? candidates.filter(c => c.status === 'interview').length,
+          offersExtended: statsData?.offersExtended ?? candidates.filter(c => c.status === 'offer').length,
+          hiredThisMonth: statsData?.hiredThisMonth ?? candidates.filter(c => c.status === 'hired').length,
         });
       }
       toast.success("Recruitment data loaded successfully");
