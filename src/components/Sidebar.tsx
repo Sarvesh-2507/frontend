@@ -77,28 +77,40 @@ export const menuItems: MenuItem[] = [
     path: '/home',
   },
 
+ //{
+   // id: 'recruitment',
+    //label: 'Recruitment',
+    //icon: Search,
+    //path: '/recruitment',
+    //hasSubmenu: true,
+    //children: [
+      //{ id: 'job-requisition', label: 'Job Requisition Management', icon: FileText, path: '/recruitment/job-requisition' },
+      //{ id: 'job-posting', label: 'Job Posting & Advertisement', icon: Plus, path: '/recruitment/job-posting' },
+      //{ id: 'application-tracking', label: 'Application Tracking System', icon: Search, path: '/recruitment/ats' },
+      //{ id: 'interview-management', label: 'Interview Management', icon: Calendar, path: '/recruitment/interviews' },
+      //{ id: 'candidate-registration', label: 'Candidate Registration', icon: UserPlus, path: '/recruitment/candidates' },
+      //{ id: 'hiring-analytics', label: 'Hiring Analytics Dashboard', icon: BarChart3, path: '/recruitment/analytics' },
+      //{ id: 'recruitment-budget', label: 'Recruitment Budget Tracker', icon: DollarSign, path: '/recruitment/budget' },
+    //]
+  //},
+  
   {
-    id: 'organizations',
-    label: 'Organization',
-    icon: Building2,
-    path: '/organizations',
-  },
-  {
-    id: 'recruitment',
-    label: 'Recruitment',
-    icon: Search,
-    path: '/recruitment',
+    id: 'employee',
+    label: 'Employee Management',
+    icon: Users,
+    path: '/employee-profile',
     hasSubmenu: true,
     children: [
-      { id: 'job-requisition', label: 'Job Requisition Management', icon: FileText, path: '/recruitment/job-requisition' },
-      { id: 'job-posting', label: 'Job Posting & Advertisement', icon: Plus, path: '/recruitment/job-posting' },
-      { id: 'application-tracking', label: 'Application Tracking System', icon: Search, path: '/recruitment/ats' },
-      { id: 'interview-management', label: 'Interview Management', icon: Calendar, path: '/recruitment/interviews' },
-      { id: 'candidate-registration', label: 'Candidate Registration', icon: UserPlus, path: '/recruitment/candidates' },
-      { id: 'hiring-analytics', label: 'Hiring Analytics Dashboard', icon: BarChart3, path: '/recruitment/analytics' },
-      { id: 'recruitment-budget', label: 'Recruitment Budget Tracker', icon: DollarSign, path: '/recruitment/budget' },
+      { id: 'employee-profiles', label: 'Employee Profiles', icon: Users, path: '/employee-profile' },
+      { id: 'employee-directory', label: 'Employee Directory', icon: Users, path: '/employee/directory' },
+      { id: 'profile-management', label: 'Profile Management', icon: User, path: '/employee/profile-management' },
+      { id: 'document-management', label: 'Document Management', icon: FileText, path: '/employee/documents' },
+      { id: 'access-control', label: 'Access Control', icon: Shield, path: '/employee/access-control' },
+      { id: 'audit-logs', label: 'Audit Logs', icon: ClipboardList, path: '/employee/audit-logs' },
+      { id: 'employee-reports', label: 'Employee Reports', icon: BarChart3, path: '/employee/reports' },
     ]
   },
+
   {
     id: 'onboarding',
     label: 'Onboarding',
@@ -115,22 +127,6 @@ export const menuItems: MenuItem[] = [
   { id: 'task-checklist', label: 'Task & Checklist Tracking', icon: ClipboardList, path: '/onboarding/tasks' },
   { id: 'candidate-invite', label: 'Candidate Invite', icon: User, path: '/onboarding/candidate-invite' },
   { id: 'asset-allocation', label: 'Asset Allocation', icon: Package, path: '/onboarding/asset-allocation' },
-    ]
-  },
-  {
-    id: 'employee',
-    label: 'Employee Management',
-    icon: Users,
-    path: '/employee-profile',
-    hasSubmenu: true,
-    children: [
-      { id: 'employee-profiles', label: 'Employee Profiles', icon: Users, path: '/employee-profile' },
-      { id: 'employee-directory', label: 'Employee Directory', icon: Users, path: '/employee/directory' },
-      { id: 'profile-management', label: 'Profile Management', icon: User, path: '/employee/profile-management' },
-      { id: 'document-management', label: 'Document Management', icon: FileText, path: '/employee/documents' },
-      { id: 'access-control', label: 'Access Control', icon: Shield, path: '/employee/access-control' },
-      { id: 'audit-logs', label: 'Audit Logs', icon: ClipboardList, path: '/employee/audit-logs' },
-      { id: 'employee-reports', label: 'Employee Reports', icon: BarChart3, path: '/employee/reports' },
     ]
   },
   {
@@ -183,59 +179,66 @@ export const menuItems: MenuItem[] = [
       { id: 'self-service', label: 'Self-Service Portal', icon: User, path: '/payroll/self-service' },
     ]
   },
-  {
-    id: 'performance',
-    label: 'Performance',
-    icon: TrendingUp,
-    path: '/performance',
-    hasSubmenu: true,
-    roles: ['admin', 'hr'],
-    children: [
-      { id: 'performance-reviews', label: 'Schedule Performance Reviews', icon: Calendar, path: '/performance/reviews' },
-      { id: 'evaluation-forms', label: 'Create Evaluation Forms', icon: FileText, path: '/performance/evaluation-forms' },
-      { id: 'self-assessment', label: 'Submit Self-Assessment', icon: User, path: '/performance/self-assessment' },
-      { id: 'performance-feedback', label: 'View Performance Feedback', icon: MessageSquare, path: '/performance/feedback' },
-      { id: 'performance-grades', label: 'Approve Performance Grades', icon: Award, path: '/performance/grades' },
-      { id: 'performance-insights', label: 'Overview Performance Insights', icon: BarChart3, path: '/performance/insights' },
-      { id: 'final-ratings', label: 'Approve Final Ratings', icon: Star, path: '/performance/final-ratings' },
-      { id: 'performance-reports', label: 'Export Performance Reports', icon: Download, path: '/performance/reports' },
-      { id: 'performance-trends', label: 'View Performance Trends', icon: TrendingUp, path: '/performance/trends' },
-    ]
+   {
+    id: 'organizations',
+    label: 'Organization',
+    icon: Building2,
+    path: '/organizations',
   },
-  {
-    id: 'offboarding',
-    label: 'Offboarding',
-    icon: FileText,
-    path: '/offboarding',
-    hasSubmenu: true,
-    roles: ['admin', 'hr'],
-    children: [
-      { id: 'exit-initiation', label: 'Exit Initiation & Approval', icon: UserX, path: '/offboarding/exit-initiation' },
-      { id: 'exit-interview', label: 'Exit Interview & Feedback', icon: MessageSquare, path: '/offboarding/exit-interview' },
-      { id: 'final-settlement', label: 'Full & Final Settlement', icon: DollarSign, path: '/offboarding/final-settlement' },
-      { id: 'documentation-handover', label: 'Final Documentation & Handover', icon: FileText, path: '/offboarding/documentation' },
-      { id: 'asset-return', label: 'Asset Return & Clearance', icon: Package, path: '/offboarding/asset-return' },
-      { id: 'access-deactivation', label: 'Access Deactivation', icon: Shield, path: '/offboarding/access-deactivation' },
-      { id: 'resignation-tracking', label: 'Apply Resignation', icon: FileText, path: '/offboarding/resignation' },
-      { id: 'exit-status', label: 'Track Exit Status', icon: Clock, path: '/offboarding/exit-status' },
-      { id: 'exit-letters', label: 'Download Exit Letters', icon: Download, path: '/offboarding/exit-letters' },
-    ]
-  },
-  {
-    id: 'assets',
-    label: 'Assets',
-    icon: Monitor,
-    path: '/assets',
-    hasSubmenu: true,
-    roles: ['admin', 'hr'],
-    children: [
-      { id: 'asset-request', label: 'Asset Request & Credential Access', icon: Plus, path: '/assets/request' },
-      { id: 'asset-template', label: 'Asset Template & Lifecycle Management', icon: Settings, path: '/assets/template' },
-      { id: 'inventory-dispatch', label: 'Inventory & Dispatch Control', icon: Package, path: '/assets/inventory' },
-      { id: 'asset-tracking', label: 'Asset Tracking', icon: Search, path: '/assets/tracking' },
-      { id: 'asset-maintenance', label: 'Asset Maintenance', icon: Settings, path: '/assets/maintenance' },
-    ]
-  },
+
+ // {
+   // id: 'performance',
+    //label: 'Performance',
+    //icon: TrendingUp,
+    //path: '/performance',
+    //hasSubmenu: true,
+    //roles: ['admin', 'hr'],
+    //children: [
+      //{ id: 'performance-reviews', label: 'Schedule Performance Reviews', icon: Calendar, path: '/performance/reviews' },
+      //{ id: 'evaluation-forms', label: 'Create Evaluation Forms', icon: FileText, path: '/performance/evaluation-forms' },
+      //{ id: 'self-assessment', label: 'Submit Self-Assessment', icon: User, path: '/performance/self-assessment' },
+      //{ id: 'performance-feedback', label: 'View Performance Feedback', icon: MessageSquare, path: '/performance/feedback' },
+      //{ id: 'performance-grades', label: 'Approve Performance Grades', icon: Award, path: '/performance/grades' },
+      //{ id: 'performance-insights', label: 'Overview Performance Insights', icon: BarChart3, path: '/performance/insights' },
+      //{ id: 'final-ratings', label: 'Approve Final Ratings', icon: Star, path: '/performance/final-ratings' },
+      //{ id: 'performance-reports', label: 'Export Performance Reports', icon: Download, path: '/performance/reports' },
+      //{ id: 'performance-trends', label: 'View Performance Trends', icon: TrendingUp, path: '/performance/trends' },
+    //]
+  //},
+ // {
+   // id: 'offboarding',
+    //label: 'Offboarding',
+   // icon: FileText,
+   // path: '/offboarding',
+   // hasSubmenu: true,
+   // roles: ['admin', 'hr'],
+   // children: [
+     // { id: 'exit-initiation', label: 'Exit Initiation & Approval', icon: UserX, path: '/offboarding/exit-initiation' },
+     // { id: 'exit-interview', label: 'Exit Interview & Feedback', icon: MessageSquare, path: '/offboarding/exit-interview' },
+     // { id: 'final-settlement', label: 'Full & Final Settlement', icon: DollarSign, path: '/offboarding/final-settlement' },
+     // { id: 'documentation-handover', label: 'Final Documentation & Handover', icon: FileText, path: '/offboarding/documentation' },
+     // { id: 'asset-return', label: 'Asset Return & Clearance', icon: Package, path: '/offboarding/asset-return' },
+     // { id: 'access-deactivation', label: 'Access Deactivation', icon: Shield, path: '/offboarding/access-deactivation' },
+     // { id: 'resignation-tracking', label: 'Apply Resignation', icon: FileText, path: '/offboarding/resignation' },
+     // { id: 'exit-status', label: 'Track Exit Status', icon: Clock, path: '/offboarding/exit-status' },
+     // { id: 'exit-letters', label: 'Download Exit Letters', icon: Download, path: '/offboarding/exit-letters' },
+   // ]
+ // },
+  // {
+   //  id: 'assets',
+   //  label: 'Assets',
+    // icon: Monitor,
+    // path: '/assets',
+    // hasSubmenu: true,
+    // roles: ['admin', 'hr'],
+    // children: [
+      // { id: 'asset-request', label: 'Asset Request & Credential Access', icon: Plus, path: '/assets/request' },
+      // { id: 'asset-template', label: 'Asset Template & Lifecycle Management', icon: Settings, path: '/assets/template' },
+     //  { id: 'inventory-dispatch', label: 'Inventory & Dispatch Control', icon: Package, path: '/assets/inventory' },
+     //  { id: 'asset-tracking', label: 'Asset Tracking', icon: Search, path: '/assets/tracking' },
+      // { id: 'asset-maintenance', label: 'Asset Maintenance', icon: Settings, path: '/assets/maintenance' },
+   //  ]
+ //  },
   {
     id: 'help-desk',
     label: 'Help Desk',
@@ -250,54 +253,54 @@ export const menuItems: MenuItem[] = [
       { id: 'feedback-engagement', label: 'Feedback & Engagement', icon: MessageSquare, path: '/help-desk/feedback' },
     ]
   },
-  {
-    id: 'benefits',
-    label: 'Benefits & Compensation',
-    icon: Award,
-    path: '/benefits',
-    hasSubmenu: true,
-    roles: ['admin', 'hr'],
-    children: [
-      { id: 'benefits-enrollment', label: 'Benefits Enrollment', icon: Plus, path: '/benefits/enrollment' },
-      { id: 'health-insurance', label: 'Health Insurance', icon: Shield, path: '/benefits/health-insurance' },
-      { id: 'retirement-plans', label: 'Retirement Plans', icon: DollarSign, path: '/benefits/retirement' },
-      { id: 'compensation-analysis', label: 'Compensation Analysis', icon: BarChart3, path: '/benefits/compensation' },
-      { id: 'benefits-administration', label: 'Benefits Administration', icon: Settings, path: '/benefits/administration' },
-    ]
-  },
-  {
-    id: 'training',
-    label: 'Training & Development',
-    icon: BookOpen,
-    path: '/training',
-    hasSubmenu: true,
-    roles: ['admin', 'hr'],
-    children: [
-      { id: 'training-programs', label: 'Training Programs', icon: BookOpen, path: '/training/programs' },
-      { id: 'skill-assessment', label: 'Skill Assessment', icon: Target, path: '/training/skill-assessment' },
-      { id: 'certification-tracking', label: 'Certification Tracking', icon: Award, path: '/training/certifications' },
-      { id: 'learning-paths', label: 'Learning Paths', icon: TrendingUp, path: '/training/learning-paths' },
-      { id: 'training-calendar', label: 'Training Calendar', icon: Calendar, path: '/training/calendar' },
-      { id: 'training-feedback', label: 'Training Feedback', icon: MessageSquare, path: '/training/feedback' },
-    ]
-  },
-  {
-    id: 'reports',
-    label: 'Reports & Analytics',
-    icon: BarChart3,
-    path: '/reports',
-    hasSubmenu: true,
-    roles: ['admin', 'hr'],
-    children: [
-      { id: 'employee-reports', label: 'Employee Reports', icon: Users, path: '/reports/employees' },
-      { id: 'attendance-reports', label: 'Attendance Reports', icon: Clock, path: '/reports/attendance' },
-      { id: 'payroll-reports', label: 'Payroll Reports', icon: DollarSign, path: '/reports/payroll' },
-      { id: 'performance-reports', label: 'Performance Reports', icon: TrendingUp, path: '/reports/performance' },
-      { id: 'recruitment-reports', label: 'Recruitment Reports', icon: Search, path: '/reports/recruitment' },
-      { id: 'custom-reports', label: 'Custom Reports', icon: FileText, path: '/reports/custom' },
+  // {
+    // id: 'benefits',
+   //  label: 'Benefits & Compensation',
+   //  icon: Award,
+   //  path: '/benefits',
+    // hasSubmenu: true,
+   //  roles: ['admin', 'hr'],
+   //  children: [
+    //   { id: 'benefits-enrollment', label: 'Benefits Enrollment', icon: Plus, path: '/benefits/enrollment' },
+    //   { id: 'health-insurance', label: 'Health Insurance', icon: Shield, path: '/benefits/health-insurance' },
+    //   { id: 'retirement-plans', label: 'Retirement Plans', icon: DollarSign, path: '/benefits/retirement' },
+    //   { id: 'compensation-analysis', label: 'Compensation Analysis', icon: BarChart3, path: '/benefits/compensation' },
+    //   { id: 'benefits-administration', label: 'Benefits Administration', icon: Settings, path: '/benefits/administration' },
+   //  ]
+  // },
+  // {
+   //  id: 'training',
+   //  label: 'Training & Development',
+   //  icon: BookOpen,
+   //  path: '/training',
+   //  hasSubmenu: true,
+   //  roles: ['admin', 'hr'],
+   //  children: [
+     //  { id: 'training-programs', label: 'Training Programs', icon: BookOpen, path: '/training/programs' },
+    //   { id: 'skill-assessment', label: 'Skill Assessment', icon: Target, path: '/training/skill-assessment' },
+    //   { id: 'certification-tracking', label: 'Certification Tracking', icon: Award, path: '/training/certifications' },
+    //   { id: 'learning-paths', label: 'Learning Paths', icon: TrendingUp, path: '/training/learning-paths' },
+    //   { id: 'training-calendar', label: 'Training Calendar', icon: Calendar, path: '/training/calendar' },
+    //   { id: 'training-feedback', label: 'Training Feedback', icon: MessageSquare, path: '/training/feedback' },
+   //  ]
+  // },
+  // {
+    // id: 'reports',
+   //  label: 'Reports & Analytics',
+   //  icon: BarChart3,
+   //  path: '/reports',
+    // hasSubmenu: true,
+   //  roles: ['admin', 'hr'],
+   //  children: [
+    //   { id: 'employee-reports', label: 'Employee Reports', icon: Users, path: '/reports/employees' },
+    //   { id: 'attendance-reports', label: 'Attendance Reports', icon: Clock, path: '/reports/attendance' },
+    //   { id: 'payroll-reports', label: 'Payroll Reports', icon: DollarSign, path: '/reports/payroll' },
+    //   { id: 'performance-reports', label: 'Performance Reports', icon: TrendingUp, path: '/reports/performance' },
+    //   { id: 'recruitment-reports', label: 'Recruitment Reports', icon: Search, path: '/reports/recruitment' },
+    //   { id: 'custom-reports', label: 'Custom Reports', icon: FileText, path: '/reports/custom' },
 
-    ]
-  },
+   //  ]
+ //  },
   {
     id: 'policies-docs',
     label: 'Policies & Documents',

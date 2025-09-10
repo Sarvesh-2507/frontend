@@ -47,28 +47,39 @@ const Login: React.FC = () => {
   const onSubmit = async (data: LoginCredentials) => {
     try {
       console.log("🔐 Login Component - Starting login with:", data.email);
-      
       // Clear any previous errors
       useAuthStore.setState({ error: null });
-      
       await login(data);
-      
-      console.log("✅ Login Component - Login successful, navigating to home");
-      
-      // Get redirect location from navigation state or default to home
-      const redirectPath = (location.state as any)?.from?.pathname || "/home";
-      navigate(redirectPath, { replace: true });
-      
+
+      // Get user and tokens from localStorage (set by authStore)
+      const userStr = localStorage.getItem("currentUser");
+      const token = localStorage.getItem("accessToken");
+      let role = null;
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          role = user.role;
+        } catch (e) {
+          role = null;
+        }
+      }
+      if (!role) {
+        throw new Error("User role not found in login response");
+      }
+      // Store role in localStorage/sessionStorage for persistence
+      localStorage.setItem("userRole", role);
+      // Redirect based on role
+      if (role === "hr") {
+        navigate("/hr-home", { replace: true });
+      } else if (role === "employee") {
+        navigate("/emp-home", { replace: true });
+      } else {
+        navigate("/home", { replace: true });
+      }
     } catch (error: any) {
       console.error("❌ Login Component - Login failed:", error);
-      
-      // Error message is already handled in authStore with toast
-      // Just log the error here for debugging
-      const errorMessage = error?.response?.data?.message || 
-                          error?.message || 
-                          "Login failed. Please check your credentials.";
-      
-      console.error("Login error details:", errorMessage);
+      const errorMessage = error?.response?.data?.message || error?.message || "Login failed. Please check your credentials.";
+      showError(errorMessage);
     }
   };
 

@@ -179,7 +179,7 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
       console.log("Attempting to change password for user:", currentUser.email);
       console.log(
         "Sending change password request to:",
-        getApiUrl('change-password')
+        getApiUrl('/change-password/')
       );
 
       // Get access token from stored user data - check multiple possible field names
@@ -216,7 +216,7 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
       console.log("Using access token:", accessToken.substring(0, 20) + "...");
 
       const response = await fetch(
-        getApiUrl('change-password'),
+        getApiUrl('/change-password/'),
         {
           method: "POST",
           headers: {

@@ -27,76 +27,18 @@ const getAuthHeaders = () => {
 export const profileApi = {
   // Get current user's profile
   getMyProfile: async (): Promise<Profile> => {
-    // Try multiple endpoint patterns
-    const endpoints = [
-      '/profiles/profiles/me/',
-      '/profiles/me/',
-      '/profile/me/',
-      '/profiles/profiles/',
-      '/profiles/',
-      '/profile/',
-    ];
-    
-    let lastError: Error | null = null;
-    
-    for (const endpoint of endpoints) {
-      try {
-        console.log('Trying API endpoint:', `${API_BASE_URL}${endpoint}`);
-        
-        const headers = getAuthHeaders();
-        console.log('Request headers:', headers);
-        
-        const response = await api.get(endpoint, { headers });
-
-        console.log(`Response status for ${endpoint}:`, response.status);
-        console.log('Response data:', response.data);
-
-        // Handle different response formats
-        if (response.data) {
-          // If it's a direct profile object
-          if (response.data.first_name || response.data.emp_id) {
-            console.log('Successfully fetched profile from:', endpoint);
-            return response.data;
-          }
-          
-          // If it's a paginated response with results
-          if (response.data.results && response.data.results.length > 0) {
-            console.log('Successfully fetched profile from:', endpoint);
-            return response.data.results[0];
-          }
-          
-          // If it's an array and we want the first item
-          if (Array.isArray(response.data) && response.data.length > 0) {
-            console.log('Successfully fetched profile from:', endpoint);
-            return response.data[0];
-          }
-        }
-        
-        lastError = new Error('No profile found in API response');
-        continue; // Try next endpoint
-      } catch (error) {
-        console.error(`Error with endpoint ${endpoint}:`, error);
-        
-        if (axios.isAxiosError(error)) {
-          if (error.response?.status === 404) {
-            lastError = new Error(`Endpoint not found: ${endpoint}`);
-          } else if (error.response?.status === 401) {
-            lastError = new Error('Authentication failed. Please log in again.');
-          } else if (error.response?.status === 403) {
-            lastError = new Error('Access denied. You may not have permission to view this profile.');
-          } else {
-            lastError = new Error(`HTTP ${error.response?.status}: ${error.response?.statusText}`);
-          }
-        } else {
-          lastError = error instanceof Error ? error : new Error('Unknown error');
-        }
-        continue; // Try next endpoint
+    try {
+      const headers = getAuthHeaders();
+      const response = await api.get('/profiles/profiles/me', { headers });
+      if (response.data) {
+        return response.data;
+      } else {
+        throw new Error('No profile data received');
       }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      throw error;
     }
-    
-    // If all endpoints failed
-    console.error('All endpoints failed. Last error:', lastError);
-    throw lastError || new Error('Failed to fetch profile from all available endpoints');
   },
 
   // Update current user's profile

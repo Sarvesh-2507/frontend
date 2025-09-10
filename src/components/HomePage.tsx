@@ -527,8 +527,6 @@ const HomePage: React.FC = () => {
         {/* Right Sidebar - Schedule and Widgets */}
         <div className="space-y-4 lg:space-y-6">
           <ScheduleComponent />
-          <LeaveBalanceWidget />
-          <YesterdayAttendanceWidget />
         </div>
       </div>
 
