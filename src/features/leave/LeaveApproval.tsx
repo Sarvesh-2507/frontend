@@ -17,28 +17,24 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import apiClient from "../../services/api";
 import Sidebar from "../../components/Sidebar";
 
 interface LeaveRequest {
   id: string;
-  employeeId: string;
-  employeeName: string;
-  employeeEmail: string;
-  department: string;
-  designation: string;
-  leaveType: string;
-  startDate: string;
-  endDate: string;
-  totalDays: number;
+  employee_id: string;
+  employee: {
+    name: string;
+    email?: string;
+  };
+  leave_type: string;
+  start_date: string;
+  end_date: string;
   reason: string;
-  appliedDate: string;
-  status: "pending" | "approved" | "rejected";
-  emergencyContact: string;
-  emergencyPhone: string;
-  handoverNotes?: string;
-  attachments?: string[];
-  priority: "low" | "medium" | "high";
-  reportingManager: string;
+  status?: "pending" | "approved" | "rejected";
+  total_days?: number;
+  applied_date?: string;
 }
 
 const LeaveApproval: React.FC = () => {
@@ -47,8 +43,7 @@ const LeaveApproval: React.FC = () => {
   const [filteredRequests, setFilteredRequests] = useState<LeaveRequest[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("pending");
-  const [departmentFilter, setDepartmentFilter] = useState("all");
-  const [priorityFilter, setPriorityFilter] = useState("all");
+
   const [loading, setLoading] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(
     null
@@ -69,21 +64,7 @@ const LeaveApproval: React.FC = () => {
     { value: "rejected", label: "Rejected" },
   ];
 
-  const departmentOptions = [
-    { value: "all", label: "All Departments" },
-    { value: "Engineering", label: "Engineering" },
-    { value: "HR", label: "HR" },
-    { value: "Finance", label: "Finance" },
-    { value: "Marketing", label: "Marketing" },
-    { value: "Sales", label: "Sales" },
-  ];
 
-  const priorityOptions = [
-    { value: "all", label: "All Priorities" },
-    { value: "high", label: "High" },
-    { value: "medium", label: "Medium" },
-    { value: "low", label: "Low" },
-  ];
 
   useEffect(() => {
     fetchLeaveRequests();
@@ -91,22 +72,21 @@ const LeaveApproval: React.FC = () => {
 
   useEffect(() => {
     filterRequests();
-  }, [
-    leaveRequests,
-    searchTerm,
-    statusFilter,
-    departmentFilter,
-    priorityFilter,
-  ]);
+  }, [leaveRequests, searchTerm, statusFilter]);
 
   const fetchLeaveRequests = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setLeaveRequests([]); // Set real API data here
-    } catch (error) {
-      console.error("Error fetching leave requests:", error);
+      console.log("🔄 Fetching leave requests from API...");
+      const response = await apiClient.get("http://192.168.1.132:8000/api/leave/leave-requests/my_team_requests/");
+      const data = response.data;
+      console.log("✅ Leave requests fetched:", data);
+      setLeaveRequests(data);
+      toast.success(`Loaded ${data.length} pending leave requests`);
+    } catch (error: any) {
+      console.error("❌ Error fetching leave requests:", error);
+      toast.error("Failed to fetch leave requests");
+      setLeaveRequests([]);
     } finally {
       setLoading(false);
     }
@@ -119,32 +99,18 @@ const LeaveApproval: React.FC = () => {
     if (searchTerm) {
       filtered = filtered.filter(
         (request) =>
-          request.employeeName
+          request.employee.name
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          request.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.leaveType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.department.toLowerCase().includes(searchTerm.toLowerCase())
+          request.employee_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          request.leave_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          request.reason.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter((request) => request.status === statusFilter);
-    }
-
-    // Department filter
-    if (departmentFilter !== "all") {
-      filtered = filtered.filter(
-        (request) => request.department === departmentFilter
-      );
-    }
-
-    // Priority filter
-    if (priorityFilter !== "all") {
-      filtered = filtered.filter(
-        (request) => request.priority === priorityFilter
-      );
+      filtered = filtered.filter((request) => (request.status || "pending") === statusFilter);
     }
 
     setFilteredRequests(filtered);
@@ -176,18 +142,7 @@ const LeaveApproval: React.FC = () => {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-100 text-red-800";
-      case "medium":
-        return "bg-yellow-100 text-yellow-800";
-      case "low":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+
 
   const handleViewDetails = (request: LeaveRequest) => {
     setSelectedRequest(request);
@@ -209,10 +164,17 @@ const LeaveApproval: React.FC = () => {
 
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log(`🔄 ${approvalAction}ing leave request:`, selectedRequest.id);
+      
+      // Make the actual API call to approve/reject
+      const response = await apiClient.post(
+        `/leave/leave-requests/${selectedRequest.id}/${approvalAction}/`,
+        { comments: approvalComments }
+      );
 
-      // Update the request status
+      console.log(`✅ Leave request ${approvalAction}ed successfully:`, response.data);
+
+      // Update the request status in local state
       setLeaveRequests((prev) =>
         prev.map((request) =>
           request.id === selectedRequest.id
@@ -224,22 +186,27 @@ const LeaveApproval: React.FC = () => {
         )
       );
 
+      toast.success(
+        `Leave request ${approvalAction === "approve" ? "approved" : "rejected"} successfully`
+      );
+
       setShowApprovalModal(false);
       setSelectedRequest(null);
       setApprovalComments("");
-    } catch (error) {
-      console.error("Error processing approval:", error);
+    } catch (error: any) {
+      console.error("❌ Error processing approval:", error);
+      toast.error("Failed to process approval");
     } finally {
       setLoading(false);
     }
   };
 
   const exportToCSV = () => {
-    const csvContent = `Employee Name,Employee ID,Department,Leave Type,Start Date,End Date,Total Days,Status,Applied Date,Priority
+    const csvContent = `Employee ID,Employee Name,Leave Type,Start Date,End Date,Reason
 ${filteredRequests
   .map(
     (request) =>
-      `${request.employeeName},${request.employeeId},${request.department},${request.leaveType},${request.startDate},${request.endDate},${request.totalDays},${request.status},${request.appliedDate},${request.priority}`
+      `${request.employee_id},${request.employee.name},${request.leave_type},${request.start_date},${request.end_date},"${request.reason}"`
   )
   .join("\n")}`;
 
@@ -247,13 +214,13 @@ ${filteredRequests
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "leave_requests.csv";
+    a.download = "pending_leave_requests.csv";
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
   const pendingCount = leaveRequests.filter(
-    (r) => r.status === "pending"
+    (r) => (r.status || "pending") === "pending"
   ).length;
   const approvedCount = leaveRequests.filter(
     (r) => r.status === "approved"
@@ -379,9 +346,9 @@ ${filteredRequests
               </motion.div>
             </div>
 
-            {/* Filters */}
+            {/* Search Filter */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Search
@@ -390,7 +357,7 @@ ${filteredRequests
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                       type="text"
-                      placeholder="Search requests..."
+                      placeholder="Search by employee name, ID, or leave type..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -415,52 +382,16 @@ ${filteredRequests
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Department
-                  </label>
-                  <select
-                    value={departmentFilter}
-                    onChange={(e) => setDepartmentFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                  >
-                    {departmentOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Priority
-                  </label>
-                  <select
-                    value={priorityFilter}
-                    onChange={(e) => setPriorityFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                  >
-                    {priorityOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
                 <div className="flex items-end">
                   <button
                     onClick={() => {
                       setSearchTerm("");
                       setStatusFilter("pending");
-                      setDepartmentFilter("all");
-                      setPriorityFilter("all");
                     }}
                     className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
                     <Filter className="w-4 h-4" />
-                    <span>Clear</span>
+                    <span>Clear Filters</span>
                   </button>
                 </div>
               </div>
@@ -479,19 +410,22 @@ ${filteredRequests
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Employee
+                        Employee ID
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Leave Details
+                        Name
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Dates
+                        Leave Type
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Priority
+                        Start Date
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Status
+                        End Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Reason
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         Actions
@@ -500,17 +434,39 @@ ${filteredRequests
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {loading ? (
-                      <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center">
-                          <div className="flex justify-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                          </div>
-                        </td>
-                      </tr>
+                      Array.from({ length: 5 }).map((_, index) => (
+                        <tr key={index} className="animate-pulse">
+                          <td className="px-6 py-4">
+                            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-40"></div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex space-x-2">
+                              <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                              <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                              <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
                     ) : filteredRequests.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={6}
+                          colSpan={7}
                           className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
                         >
                           No leave requests found matching your criteria.
@@ -523,66 +479,34 @@ ${filteredRequests
                           className="hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
                           <td className="px-6 py-4">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                                <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                              </div>
-                              <div>
-                                <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {request.employeeName}
-                                </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                  {request.employeeId} • {request.department}
-                                </div>
-                              </div>
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              {request.employee_id}
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                {request.leaveType}
-                              </div>
-                              <div className="text-sm text-gray-500 dark:text-gray-400">
-                                {request.totalDays} day
-                                {request.totalDays > 1 ? "s" : ""}
-                              </div>
-                              <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">
-                                {request.reason}
-                              </div>
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              {request.employee.name}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              {request.leave_type}
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-sm text-gray-900 dark:text-white">
-                              {new Date(request.startDate).toLocaleDateString()}{" "}
-                              - {new Date(request.endDate).toLocaleDateString()}
-                            </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                              Applied:{" "}
-                              {new Date(
-                                request.appliedDate
-                              ).toLocaleDateString()}
+                              {new Date(request.start_date).toLocaleDateString()}
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(
-                                request.priority
-                              )}`}
-                            >
-                              {request.priority}
-                            </span>
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              {new Date(request.end_date).toLocaleDateString()}
+                            </div>
                           </td>
                           <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                                request.status
-                              )}`}
-                            >
-                              {getStatusIcon(request.status)}
-                              <span className="capitalize">
-                                {request.status}
-                              </span>
-                            </span>
+                            <div className="text-sm text-gray-900 dark:text-white max-w-xs truncate">
+                              {request.reason}
+                            </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-2">
@@ -593,7 +517,7 @@ ${filteredRequests
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
-                              {request.status === "pending" && (
+                              {(request.status || "pending") === "pending" && (
                                 <>
                                   <button
                                     onClick={() =>
@@ -655,7 +579,7 @@ ${filteredRequests
                     Employee Name
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {selectedRequest.employeeName}
+                    {selectedRequest.employee.name}
                   </p>
                 </div>
                 <div>
@@ -663,23 +587,7 @@ ${filteredRequests
                     Employee ID
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {selectedRequest.employeeId}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Department
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {selectedRequest.department}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Designation
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {selectedRequest.designation}
+                    {selectedRequest.employee_id}
                   </p>
                 </div>
                 <div>
@@ -687,7 +595,7 @@ ${filteredRequests
                     Leave Type
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {selectedRequest.leaveType}
+                    {selectedRequest.leave_type}
                   </p>
                 </div>
                 <div>
@@ -695,7 +603,7 @@ ${filteredRequests
                     Total Days
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {selectedRequest.totalDays}
+                    {selectedRequest.total_days || 'N/A'}
                   </p>
                 </div>
                 <div>
@@ -703,7 +611,7 @@ ${filteredRequests
                     Start Date
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {new Date(selectedRequest.startDate).toLocaleDateString()}
+                    {new Date(selectedRequest.start_date).toLocaleDateString()}
                   </p>
                 </div>
                 <div>
@@ -711,7 +619,7 @@ ${filteredRequests
                     End Date
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {new Date(selectedRequest.endDate).toLocaleDateString()}
+                    {new Date(selectedRequest.end_date).toLocaleDateString()}
                   </p>
                 </div>
               </div>
@@ -724,56 +632,6 @@ ${filteredRequests
                   {selectedRequest.reason}
                 </p>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Emergency Contact
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {selectedRequest.emergencyContact}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Emergency Phone
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {selectedRequest.emergencyPhone}
-                  </p>
-                </div>
-              </div>
-
-              {selectedRequest.handoverNotes && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Handover Notes
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {selectedRequest.handoverNotes}
-                  </p>
-                </div>
-              )}
-
-              {selectedRequest.attachments &&
-                selectedRequest.attachments.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Attachments
-                    </label>
-                    <div className="mt-1 space-y-1">
-                      {selectedRequest.attachments.map((attachment, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 text-sm text-blue-600 dark:text-blue-400"
-                        >
-                          <FileText className="w-4 h-4" />
-                          <span>{attachment}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
             </div>
 
             <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
@@ -783,7 +641,7 @@ ${filteredRequests
               >
                 Close
               </button>
-              {selectedRequest.status === "pending" && (
+              {(selectedRequest.status || "pending") === "pending" && (
                 <>
                   <button
                     onClick={() => {
@@ -836,19 +694,19 @@ ${filteredRequests
             <div className="p-6 space-y-4">
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                 <p className="text-sm text-gray-900 dark:text-white">
-                  <strong>Employee:</strong> {selectedRequest.employeeName}
+                  <strong>Employee:</strong> {selectedRequest.employee.name}
                 </p>
                 <p className="text-sm text-gray-900 dark:text-white">
-                  <strong>Leave Type:</strong> {selectedRequest.leaveType}
+                  <strong>Leave Type:</strong> {selectedRequest.leave_type}
                 </p>
                 <p className="text-sm text-gray-900 dark:text-white">
-                  <strong>Duration:</strong> {selectedRequest.totalDays} day
-                  {selectedRequest.totalDays > 1 ? "s" : ""}
+                  <strong>Duration:</strong> {selectedRequest.total_days || 'N/A'} day
+                  {(selectedRequest.total_days || 0) > 1 ? "s" : ""}
                 </p>
                 <p className="text-sm text-gray-900 dark:text-white">
                   <strong>Dates:</strong>{" "}
-                  {new Date(selectedRequest.startDate).toLocaleDateString()} -{" "}
-                  {new Date(selectedRequest.endDate).toLocaleDateString()}
+                  {new Date(selectedRequest.start_date).toLocaleDateString()} -{" "}
+                  {new Date(selectedRequest.end_date).toLocaleDateString()}
                 </p>
               </div>
 

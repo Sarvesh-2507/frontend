@@ -80,16 +80,78 @@ const JobPostingDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-16 bg-gray-200 rounded"></div>
-            ))}
+      <MainLayout>
+        <div className="p-6">
+          <div className="animate-pulse">
+            {/* Header skeleton */}
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-2"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-64"></div>
+              </div>
+              <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-36"></div>
+            </div>
+
+            {/* Filters skeleton */}
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <div className="flex-1">
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="h-5 w-5 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+              </div>
+            </div>
+
+            {/* Table skeleton */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+              <div className="overflow-x-auto">
+                {/* Table header skeleton */}
+                <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3">
+                  <div className="grid grid-cols-8 gap-4">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                      <div key={i} className="h-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Table rows skeleton */}
+                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <div key={i} className="px-6 py-4">
+                      <div className="grid grid-cols-8 gap-4 items-center">
+                        <div className="space-y-2">
+                          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                        </div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-8"></div>
+                        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                        <div className="flex space-x-2">
+                          <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                          <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                          <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Loading text */}
+            <div className="text-center mt-8">
+              <div className="flex items-center justify-center space-x-2">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span className="text-gray-600 dark:text-gray-400">Loading job postings...</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
