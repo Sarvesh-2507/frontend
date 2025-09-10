@@ -89,7 +89,6 @@ export const menuItems: MenuItem[] = [
     icon: Search,
     path: '/recruitment',
     hasSubmenu: true,
-    roles: ['admin', 'hr'],
     children: [
       { id: 'job-requisition', label: 'Job Requisition Management', icon: FileText, path: '/recruitment/job-requisition' },
       { id: 'job-posting', label: 'Job Posting & Advertisement', icon: Plus, path: '/recruitment/job-posting' },

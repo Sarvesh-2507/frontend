@@ -33,6 +33,8 @@ import HomePage from "./components/HomePage";
 import Organizations from "./features/organization/Organizations";
 import CreateOrganization from "./features/organization/CreateOrganization";
 import Recruitment from "./features/recruitment/Recruitment";
+import JobPostingDashboard from "./features/recruitment/components/JobPostingDashboard";
+import JobPostingForm from "./features/recruitment/components/JobPostingForm";
 import Onboarding from "./features/onboarding/Onboarding";
 // Onboarding sub-features
 import OfferLetter from "./features/onboarding/OfferLetter";
@@ -218,6 +220,25 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <Recruitment />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Recruitment Sub-routes */}
+          <Route
+            path="/recruitment/job-posting"
+            element={
+              <ProtectedRoute>
+                <JobPostingDashboard />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/recruitment/job-posting/create"
+            element={
+              <ProtectedRoute>
+                <JobPostingForm />
               </ProtectedRoute>
             }
           />
