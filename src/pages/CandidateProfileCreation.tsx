@@ -144,25 +144,17 @@ const CandidateProfileCreation: React.FC = () => {
       : '';
 
     // Map backend status to display status
-    let status: string;
+    let status: "Pending" | "Submitted" | null = null;
     switch (backendCandidate.status) {
-      case "invited":
-        status = "Invited";
-        break;
       case "pending":
         status = "Pending";
         break;
       case "submitted":
         status = "Submitted";
         break;
-      case "assigned":
-        status = "Assigned";
-        break;
-      case "completed":
-        // Do not show completed candidates in this page
-        return null;
       default:
-        status = backendCandidate.status;
+        // Only allow "Pending" or "Submitted" for CandidateProfile
+        return null;
     }
 
     return {
@@ -172,7 +164,7 @@ const CandidateProfileCreation: React.FC = () => {
       mobileNumber: backendCandidate.phone_number || '',
       organization: backendCandidate.assigned_organization_name || '',
       inviteDate,
-      status,
+      status: status as "Pending" | "Submitted",
       selected: false,
       backendData: backendCandidate,
     };

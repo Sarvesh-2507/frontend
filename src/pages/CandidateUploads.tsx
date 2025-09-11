@@ -214,11 +214,13 @@ const CandidateProfileCreation: React.FC = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor={`role-select-${assignment.candidateId}`} className="block text-sm font-medium text-gray-700 mb-2">
                   <Building size={16} className="inline mr-2" />
                   Role
                 </label>
                 <select
+                  id={`role-select-${assignment.candidateId}`}
+                  aria-label="Role"
                   value={assignment.role}
                   onChange={(e) => handleRoleAssignmentChange(assignment.candidateId, "role", e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -234,11 +236,13 @@ const CandidateProfileCreation: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor={`department-select-${assignment.candidateId}`} className="block text-sm font-medium text-gray-700 mb-2">
                   <User size={16} className="inline mr-2" />
                   Department
                 </label>
                 <select
+                  id={`department-select-${assignment.candidateId}`}
+                  aria-label="Department"
                   value={assignment.department}
                   onChange={(e) => handleRoleAssignmentChange(assignment.candidateId, "department", e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -259,6 +263,8 @@ const CandidateProfileCreation: React.FC = () => {
                   Access Level
                 </label>
                 <select
+                  id={`access-level-select-${assignment.candidateId}`}
+                  aria-label="Access Level"
                   value={assignment.accessLevel}
                   onChange={(e) => handleRoleAssignmentChange(assignment.candidateId, "accessLevel", e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -281,6 +287,8 @@ const CandidateProfileCreation: React.FC = () => {
                   value={assignment.dateOfJoining}
                   onChange={(e) => handleRoleAssignmentChange(assignment.candidateId, "dateOfJoining", e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Select date of joining"
+                  title="Date of Joining"
                 />
               </div>
             </div>
@@ -452,6 +460,18 @@ const CandidateProfileCreation: React.FC = () => {
     </div>
   );
 };
+
+// Render candidates step function
+function renderCandidatesStep() {
+  // You can customize this UI as needed
+  return (
+    <div className="p-6">
+      <h2 className="text-xl font-bold mb-4">Candidates Ready for Profile Creation</h2>
+      {/* Add your candidate selection table or UI here */}
+      <p className="text-gray-600">Candidate selection UI goes here.</p>
+    </div>
+  );
+}
 
 export default CandidateProfileCreation;
 

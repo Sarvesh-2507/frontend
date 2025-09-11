@@ -132,7 +132,11 @@ const ScheduleComponent: React.FC = () => {
           <Calendar className="w-5 h-5 text-blue-600" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Schedule</h3>
         </div>
-        <button className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+        <button
+          type="button"
+          title="Add event"
+          className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+        >
           <Plus className="w-4 h-4 text-blue-600" />
         </button>
       </div>
@@ -140,6 +144,8 @@ const ScheduleComponent: React.FC = () => {
       {/* Calendar Header */}
       <div className="flex items-center justify-between mb-4">
         <button
+          type="button"
+          title="Previous month"
           onClick={() => navigateMonth('prev')}
           className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
         >
@@ -149,6 +155,8 @@ const ScheduleComponent: React.FC = () => {
           {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </h4>
         <button
+          type="button"
+          title="Next month"
           onClick={() => navigateMonth('next')}
           className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
         >
