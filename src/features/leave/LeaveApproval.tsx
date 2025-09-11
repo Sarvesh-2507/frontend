@@ -19,22 +19,40 @@ import {
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import apiClient from "../../services/api";
+import { apiService } from "../../services/leaveApi";
 import Sidebar from "../../components/Sidebar";
 
+interface Employee {
+  id: number;
+  email: string;
+  full_name: string;
+  access_level: string;
+  department?: string;
+}
+
 interface LeaveRequest {
-  id: string;
-  employee_id: string;
-  employee: {
-    name: string;
-    email?: string;
-  };
+  id: number;
+  employee: Employee;
   leave_type: string;
+  leave_type_display: string;
   start_date: string;
   end_date: string;
-  reason: string;
-  status?: "pending" | "approved" | "rejected";
-  total_days?: number;
-  applied_date?: string;
+  total_days: string;
+  status: "PENDING" | "TL_APPROVED" | "APPROVED" | "REJECTED" | "CANCELLED";
+  status_display: string;
+  created_at: string;
+  reason?: string;
+  approved_by?: string;
+  rejection_reason?: string | null;
+}
+
+interface HRDashboardResponse {
+  status: string;
+  message: string;
+  total_count: number;
+  pending_hr_approval: number;
+  rejected_requests: number;
+  requests: LeaveRequest[];
 }
 
 const LeaveApproval: React.FC = () => {
@@ -42,7 +60,7 @@ const LeaveApproval: React.FC = () => {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [filteredRequests, setFilteredRequests] = useState<LeaveRequest[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("pending");
+  const [statusFilter, setStatusFilter] = useState("TL_APPROVED");
 
   const [loading, setLoading] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(
@@ -59,9 +77,11 @@ const LeaveApproval: React.FC = () => {
 
   const statusOptions = [
     { value: "all", label: "All Status" },
-    { value: "pending", label: "Pending" },
-    { value: "approved", label: "Approved" },
-    { value: "rejected", label: "Rejected" },
+    { value: "PENDING", label: "Pending" },
+    { value: "TL_APPROVED", label: "Team Lead Approved - Pending HR" },
+    { value: "APPROVED", label: "Approved" },
+    { value: "REJECTED", label: "Rejected" },
+    { value: "CANCELLED", label: "Cancelled" },
   ];
 
 
@@ -77,16 +97,67 @@ const LeaveApproval: React.FC = () => {
   const fetchLeaveRequests = async () => {
     setLoading(true);
     try {
-      console.log("🔄 Fetching leave requests from API...");
-      const response = await apiClient.get("http://192.168.1.132:8000/api/leave/leave-requests/my_team_requests/");
-      const data = response.data;
-      console.log("✅ Leave requests fetched:", data);
-      setLeaveRequests(data);
-      toast.success(`Loaded ${data.length} pending leave requests`);
+      console.log("🔄 Fetching leave requests from HR dashboard API...");
+      
+      const response = await apiClient.get("/leave/leave-requests/hr_dashboard/");
+      const data: HRDashboardResponse = response.data;
+      
+      console.log("✅ Leave requests fetched from hr_dashboard:", data);
+      setLeaveRequests(Array.isArray(data.requests) ? data.requests : []);
+      toast.success(`Loaded ${data.requests?.length || 0} leave requests`);
     } catch (error: any) {
-      console.error("❌ Error fetching leave requests:", error);
-      toast.error("Failed to fetch leave requests");
-      setLeaveRequests([]);
+      console.error("❌ Error fetching leave requests from hr_dashboard:", error);
+      
+      // For development/testing, provide fallback data
+      if (process.env.NODE_ENV === 'development') {
+        const fallbackData: LeaveRequest[] = [
+          {
+            id: 1,
+            employee: {
+              id: 1,
+              email: "john.doe@company.com",
+              full_name: "John Doe",
+              access_level: "Employee",
+              department: "Engineering"
+            },
+            leave_type: "SICK",
+            leave_type_display: "Sick Leave",
+            start_date: "2024-02-15",
+            end_date: "2024-02-17",
+            total_days: "3.0",
+            status: "PENDING",
+            status_display: "Pending HR Approval",
+            created_at: "2024-02-10T10:30:00Z",
+            reason: "Medical checkup",
+            approved_by: "Team Lead"
+          },
+          {
+            id: 2,
+            employee: {
+              id: 2,
+              email: "jane.smith@company.com",
+              full_name: "Jane Smith",
+              access_level: "Employee",
+              department: "Marketing"
+            },
+            leave_type: "CASUAL",
+            leave_type_display: "Casual Leave",
+            start_date: "2024-03-01",
+            end_date: "2024-03-03",
+            total_days: "3.0",
+            status: "TL_APPROVED",
+            status_display: "Team Lead Approved - Pending HR",
+            created_at: "2024-02-25T14:20:00Z",
+            reason: "Family emergency",
+            approved_by: "Team Lead"
+          }
+        ];
+        setLeaveRequests(fallbackData);
+        toast.error("HR Dashboard API failed - Using sample data for testing");
+      } else {
+        toast.error("Failed to fetch leave requests from HR dashboard");
+        setLeaveRequests([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -99,18 +170,18 @@ const LeaveApproval: React.FC = () => {
     if (searchTerm) {
       filtered = filtered.filter(
         (request) =>
-          request.employee.name
+          request.employee.full_name
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          request.employee_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.leave_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.reason.toLowerCase().includes(searchTerm.toLowerCase())
+          request.employee.id.toString().includes(searchTerm.toLowerCase()) ||
+          request.leave_type_display.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (request.reason && request.reason.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
     // Status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter((request) => (request.status || "pending") === statusFilter);
+      filtered = filtered.filter((request) => request.status === statusFilter);
     }
 
     setFilteredRequests(filtered);
@@ -118,12 +189,16 @@ const LeaveApproval: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "approved":
-        return "bg-green-100 text-green-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      case "pending":
+      case "PENDING":
         return "bg-yellow-100 text-yellow-800";
+      case "TL_APPROVED":
+        return "bg-blue-100 text-blue-800";
+      case "APPROVED":
+        return "bg-green-100 text-green-800";
+      case "REJECTED":
+        return "bg-red-100 text-red-800";
+      case "CANCELLED":
+        return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -131,12 +206,16 @@ const LeaveApproval: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "approved":
-        return <CheckCircle className="w-4 h-4" />;
-      case "rejected":
-        return <XCircle className="w-4 h-4" />;
-      case "pending":
+      case "PENDING":
         return <Clock className="w-4 h-4" />;
+      case "TL_APPROVED":
+        return <CheckCircle className="w-4 h-4 text-blue-600" />;
+      case "APPROVED":
+        return <CheckCircle className="w-4 h-4" />;
+      case "REJECTED":
+        return <XCircle className="w-4 h-4" />;
+      case "CANCELLED":
+        return <AlertCircle className="w-4 h-4" />;
       default:
         return <Clock className="w-4 h-4" />;
     }
@@ -166,11 +245,20 @@ const LeaveApproval: React.FC = () => {
     try {
       console.log(`🔄 ${approvalAction}ing leave request:`, selectedRequest.id);
       
-      // Make the actual API call to approve/reject
-      const response = await apiClient.post(
-        `/leave/leave-requests/${selectedRequest.id}/${approvalAction}/`,
-        { comments: approvalComments }
-      );
+      // Determine the correct endpoint and request body based on action
+      const endpoint = approvalAction === "approve" 
+        ? `/leave/leave-requests/${selectedRequest.id}/hr_approve/`
+        : `/leave/leave-requests/${selectedRequest.id}/hr_reject/`;
+      
+      const requestBody = approvalAction === "approve"
+        ? { status: "APPROVED" }
+        : { 
+            status: "REJECTED",
+            rejection_reason: approvalComments || "No reason provided"
+          };
+      
+      // Make the actual API call to approve/reject using PATCH
+      const response = await apiClient.patch(endpoint, requestBody);
 
       console.log(`✅ Leave request ${approvalAction}ed successfully:`, response.data);
 
@@ -180,7 +268,8 @@ const LeaveApproval: React.FC = () => {
           request.id === selectedRequest.id
             ? {
                 ...request,
-                status: approvalAction === "approve" ? "approved" : "rejected",
+                status: approvalAction === "approve" ? "APPROVED" : "REJECTED",
+                ...(approvalAction === "reject" && { rejection_reason: approvalComments || "No reason provided" })
               }
             : request
         )
@@ -195,18 +284,18 @@ const LeaveApproval: React.FC = () => {
       setApprovalComments("");
     } catch (error: any) {
       console.error("❌ Error processing approval:", error);
-      toast.error("Failed to process approval");
+      toast.error(`Failed to ${approvalAction} leave request. Please try again.`);
     } finally {
       setLoading(false);
     }
   };
 
   const exportToCSV = () => {
-    const csvContent = `Employee ID,Employee Name,Leave Type,Start Date,End Date,Reason
+    const csvContent = `Emp ID,Name,Department,Start Date,End Date,Total Days,Status,Approved By,Reason,Rejection Reason,Submitted At
 ${filteredRequests
   .map(
     (request) =>
-      `${request.employee_id},${request.employee.name},${request.leave_type},${request.start_date},${request.end_date},"${request.reason}"`
+      `${request.employee.id},"${request.employee.full_name}","${request.employee.department || 'N/A'}",${request.start_date},${request.end_date},${request.total_days},"${request.status_display || request.status}","${request.approved_by || 'N/A'}","${request.reason || 'N/A'}","${request.rejection_reason || 'N/A'}",${new Date(request.created_at).toLocaleDateString()}`
   )
   .join("\n")}`;
 
@@ -214,19 +303,19 @@ ${filteredRequests
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "pending_leave_requests.csv";
+    a.download = "hr_leave_requests.csv";
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
   const pendingCount = leaveRequests.filter(
-    (r) => (r.status || "pending") === "pending"
+    (r) => r.status === "TL_APPROVED"
   ).length;
   const approvedCount = leaveRequests.filter(
-    (r) => r.status === "approved"
+    (r) => r.status === "APPROVED"
   ).length;
   const rejectedCount = leaveRequests.filter(
-    (r) => r.status === "rejected"
+    (r) => r.status === "REJECTED"
   ).length;
 
   return (
@@ -386,7 +475,7 @@ ${filteredRequests
                   <button
                     onClick={() => {
                       setSearchTerm("");
-                      setStatusFilter("pending");
+                      setStatusFilter("TL_APPROVED");
                     }}
                     className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
@@ -410,13 +499,13 @@ ${filteredRequests
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Employee ID
+                        Emp ID
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         Name
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Leave Type
+                        Department
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         Start Date
@@ -425,7 +514,22 @@ ${filteredRequests
                         End Date
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Total Days
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Approved By
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         Reason
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Rejection Reason
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Submitted At
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         Actions
@@ -455,6 +559,24 @@ ${filteredRequests
                             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-40"></div>
                           </td>
                           <td className="px-6 py-4">
+                            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-40"></div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                          </td>
+                          <td className="px-6 py-4">
                             <div className="flex space-x-2">
                               <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
                               <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
@@ -466,7 +588,7 @@ ${filteredRequests
                     ) : filteredRequests.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={7}
+                          colSpan={11}
                           className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
                         >
                           No leave requests found matching your criteria.
@@ -480,17 +602,17 @@ ${filteredRequests
                         >
                           <td className="px-6 py-4">
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {request.employee_id}
+                              {request.employee.id}
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {request.employee.name}
+                              {request.employee.full_name}
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {request.leave_type}
+                              {request.employee.department || 'N/A'}
                             </div>
                           </td>
                           <td className="px-6 py-4">
@@ -504,8 +626,34 @@ ${filteredRequests
                             </div>
                           </td>
                           <td className="px-6 py-4">
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              {request.total_days} days
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
+                              {getStatusIcon(request.status)}
+                              <span>{request.status_display || request.status}</span>
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              {request.approved_by || 'N/A'}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
                             <div className="text-sm text-gray-900 dark:text-white max-w-xs truncate">
-                              {request.reason}
+                              {request.reason || 'N/A'}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-900 dark:text-white max-w-xs truncate">
+                              {request.status === "REJECTED" && request.rejection_reason ? request.rejection_reason : 'N/A'}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              {new Date(request.created_at).toLocaleDateString()}
                             </div>
                           </td>
                           <td className="px-6 py-4">
@@ -517,7 +665,7 @@ ${filteredRequests
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
-                              {(request.status || "pending") === "pending" && (
+                              {request.status === "TL_APPROVED" && (
                                 <>
                                   <button
                                     onClick={() =>
@@ -579,7 +727,7 @@ ${filteredRequests
                     Employee Name
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {selectedRequest.employee.name}
+                    {selectedRequest.employee.full_name}
                   </p>
                 </div>
                 <div>
@@ -587,7 +735,7 @@ ${filteredRequests
                     Employee ID
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {selectedRequest.employee_id}
+                    {selectedRequest.employee.id}
                   </p>
                 </div>
                 <div>
@@ -595,7 +743,7 @@ ${filteredRequests
                     Leave Type
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {selectedRequest.leave_type}
+                    {selectedRequest.leave_type_display}
                   </p>
                 </div>
                 <div>
@@ -603,7 +751,7 @@ ${filteredRequests
                     Total Days
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {selectedRequest.total_days || 'N/A'}
+                    {selectedRequest.total_days}
                   </p>
                 </div>
                 <div>
@@ -626,10 +774,19 @@ ${filteredRequests
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Department
+                </label>
+                <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                  {selectedRequest.employee.department || 'N/A'}
+                </p>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Reason
                 </label>
                 <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                  {selectedRequest.reason}
+                  {selectedRequest.reason || 'N/A'}
                 </p>
               </div>
             </div>
@@ -641,7 +798,7 @@ ${filteredRequests
               >
                 Close
               </button>
-              {(selectedRequest.status || "pending") === "pending" && (
+              {selectedRequest.status === "TL_APPROVED" && (
                 <>
                   <button
                     onClick={() => {
@@ -694,14 +851,14 @@ ${filteredRequests
             <div className="p-6 space-y-4">
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                 <p className="text-sm text-gray-900 dark:text-white">
-                  <strong>Employee:</strong> {selectedRequest.employee.name}
+                  <strong>Employee:</strong> {selectedRequest.employee.full_name}
                 </p>
                 <p className="text-sm text-gray-900 dark:text-white">
-                  <strong>Leave Type:</strong> {selectedRequest.leave_type}
+                  <strong>Leave Type:</strong> {selectedRequest.leave_type_display}
                 </p>
                 <p className="text-sm text-gray-900 dark:text-white">
-                  <strong>Duration:</strong> {selectedRequest.total_days || 'N/A'} day
-                  {(selectedRequest.total_days || 0) > 1 ? "s" : ""}
+                  <strong>Duration:</strong> {selectedRequest.total_days} day
+                  {parseFloat(selectedRequest.total_days) > 1 ? "s" : ""}
                 </p>
                 <p className="text-sm text-gray-900 dark:text-white">
                   <strong>Dates:</strong>{" "}

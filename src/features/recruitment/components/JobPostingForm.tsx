@@ -3,20 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, X } from 'lucide-react';
 import MainLayout from '../../../layouts/MainLayout';
 import { toast } from 'react-hot-toast';
+import { recruitmentAPI, CreateJobPostingData } from '../../../services/recruitmentApi';
 
 interface JobPostingFormData {
-  title: string;
+  job_title: string;
   department: string;
   location: string;
-  type: 'full-time' | 'part-time' | 'contract' | 'internship';
-  experience: string;
-  salaryMin: string;
-  salaryMax: string;
+  job_type: 'Full-time' | 'Part-time' | 'Contract' | 'Internship';
+  min_experience: number;
+  required_skills: string;
+  education: string;
+  vacancies: number;
+  salary_range: string;
   description: string;
-  requirements: string;
-  responsibilities: string;
-  benefits: string;
-  closingDate: string;
+  deadline: string;
   status: 'draft' | 'active';
 }
 
@@ -24,60 +24,57 @@ const JobPostingForm: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<JobPostingFormData>({
-    title: '',
+    job_title: '',
     department: '',
     location: '',
-    type: 'full-time',
-    experience: '',
-    salaryMin: '',
-    salaryMax: '',
+    job_type: 'Full-time',
+    min_experience: 0,
+    required_skills: '',
+    education: '',
+    vacancies: 1,
+    salary_range: '',
     description: '',
-    requirements: '',
-    responsibilities: '',
-    benefits: '',
-    closingDate: '',
+    deadline: '',
     status: 'draft'
   });
 
-  const [errors, setErrors] = useState<Partial<JobPostingFormData>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: name === 'vacancies' || name === 'min_experience'
+        ? Number(value)
+        : value
     }));
     
     // Clear error when user starts typing
     if (errors[name as keyof JobPostingFormData]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: undefined
-      }));
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
     }
   };
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<JobPostingFormData> = {};
+    const newErrors: Record<string, string> = {};
 
-    if (!formData.title.trim()) newErrors.title = 'Job title is required';
+    if (!formData.job_title.trim()) newErrors.job_title = 'Job title is required';
     if (!formData.department.trim()) newErrors.department = 'Department is required';
     if (!formData.location.trim()) newErrors.location = 'Location is required';
     if (!formData.description.trim()) newErrors.description = 'Job description is required';
-    if (!formData.requirements.trim()) newErrors.requirements = 'Requirements are required';
-    if (!formData.responsibilities.trim()) newErrors.responsibilities = 'Responsibilities are required';
-    if (!formData.closingDate) newErrors.closingDate = 'Closing date is required';
+    if (!formData.required_skills.trim()) newErrors.required_skills = 'Required skills are required';
+    if (!formData.education.trim()) newErrors.education = 'Education requirements are required';
+    if (!formData.deadline) newErrors.deadline = 'Application deadline is required';
+    if (formData.vacancies < 1) newErrors.vacancies = 'Number of vacancies must be at least 1';
+    if (formData.min_experience < 0) newErrors.min_experience = 'Minimum experience cannot be negative';
 
-    // Validate closing date is in the future
-    if (formData.closingDate && new Date(formData.closingDate) <= new Date()) {
-      newErrors.closingDate = 'Closing date must be in the future';
-    }
-
-    // Validate salary range
-    if (formData.salaryMin && formData.salaryMax) {
-      if (parseFloat(formData.salaryMin) > parseFloat(formData.salaryMax)) {
-        newErrors.salaryMax = 'Maximum salary must be greater than minimum salary';
-      }
+    // Validate deadline is in the future
+    if (formData.deadline && new Date(formData.deadline) <= new Date()) {
+      newErrors.deadline = 'Application deadline must be in the future';
     }
 
     setErrors(newErrors);
@@ -94,31 +91,33 @@ const JobPostingForm: React.FC = () => {
     setLoading(true);
     
     try {
-      // Simulate API call - replace with actual API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const submissionData = {
-        ...formData,
-        status: isDraft ? 'draft' : formData.status,
-        postedDate: new Date().toISOString(),
-        applicants: 0
+      const submissionData: CreateJobPostingData = {
+        job_title: formData.job_title,
+        department: formData.department,
+        location: formData.location,
+        job_type: formData.job_type,
+        min_experience: formData.min_experience,
+        required_skills: formData.required_skills,
+        education: formData.education,
+        vacancies: formData.vacancies,
+        salary_range: formData.salary_range,
+        description: formData.description,
+        deadline: formData.deadline,
       };
       
       console.log('Submitting job posting:', submissionData);
       
-      // Here you would make the actual API call
-      // const response = await jobPostingApi.create(submissionData);
+      // Make the actual API call
+      const response = await recruitmentAPI.jobPostings.create(submissionData);
+      
+      toast.success(`Job posting ${isDraft ? 'saved as draft' : 'created'} successfully!`);
       
       // Redirect back to dashboard on success
-      navigate('/recruitment/job-posting', { 
-        state: { 
-          message: `Job posting ${isDraft ? 'saved as draft' : 'created'} successfully!` 
-        }
-      });
+      navigate('/recruitment/job-posting');
       
     } catch (error) {
       console.error('Error submitting job posting:', error);
-      // Handle error - show toast or error message
+      toast.error('Failed to create job posting. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -155,7 +154,7 @@ const JobPostingForm: React.FC = () => {
               </p>
             </div>
           </div>
-        <div className="flex space-x-3">
+          <div className="flex space-x-3">
           <button
             onClick={handleCancel}
             className="btn-secondary flex items-center space-x-2"
@@ -179,8 +178,8 @@ const JobPostingForm: React.FC = () => {
             <Save className="w-4 h-4" />
             <span>{loading ? 'Publishing...' : 'Publish Job'}</span>
           </button>
+          </div>
         </div>
-      </div>
 
       {/* Form */}
       <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-6">
@@ -191,21 +190,21 @@ const JobPostingForm: React.FC = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="job_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Job Title *
               </label>
               <input
                 type="text"
-                id="title"
-                name="title"
-                value={formData.title}
+                id="job_title"
+                name="job_title"
+                value={formData.job_title}
                 onChange={handleInputChange}
                 className={`input-field ${
-                  errors.title ? 'border-red-500' : ''
+                  errors.job_title ? 'border-red-500' : ''
                 }`}
                 placeholder="e.g. Senior Software Engineer"
               />
-              {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
+              {errors.job_title && <p className="mt-1 text-sm text-red-600">{errors.job_title}</p>}
             </div>
 
             <div>
@@ -245,89 +244,92 @@ const JobPostingForm: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="job_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Employment Type
               </label>
               <select
-                id="type"
-                name="type"
-                value={formData.type}
+                id="job_type"
+                name="job_type"
+                value={formData.job_type}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               >
-                <option value="full-time">Full-time</option>
-                <option value="part-time">Part-time</option>
-                <option value="contract">Contract</option>
-                <option value="internship">Internship</option>
+                <option value="Full-time">Full-time</option>
+                <option value="Part-time">Part-time</option>
+                <option value="Contract">Contract</option>
+                <option value="Internship">Internship</option>
               </select>
             </div>
 
             <div>
-              <label htmlFor="experience" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Experience Level
+              <label htmlFor="min_experience" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Minimum Experience (years)
               </label>
               <input
-                type="text"
-                id="experience"
-                name="experience"
-                value={formData.experience}
+                type="number"
+                id="min_experience"
+                name="min_experience"
+                value={formData.min_experience}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                placeholder="e.g. 3-5 years, Entry level, Senior level"
+                placeholder="e.g. 3"
+                min={0}
               />
+              {errors.min_experience && <p className="mt-1 text-sm text-red-600">{errors.min_experience}</p>}
             </div>
 
             <div>
-              <label htmlFor="closingDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="deadline" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Application Closing Date *
               </label>
               <input
                 type="date"
-                id="closingDate"
-                name="closingDate"
-                value={formData.closingDate}
+                id="deadline"
+                name="deadline"
+                value={formData.deadline}
                 onChange={handleInputChange}
                 min={new Date().toISOString().split('T')[0]}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white ${
-                  errors.closingDate ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  errors.deadline ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
               />
-              {errors.closingDate && <p className="mt-1 text-sm text-red-600">{errors.closingDate}</p>}
+              {errors.deadline && <p className="mt-1 text-sm text-red-600">{errors.deadline}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <div>
-              <label htmlFor="salaryMin" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Minimum Salary
+              <label htmlFor="salary_range" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Salary Range
               </label>
               <input
-                type="number"
-                id="salaryMin"
-                name="salaryMin"
-                value={formData.salaryMin}
+                type="text"
+                id="salary_range"
+                name="salary_range"
+                value={formData.salary_range}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                placeholder="e.g. 50000"
+                placeholder="e.g. 50000-80000"
               />
             </div>
 
             <div>
-              <label htmlFor="salaryMax" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Maximum Salary
+              <label htmlFor="vacancies" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Number of Vacancies *
               </label>
               <input
                 type="number"
-                id="salaryMax"
-                name="salaryMax"
-                value={formData.salaryMax}
+                id="vacancies"
+                name="vacancies"
+                value={formData.vacancies}
                 onChange={handleInputChange}
+                min={1}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white ${
-                  errors.salaryMax ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  errors.vacancies ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
-                placeholder="e.g. 80000"
+                placeholder="e.g. 3"
               />
-              {errors.salaryMax && <p className="mt-1 text-sm text-red-600">{errors.salaryMax}</p>}
+              {errors.vacancies && <p className="mt-1 text-sm text-red-600">{errors.vacancies}</p>}
             </div>
           </div>
         </div>
@@ -357,39 +359,21 @@ const JobPostingForm: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="responsibilities" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Key Responsibilities *
-              </label>
-              <textarea
-                id="responsibilities"
-                name="responsibilities"
-                rows={4}
-                value={formData.responsibilities}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white ${
-                  errors.responsibilities ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                }`}
-                placeholder="List the main responsibilities and duties..."
-              />
-              {errors.responsibilities && <p className="mt-1 text-sm text-red-600">{errors.responsibilities}</p>}
-            </div>
-
-            <div>
-              <label htmlFor="requirements" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="required_skills" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Requirements & Qualifications *
               </label>
               <textarea
-                id="requirements"
-                name="requirements"
+                id="required_skills"
+                name="required_skills"
                 rows={4}
-                value={formData.requirements}
+                value={formData.required_skills}
                 onChange={handleInputChange}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white ${
-                  errors.requirements ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  errors.required_skills ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="List the required skills, qualifications, and experience..."
               />
-              {errors.requirements && <p className="mt-1 text-sm text-red-600">{errors.requirements}</p>}
+              {errors.required_skills && <p className="mt-1 text-sm text-red-600">{errors.required_skills}</p>}
             </div>
 
             <div>
@@ -400,41 +384,36 @@ const JobPostingForm: React.FC = () => {
                 id="benefits"
                 name="benefits"
                 rows={3}
-                value={formData.benefits}
+                value={(formData as any).benefits || ''}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 placeholder="List the benefits, perks, and compensation details..."
               />
+            {/* Remove benefits field if not present in JobPostingFormData */}
+            </div>
+
+            <div>
+              <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Status
+              </label>
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleInputChange}
+                className="w-full md:w-64 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="draft">Draft</option>
+                <option value="active">Active</option>
+              </select>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Draft posts are not visible to applicants. Active posts are live and accepting applications.
+              </p>
             </div>
           </div>
         </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Publication Settings
-          </h2>
-          
-          <div>
-            <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={formData.status}
-              onChange={handleInputChange}
-              className="w-full md:w-64 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            >
-              <option value="draft">Draft</option>
-              <option value="active">Active</option>
-            </select>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Draft posts are not visible to applicants. Active posts are live and accepting applications.
-            </p>
-          </div>
-        </div>
       </form>
-      </div>
+    </div>
     </MainLayout>
   );
 };

@@ -3,18 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Eye, Edit, Trash2, Search, Filter } from 'lucide-react';
 import MainLayout from '../../../layouts/MainLayout';
 import { toast } from 'react-hot-toast';
-
-interface JobPosting {
-  id: number;
-  Tl_Name: string;
-  job_title: string;
-  department: string;
-  vacancies: number;
-  job_type: 'Full-time' | 'Part-time' | 'Internship' | 'Contract';
-  required_skills: string;
-  min_experience: number;
-  education: string;
-}
+import { recruitmentAPI, JobPosting } from '../../../services/recruitmentApi';
 
 const JobPostingDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -38,17 +27,16 @@ const JobPostingDashboard: React.FC = () => {
   const fetchJobPostings = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://192.168.1.97:8000/hr_view/tl-only/');
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch job postings');
-      }
-      
-      const data: JobPosting[] = await response.json();
+      const data = await recruitmentAPI.jobPostings.getAll({
+        search: searchTerm || undefined,
+        job_type: statusFilter !== 'all' ? statusFilter : undefined,
+      });
       setJobPostings(data);
+      toast.success(`Loaded ${data.length} job postings`);
     } catch (error) {
       console.error('Error fetching job postings:', error);
       toast.error('Failed to load job postings');
+      setJobPostings([]);
     } finally {
       setLoading(false);
     }
@@ -61,6 +49,22 @@ const JobPostingDashboard: React.FC = () => {
     const matchesType = statusFilter === 'all' || posting.job_type === statusFilter;
     return matchesSearch && matchesType;
   });
+
+  const handleDeletePosting = async (id: number, title: string) => {
+    if (!confirm(`Are you sure you want to delete the job posting "${title}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await recruitmentAPI.jobPostings.delete(id);
+      toast.success('Job posting deleted successfully');
+      // Refresh the list
+      fetchJobPostings();
+    } catch (error) {
+      console.error('Error deleting job posting:', error);
+      toast.error('Failed to delete job posting');
+    }
+  };
 
   const getTypeColor = (type: string) => {
     const baseClasses = 'px-2 py-1 text-xs font-medium rounded-full';
@@ -288,12 +292,7 @@ const JobPostingDashboard: React.FC = () => {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => {
-                            if (confirm('Are you sure you want to delete this job posting?')) {
-                              // Handle delete - implement delete logic here
-                              console.log('Delete posting:', posting.id);
-                            }
-                          }}
+                          onClick={() => handleDeletePosting(posting.id, posting.job_title)}
                           className="text-red-600 hover:text-red-800 transition-colors"
                           title="Delete"
                         >
