@@ -1,3 +1,12 @@
+import Profile from "./features/employee/Profile";
+<Route
+  path="/profile"
+  element={
+    <ProtectedRoute>
+      <Profile />
+    </ProtectedRoute>
+  }
+/>;
 import React, { useEffect } from "react";
 import {
   Navigate,
@@ -52,6 +61,17 @@ import ManualAttendanceUpdate from "./features/attendance/ManualAttendanceUpdate
 import ImportAttendance from "./features/attendance/ImportAttendance";
 import HolidayCalendar from "./features/attendance/HolidayCalendar";
 import AttendanceMetricsDashboard from "./features/attendance/AttendanceMetricsDashboard";
+import {
+  AttendanceLeaveModuleLayout,
+  AttendanceContent,
+  AttendanceDailyContent,
+  AttendanceMonthlyContent,
+  AttendanceSummaryContent,
+  AttendanceManualUpdateContent,
+  AttendanceImportContent,
+  AttendanceHolidaysContent,
+  AttendanceMetricsContent,
+} from "./features/attendance/AttendanceLeaveModule";
 import Leave from "./features/leave/Leave";
 import LeaveApplication from "./features/leave/LeaveApplication";
 import LeaveApplicationHistory from "./features/leave/LeaveApplicationHistory";
@@ -99,14 +119,14 @@ import { AuthProvider } from "./auth/AuthProvider";
 // Auth Store
 import { useAuthStore } from "./context/authStore";
 import CandidateProfileCreation from "./pages/CandidateProfileCreation";
-import EmployeeRoutes from './employee/pages/EmployeeRoutes';
-import EmployeeLoginPage from './employee/pages/LoginPage';
-import EmployeeLogoutPage from './employee/pages/LogoutPage';
-import PoliciesPage from './employee/pages/PoliciesPage';
-import { HRMChatbot } from "./components/HRMChatbot/HRMChatbot";
+import EmployeeRoutes from "./employee/pages/EmployeeRoutes";
+import EmployeeLoginPage from "./employee/pages/LoginPage";
+import EmployeeLogoutPage from "./employee/pages/LogoutPage";
+import PoliciesPage from "./employee/pages/PoliciesPage";
 
 const App: React.FC = () => {
-  const { isAuthenticated, refreshToken, checkSession, initializeFromStorage } = useAuthStore();
+  const { isAuthenticated, refreshToken, checkSession, initializeFromStorage } =
+    useAuthStore();
 
   // Apply theme
   useEffect(() => {
@@ -117,13 +137,13 @@ const App: React.FC = () => {
       document.documentElement.classList.remove("dark");
     }
   }, []);
-  
+
   // Initialize auth store from localStorage on app start
   useEffect(() => {
     console.log("🚀 App - Initializing auth store from localStorage");
     initializeFromStorage();
   }, [initializeFromStorage]);
-  
+
   // Set up API interceptor for token refresh
   useEffect(() => {
     // Initialize API interceptors to handle 401 responses
@@ -139,7 +159,7 @@ const App: React.FC = () => {
         // Don't auto-logout, just let the component handle the error
       }
     });
-    
+
     // Initial session check
     checkSession();
   }, []);
@@ -149,524 +169,472 @@ const App: React.FC = () => {
       <Router>
         <ToastProvider>
           <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-          <Routes>
-          {/* Auth Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/change-password" element={<ChangePassword />} />
+            <Routes>
+              {/* Auth Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route
+                path="/reset-password/:token"
+                element={<ResetPassword />}
+              />
+              <Route path="/change-password" element={<ChangePassword />} />
 
-          {/* Main App Routes */}
-          <Route
-            path="/home"
-            element={
-              <ProtectedRoute>
-                <HomePage />
-              </ProtectedRoute>
-            }
-          />
+              {/* Main App Routes */}
+              <Route
+                path="/home"
+                element={
+                  <ProtectedRoute>
+                    <HomePage />
+                  </ProtectedRoute>
+                }
+              />
 
+              {/* Core HR Modules */}
+              <Route
+                path="/organizations"
+                element={
+                  <ProtectedRoute>
+                    <Organizations />
+                  </ProtectedRoute>
+                }
+              />
 
+              <Route
+                path="/organizations/create"
+                element={
+                  <ProtectedRoute>
+                    <CreateOrganization />
+                  </ProtectedRoute>
+                }
+              />
 
-          {/* Core HR Modules */}
-          <Route
-            path="/organizations"
-            element={
-              <ProtectedRoute>
-                <Organizations />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/organizations/:id"
+                element={
+                  <ProtectedRoute>
+                    <Organizations />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/organizations/create"
-            element={
-              <ProtectedRoute>
-                <CreateOrganization />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/organizations/:id/companies"
+                element={
+                  <ProtectedRoute>
+                    <Organizations />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/organizations/:id"
-            element={
-              <ProtectedRoute>
-                <Organizations />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/recruitment"
+                element={
+                  <ProtectedRoute>
+                    <Recruitment />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/organizations/:id/companies"
-            element={
-              <ProtectedRoute>
-                <Organizations />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/onboarding"
+                element={
+                  <ProtectedRoute>
+                    <Onboarding />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/recruitment"
-            element={
-              <ProtectedRoute>
-                <Recruitment />
-              </ProtectedRoute>
-            }
-          />
+              {/* Onboarding Sub-routes */}
+              <Route
+                path="/onboarding/offer-letter"
+                element={
+                  <ProtectedRoute>
+                    <OfferLetter />
+                  </ProtectedRoute>
+                }
+              />
 
-          {/* Recruitment Sub-routes */}
-          <Route
-            path="/recruitment/job-posting"
-            element={
-              <ProtectedRoute>
-                <JobPostingDashboard />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/recruitment/job-posting/create"
-            element={
-              <ProtectedRoute>
-                <JobPostingForm />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/onboarding/pre-boarding"
+                element={
+                  <ProtectedRoute>
+                    <PreBoarding />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/onboarding"
-            element={
-              <ProtectedRoute>
-                <Onboarding />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/onboarding/background-verification"
+                element={
+                  <ProtectedRoute>
+                    <BackgroundVerification />
+                  </ProtectedRoute>
+                }
+              />
 
-          {/* Onboarding Sub-routes */}
-          <Route
-            path="/onboarding/offer-letter"
-            element={
-              <ProtectedRoute>
-                <OfferLetter />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/onboarding/pre-boarding"
-            element={
-              <ProtectedRoute>
-                <PreBoarding />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/onboarding/background-verification"
-            element={
-              <ProtectedRoute>
-                <BackgroundVerification />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/onboarding/joining-formalities"
-            element={
-              <ProtectedRoute>
-                <JoiningFormalities />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/onboarding/candidate-uploads"
-            element={<CandidateProfileCreation />}
-          />
-          
-          <Route
-            path="/onboarding/tasks"
-            element={
-              <ProtectedRoute>
-                <TaskChecklist />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/onboarding/candidate-invite"
-            element={
-              <ProtectedRoute>
-                <CandidateInvite />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/onboarding/candidate-invites"
-            element={
-              <ProtectedRoute>
-                <CandidateInvites />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/onboarding/asset-allocation"
-            element={
-              <ProtectedRoute>
-                <AssetAllocation />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/onboarding/joining-formalities"
+                element={
+                  <ProtectedRoute>
+                    <JoiningFormalities />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/employee-profile"
-            element={
-              <ProtectedRoute>
-                <EmployeeProfile />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/onboarding/candidate-uploads"
+                element={<CandidateProfileCreation />}
+              />
 
-          <Route
-            path="/employee/directory"
-            element={
-              <ProtectedRoute>
-                <EmployeeDirectory />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/employee/view/:empId"
-            element={
-              <ProtectedRoute>
-                <EmployeeView />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/onboarding/tasks"
+                element={
+                  <ProtectedRoute>
+                    <TaskChecklist />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/employee/profile-management"
-            element={
-              <ProtectedRoute>
-                <ProfileManagement />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/onboarding/candidate-invite"
+                element={
+                  <ProtectedRoute>
+                    <CandidateInvite />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/employee/documents"
-            element={
-              <ProtectedRoute>
-                <DocumentManagement />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/onboarding/candidate-invites"
+                element={
+                  <ProtectedRoute>
+                    <CandidateInvites />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/employee/access-control"
-            element={
-              <ProtectedRoute>
-                <AccessControl />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/onboarding/asset-allocation"
+                element={
+                  <ProtectedRoute>
+                    <AssetAllocation />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/attendance"
-            element={
-              <ProtectedRoute>
-                <Attendance />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/employee-profile"
+                element={
+                  <ProtectedRoute>
+                    <EmployeeProfile />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/attendance/daily"
-            element={
-              <ProtectedRoute>
-                <AttendanceDailyView />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/employee/directory"
+                element={
+                  <ProtectedRoute>
+                    <EmployeeDirectory />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/employee/view/:empId"
+                element={
+                  <ProtectedRoute>
+                    <EmployeeView />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/attendance/monthly"
-            element={
-              <ProtectedRoute>
-                <MonthlyAttendanceCalendar />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/employee/profile-management"
+                element={
+                  <ProtectedRoute>
+                    <ProfileManagement />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/attendance/summary"
-            element={
-              <ProtectedRoute>
-                <AttendanceSummaryReport />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/employee/documents"
+                element={
+                  <ProtectedRoute>
+                    <DocumentManagement />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/attendance/manual-update"
-            element={
-              <ProtectedRoute>
-                <ManualAttendanceUpdate />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/employee/access-control"
+                element={
+                  <ProtectedRoute>
+                    <AccessControl />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/attendance/import"
-            element={
-              <ProtectedRoute>
-                <ImportAttendance />
-              </ProtectedRoute>
-            }
-          />
+              {/* Attendance Routes with Sidebar Layout */}
+              <Route
+                path="/attendance"
+                element={
+                  <ProtectedRoute>
+                    <AttendanceLeaveModuleLayout />
+                  </ProtectedRoute>
+                }
+              >
+                {/* Nested routes that will render in the Outlet */}
+                <Route index element={<AttendanceContent />} />
+                <Route path="daily" element={<AttendanceDailyContent />} />
+                <Route path="monthly" element={<AttendanceMonthlyContent />} />
+                <Route path="summary" element={<AttendanceSummaryContent />} />
+                <Route
+                  path="manual-update"
+                  element={<AttendanceManualUpdateContent />}
+                />
+                <Route path="import" element={<AttendanceImportContent />} />
+                <Route
+                  path="holidays"
+                  element={<AttendanceHolidaysContent />}
+                />
+                <Route path="metrics" element={<AttendanceMetricsContent />} />
+              </Route>
 
-          <Route
-            path="/attendance/holidays"
-            element={
-              <ProtectedRoute>
-                <HolidayCalendar />
-              </ProtectedRoute>
-            }
-          />
+              {/* Employee Profile Attendance Route */}
+              <Route
+                path="/employee-profile/attendance"
+                element={
+                  <ProtectedRoute>
+                    <AttendanceLeaveModuleLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<AttendanceContent />} />
+              </Route>
 
-          <Route
-            path="/attendance/metrics"
-            element={
-              <ProtectedRoute>
-                <AttendanceMetricsDashboard />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/leave"
+                element={
+                  <ProtectedRoute>
+                    <Leave />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/leave"
-            element={
-              <ProtectedRoute>
-                <Leave />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/leave/application"
+                element={
+                  <ProtectedRoute>
+                    <LeaveApplication />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/leave/application"
-            element={
-              <ProtectedRoute>
-                <LeaveApplication />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/leave/history"
+                element={
+                  <ProtectedRoute>
+                    <LeaveApplicationHistory />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/leave/history"
-            element={
-              <ProtectedRoute>
-                <LeaveApplicationHistory />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/leave/balance"
+                element={
+                  <ProtectedRoute>
+                    <LeaveBalance />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/leave/balance"
-            element={
-              <ProtectedRoute>
-                <LeaveBalance />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/leave/approval"
+                element={
+                  <ProtectedRoute>
+                    <LeaveApproval />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/leave/approval"
-            element={
-              <ProtectedRoute>
-                <LeaveApproval />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/payroll"
+                element={
+                  <ProtectedRoute>
+                    <Payroll />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/payroll"
-            element={
-              <ProtectedRoute>
-                <Payroll />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/payroll/salary-structure"
+                element={
+                  <ProtectedRoute>
+                    <SalaryStructure />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/payroll/salary-structure"
-            element={
-              <ProtectedRoute>
-                <SalaryStructure />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/payroll/run"
+                element={
+                  <ProtectedRoute>
+                    <PayrollRun />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/payroll/run"
-            element={
-              <ProtectedRoute>
-                <PayrollRun />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/payroll/payslips"
+                element={
+                  <ProtectedRoute>
+                    <Payslips />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/payroll/payslips"
-            element={
-              <ProtectedRoute>
-                <Payslips />
-              </ProtectedRoute>
-            }
-          />
+              {/* Payroll Subfeatures */}
+              <Route
+                path="/payroll/attendance-integration"
+                element={
+                  <ProtectedRoute>
+                    <AttendanceIntegration />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payroll/tax-management"
+                element={
+                  <ProtectedRoute>
+                    <TaxManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payroll/bank-processing"
+                element={
+                  <ProtectedRoute>
+                    <BankProcessing />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payroll/compliance"
+                element={
+                  <ProtectedRoute>
+                    <PayrollCompliance />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payroll/reports"
+                element={
+                  <ProtectedRoute>
+                    <PayrollReports />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payroll/audit"
+                element={
+                  <ProtectedRoute>
+                    <PayrollAudit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payroll/self-service"
+                element={
+                  <ProtectedRoute>
+                    <PayrollSelfService />
+                  </ProtectedRoute>
+                }
+              />
 
-          {/* Payroll Subfeatures */}
-          <Route
-            path="/payroll/attendance-integration"
-            element={
-              <ProtectedRoute>
-                <AttendanceIntegration />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payroll/tax-management"
-            element={
-              <ProtectedRoute>
-                <TaxManagement />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payroll/bank-processing"
-            element={
-              <ProtectedRoute>
-                <BankProcessing />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payroll/compliance"
-            element={
-              <ProtectedRoute>
-                <PayrollCompliance />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payroll/reports"
-            element={
-              <ProtectedRoute>
-                <PayrollReports />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payroll/audit"
-            element={
-              <ProtectedRoute>
-                <PayrollAudit />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payroll/self-service"
-            element={
-              <ProtectedRoute>
-                <PayrollSelfService />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/performance"
+                element={
+                  <ProtectedRoute>
+                    <Performance />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/performance"
-            element={
-              <ProtectedRoute>
-                <Performance />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/offboarding"
+                element={
+                  <ProtectedRoute>
+                    <Offboarding />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/offboarding"
-            element={
-              <ProtectedRoute>
-                <Offboarding />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/assets"
+                element={
+                  <ProtectedRoute>
+                    <Assets />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/assets"
-            element={
-              <ProtectedRoute>
-                <Assets />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/help-desk"
+                element={
+                  <ProtectedRoute>
+                    <HelpDesk />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/help-desk"
-            element={
-              <ProtectedRoute>
-                <HelpDesk />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/help-desk/create-ticket"
+                element={
+                  <ProtectedRoute>
+                    <CreateSupportTicket />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/help-desk/create-ticket"
-            element={
-              <ProtectedRoute>
-                <CreateSupportTicket />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/help-desk/tracking"
+                element={
+                  <ProtectedRoute>
+                    <TicketTracking />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/help-desk/tracking"
-            element={
-              <ProtectedRoute>
-                <TicketTracking />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/help-desk/knowledge-base"
+                element={
+                  <ProtectedRoute>
+                    <KnowledgeBase />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/help-desk/knowledge-base"
-            element={
-              <ProtectedRoute>
-                <KnowledgeBase />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/help-desk/faq"
+                element={
+                  <ProtectedRoute>
+                    <FAQ />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/help-desk/faq"
-            element={
-              <ProtectedRoute>
-                <FAQ />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/help-desk/feedback"
+                element={
+                  <ProtectedRoute>
+                    <FeedbackEngagement />
+                  </ProtectedRoute>
+                }
+              />
 
-          <Route
-            path="/help-desk/feedback"
-            element={
-              <ProtectedRoute>
-                <FeedbackEngagement />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Enhanced Modules - Temporarily commented out
+              {/* Enhanced Modules - Temporarily commented out
           <Route
             path="/training"
             element={
@@ -704,7 +672,7 @@ const App: React.FC = () => {
           />
           */}
 
-          {/* Temporarily commented out to prevent loading issues
+              {/* Temporarily commented out to prevent loading issues
           <Route
             path="/communication"
             element={
@@ -715,17 +683,11 @@ const App: React.FC = () => {
           />
           */}
 
-          <Route
-            path="/announcements"
-            element={<Announcements />}
-          />
+              <Route path="/announcements" element={<Announcements />} />
 
-          <Route
-            path="/inbox"
-            element={<Inbox />}
-          />
+              <Route path="/inbox" element={<Inbox />} />
 
-          {/* 
+              {/* 
           <Route
             path="/hr/profile"
             element={
@@ -736,7 +698,7 @@ const App: React.FC = () => {
           />
           */}
 
-          {/* Policies & Documents - Temporarily commented out
+              {/* Policies & Documents - Temporarily commented out
           <Route
             path="/policies"
             element={
@@ -763,81 +725,74 @@ const App: React.FC = () => {
           />
           */}
 
-          <Route
-            path="/settings/*"
-            element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/settings/*"
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                }
+              />
 
-          {/* Test Inbox Route - No Auth */}
-          <Route path="/test-inbox" element={<Inbox />} />
-          
-          {/* Test Announcements Route - No Auth */}
-          <Route path="/test-announcements" element={<Announcements />} />
+              {/* Test Inbox Route - No Auth */}
+              <Route path="/test-inbox" element={<Inbox />} />
 
-          {/* Employee Routes - No Auth */}
-          <Route path="/emp-home/*" element={<EmployeeRoutes />} />
-          <Route path="/emp-login" element={<EmployeeLoginPage />} />
-          <Route path="/emp-logout" element={<EmployeeLogoutPage />} />
+              {/* Test Announcements Route - No Auth */}
+              <Route path="/test-announcements" element={<Announcements />} />
 
-          {/* Default Routes */}
-          <Route
-            path="/"
-            element={<Navigate to="/login" replace />}
-          />
+              {/* Employee Routes - No Auth */}
+              <Route path="/emp-home/*" element={<EmployeeRoutes />} />
+              <Route path="/emp-login" element={<EmployeeLoginPage />} />
+              <Route path="/emp-logout" element={<EmployeeLogoutPage />} />
 
-          <Route
-            path="*"
-            element={<Navigate to="/login" replace />}
-          />
-        </Routes>
+              {/* Default Routes */}
+              <Route path="/" element={<Navigate to="/login" replace />} />
 
-        <HRMChatbot />
-        {/* Toast Notifications */}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: 'var(--toast-bg, #ffffff)',
-              color: 'var(--toast-color, #333333)',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '500',
-              maxWidth: '320px'
-            },
-            success: {
-              style: {
-                background: '#10B981',
-                color: '#FFFFFF',
-                border: '1px solid #059669',
-              },
-              iconTheme: {
-                primary: '#FFFFFF',
-                secondary: '#10B981',
-              },
-            },
-            error: {
-              style: {
-                background: '#EF4444',
-                color: '#FFFFFF',
-                border: '1px solid #DC2626',
-              },
-              iconTheme: {
-                primary: '#FFFFFF',
-                secondary: '#EF4444',
-              },
-            },
-          }}
-        />
-        </div>
-      </ToastProvider>
-    </Router>
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+
+            {/* Toast Notifications */}
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: "var(--toast-bg, #ffffff)",
+                  color: "var(--toast-color, #333333)",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                  padding: "12px 16px",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  maxWidth: "320px",
+                },
+                success: {
+                  style: {
+                    background: "#10B981",
+                    color: "#FFFFFF",
+                    border: "1px solid #059669",
+                  },
+                  iconTheme: {
+                    primary: "#FFFFFF",
+                    secondary: "#10B981",
+                  },
+                },
+                error: {
+                  style: {
+                    background: "#EF4444",
+                    color: "#FFFFFF",
+                    border: "1px solid #DC2626",
+                  },
+                  iconTheme: {
+                    primary: "#FFFFFF",
+                    secondary: "#EF4444",
+                  },
+                },
+              }}
+            />
+          </div>
+        </ToastProvider>
+      </Router>
     </AuthProvider>
   );
 };
