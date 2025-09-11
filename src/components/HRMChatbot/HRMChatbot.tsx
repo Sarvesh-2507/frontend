@@ -1,7 +1,6 @@
 import React, { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useVoiceInput } from "./hooks/useVoiceInput";
-import { useVoiceOutput } from "./hooks/useVoiceOutput";
 import { useChatbotNavigation } from "./hooks/useChatbotNavigation";
 import { useChatAPI, ChatMessage } from "./hooks/useChatAPI";
 
@@ -16,7 +15,6 @@ export const HRMChatbot: React.FC = () => {
 
   const [transcript, setTranscript] = useState("");
   const { listening, startListening, stopListening } = useVoiceInput((text) => setTranscript(text));
-  const { speak } = useVoiceOutput();
   const { handleNavigation } = useChatbotNavigation();
   const { sendMessage, loading } = useChatAPI();
 
@@ -41,6 +39,7 @@ export const HRMChatbot: React.FC = () => {
     setInput("");
     setTranscript("");
 
+
     // Navigation intent
     const navPath = handleNavigation(text);
     if (navPath) {
@@ -48,7 +47,6 @@ export const HRMChatbot: React.FC = () => {
         ...prev,
         { sender: "bot", text: `Navigating to ${navPath}...`, timestamp: Date.now() },
       ]);
-      speak(`Navigating to ${navPath}`);
       return;
     }
 
@@ -58,7 +56,7 @@ export const HRMChatbot: React.FC = () => {
       ...prev,
       { sender: "bot", text: response, timestamp: Date.now() },
     ]);
-    speak(response);
+  // No voice output
   };
 
   return (

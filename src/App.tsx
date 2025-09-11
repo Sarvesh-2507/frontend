@@ -1,12 +1,3 @@
-import Profile from "./features/employee/Profile";
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
 import React, { useEffect } from "react";
 import {
   Navigate,
@@ -27,7 +18,6 @@ import ChangePassword from "./features/authentication/ChangePassword";
 
 // Main Components
 import HomePage from "./components/HomePage";
-
 
 // HR Modules
 import Organizations from "./features/organization/Organizations";
@@ -113,6 +103,7 @@ import EmployeeRoutes from './employee/pages/EmployeeRoutes';
 import EmployeeLoginPage from './employee/pages/LoginPage';
 import EmployeeLogoutPage from './employee/pages/LogoutPage';
 import PoliciesPage from './employee/pages/PoliciesPage';
+import { HRMChatbot } from "./components/HRMChatbot/HRMChatbot";
 
 const App: React.FC = () => {
   const { isAuthenticated, refreshToken, checkSession, initializeFromStorage } = useAuthStore();
@@ -804,6 +795,7 @@ const App: React.FC = () => {
           />
         </Routes>
 
+        <HRMChatbot />
         {/* Toast Notifications */}
         <Toaster
           position="top-right"

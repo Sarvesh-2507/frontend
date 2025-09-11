@@ -31,6 +31,7 @@ import GlobalSearchHeader from './GlobalSearchHeader';
 import BackButton from './ui/BackButton';
 import LeaveBalanceWidget from './LeaveBalanceWidget';
 import YesterdayAttendanceWidget from './YesterdayAttendanceWidget';
+import { HRMChatbot } from "./HRMChatbot/HRMChatbot";
 
 interface QuickStatsCardProps {
   title: string;
@@ -530,21 +531,29 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Floating Action Button */}
-      <motion.button
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 1, type: "spring", stiffness: 200 }}
-        whileHover={{
-          scale: 1.1,
-          boxShadow: "0 8px 25px rgba(59, 130, 246, 0.4)"
-        }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => navigate('/announcements', { state: { openCreate: true } })}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center z-50 transition-colors"
-      >
-        <Plus className="w-6 h-6" />
-      </motion.button>
+      {/* Floating Action Button and Chatbot */}
+      <div className="fixed right-6 z-50 flex flex-col items-end gap-4" style={{ bottom: 120 }}>
+        {/* + Button (FAB) */}
+        <motion.button
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 1, type: "spring", stiffness: 200 }}
+          whileHover={{
+            scale: 1.1,
+            boxShadow: "0 8px 25px rgba(59, 130, 246, 0.4)"
+          }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => navigate('/announcements', { state: { openCreate: true } })}
+          className="mb-4 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
+        >
+          <Plus className="w-6 h-6" />
+        </motion.button>
+        {/* Chatbot Button */}
+        <div className="z-50">
+          {/* Import and render the chatbot here */}
+            <HRMChatbot />
+        </div>
+      </div>
 
       {/* Quick Employee Directory Modal */}
       <QuickEmployeeDirectory
