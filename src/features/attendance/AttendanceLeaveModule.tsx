@@ -235,6 +235,16 @@ export function EmployeeDashboard() {
   const [showApiResponsePopup, setShowApiResponsePopup] = useState(false);
   const [apiResponseData, setApiResponseData] = useState<any>(null);
 
+  // Current location state
+  const [currentLocation, setCurrentLocation] = useState<{
+    latitude: number;
+    longitude: number;
+    timestamp: string;
+  } | null>(null);
+  const [locationStatus, setLocationStatus] = useState<
+    "checking" | "available" | "unavailable"
+  >("checking");
+
   // Regularization form
   const [regOpen, setRegOpen] = useState(false);
   const [regReason, setRegReason] = useState("");
@@ -252,10 +262,142 @@ export function EmployeeDashboard() {
   // Temporary flag to enable mock mode for testing (set to false when backend is ready)
   const MOCK_MODE = false;
 
+  // Predefined location clusters for consistent coordinate mapping
+  const LOCATION_CLUSTERS = [
+    {
+      name: "office",
+      center: { latitude: 12.9716, longitude: 77.5946 }, // Example office coordinates
+      radius: 100, // 100 meters radius
+      snapTo: { latitude: 12.9716, longitude: 77.5946 }, // Exact coordinates to use
+    },
+    {
+      name: "home_area",
+      center: { latitude: 12.9352, longitude: 77.6245 }, // Example home area
+      radius: 200, // 200 meters radius
+      snapTo: { latitude: 12.9352, longitude: 77.6245 },
+    },
+    {
+      name: "vels_university",
+      center: { latitude: 12.8205, longitude: 80.0507 }, // Example university coordinates
+      radius: 150, // 150 meters radius
+      snapTo: { latitude: 12.8205, longitude: 80.0507 },
+    },
+  ];
+
+  // Function to calculate distance between two coordinates (Haversine formula)
+  const calculateDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // Distance in meters
+  };
+
+  // Function to normalize location coordinates
+  const normalizeLocation = (
+    rawLatitude: number,
+    rawLongitude: number,
+    locationType: string
+  ): {
+    latitude: number;
+    longitude: number;
+    isNormalized: boolean;
+    originalDistance?: number;
+  } => {
+    console.log("=== Location Normalization ===");
+    console.log("Raw coordinates:", rawLatitude, rawLongitude);
+    console.log("Location type:", locationType);
+
+    // Find matching cluster based on distance
+    for (const cluster of LOCATION_CLUSTERS) {
+      const distance = calculateDistance(
+        rawLatitude,
+        rawLongitude,
+        cluster.center.latitude,
+        cluster.center.longitude
+      );
+
+      console.log(
+        `Distance to ${cluster.name}: ${Math.round(distance)}m (radius: ${
+          cluster.radius
+        }m)`
+      );
+
+      if (distance <= cluster.radius) {
+        console.log(`✅ Location matched to cluster: ${cluster.name}`);
+        console.log(
+          `📍 Normalized coordinates: ${cluster.snapTo.latitude}, ${cluster.snapTo.longitude}`
+        );
+
+        return {
+          latitude: cluster.snapTo.latitude,
+          longitude: cluster.snapTo.longitude,
+          isNormalized: true,
+          originalDistance: Math.round(distance),
+        };
+      }
+    }
+
+    // If no cluster match found, try to match based on location type
+    const typeBasedCluster = LOCATION_CLUSTERS.find((cluster) => {
+      if (locationType === "office" && cluster.name === "office") return true;
+      if (locationType === "home" && cluster.name === "home_area") return true;
+      if (locationType === "vels" && cluster.name === "vels_university")
+        return true;
+      return false;
+    });
+
+    if (typeBasedCluster) {
+      const distance = calculateDistance(
+        rawLatitude,
+        rawLongitude,
+        typeBasedCluster.center.latitude,
+        typeBasedCluster.center.longitude
+      );
+
+      // Use a larger radius for type-based matching (500m)
+      if (distance <= 500) {
+        console.log(`✅ Location matched by type: ${typeBasedCluster.name}`);
+        console.log(
+          `📍 Normalized coordinates: ${typeBasedCluster.snapTo.latitude}, ${typeBasedCluster.snapTo.longitude}`
+        );
+
+        return {
+          latitude: typeBasedCluster.snapTo.latitude,
+          longitude: typeBasedCluster.snapTo.longitude,
+          isNormalized: true,
+          originalDistance: Math.round(distance),
+        };
+      }
+    }
+
+    console.log("⚠️ No cluster match found, using raw coordinates");
+    return {
+      latitude: rawLatitude,
+      longitude: rawLongitude,
+      isNormalized: false,
+    };
+  };
+
   useEffect(() => {
     // Check face data status on component mount and when attendance page is accessed
     console.log("Attendance page accessed - validating face data status API");
     checkFaceDataStatus();
+
+    // Get current location when component mounts
+    getCurrentLocationForDisplay();
 
     return () => {
       if (streamRef.current) {
@@ -263,6 +405,50 @@ export function EmployeeDashboard() {
       }
     };
   }, []);
+
+  // Get current location for display purposes (non-blocking)
+  async function getCurrentLocationForDisplay() {
+    try {
+      setLocationStatus("checking");
+      console.log("🔍 Getting current location for display...");
+
+      if (!navigator.geolocation) {
+        setLocationStatus("unavailable");
+        return;
+      }
+
+      const position = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            (position) => resolve(position),
+            (error) => {
+              console.log("Location error for display:", error);
+              reject(error);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 60000,
+            }
+          );
+        }
+      );
+
+      const locationData = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        timestamp: new Date().toISOString(),
+      };
+
+      setCurrentLocation(locationData);
+      setLocationStatus("available");
+      console.log("✅ Current location obtained for display:", locationData);
+    } catch (error) {
+      console.log("❌ Could not get location for display:", error);
+      setCurrentLocation(null);
+      setLocationStatus("unavailable");
+    }
+  }
 
   // Check if employee has face data registered
   async function checkFaceDataStatus() {
@@ -440,7 +626,7 @@ export function EmployeeDashboard() {
   // Mark attendance API call
   async function markAttendance(imageData: string) {
     try {
-      console.log("Marking attendance...");
+      console.log("=== Starting Attendance Marking Process ===");
       console.log("Work mode:", workMode);
       console.log("Remote location:", remoteLocation);
 
@@ -459,6 +645,121 @@ export function EmployeeDashboard() {
         return;
       }
 
+      // First check if geolocation is supported and available
+      if (!navigator.geolocation) {
+        console.log("❌ Geolocation not supported by browser");
+        setSuccessModal({
+          message: `📍 Turn On Location
+
+❌ Location services are not supported by your browser.
+
+🔧 Please try:
+1. **Update your browser** to the latest version
+2. **Use a modern browser** like:
+   • Chrome (recommended)
+   • Firefox
+   • Safari
+   • Microsoft Edge
+
+3. **Enable location services** in your browser settings
+
+Turn on location services and try again.`,
+          meta: { mode: workMode, locationError: true },
+        });
+        return;
+      }
+
+      // Test location services availability before proceeding
+      console.log("🔍 Testing location services availability...");
+      try {
+        // Quick test to check if location services are available
+        await new Promise((resolve, reject) => {
+          const timeoutId = setTimeout(() => {
+            reject(new Error("LOCATION_TIMEOUT"));
+          }, 5000);
+
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              clearTimeout(timeoutId);
+              console.log("✅ Location services are available");
+              resolve(position);
+            },
+            (error) => {
+              clearTimeout(timeoutId);
+              console.log("❌ Location services test failed:", error);
+              if (error.code === error.PERMISSION_DENIED) {
+                reject(new Error("LOCATION_PERMISSION_DENIED"));
+              } else if (error.code === error.POSITION_UNAVAILABLE) {
+                reject(new Error("LOCATION_UNAVAILABLE"));
+              } else {
+                reject(new Error("LOCATION_ERROR"));
+              }
+            },
+            {
+              enableHighAccuracy: false,
+              timeout: 3000,
+              maximumAge: 60000,
+            }
+          );
+        });
+      } catch (locationTestError) {
+        console.log("❌ Location services test failed:", locationTestError);
+
+        const errorMessage =
+          locationTestError instanceof Error
+            ? locationTestError.message
+            : "LOCATION_ERROR";
+
+        if (errorMessage === "LOCATION_PERMISSION_DENIED") {
+          setSuccessModal({
+            message: `📍 Turn On Location
+
+❌ Location access was denied.
+
+🔧 To enable location:
+1. **Click the location icon** in your browser address bar
+2. **Select "Allow"** for location access
+3. **Or go to browser settings** and enable location for this site
+4. **Refresh the page** and try again
+
+Turn on location services to mark attendance.`,
+            meta: { mode: workMode, locationError: true },
+          });
+          return;
+        } else if (errorMessage === "LOCATION_UNAVAILABLE") {
+          setSuccessModal({
+            message: `📍 Turn On Location
+
+❌ Location services are turned off.
+
+🔧 Please turn on location:
+1. **Android:** Settings > Location > Turn on
+2. **iPhone:** Settings > Privacy > Location Services > Turn on
+3. **Windows:** Settings > Privacy > Location > Turn on
+4. **Mac:** System Preferences > Privacy > Location Services
+
+Turn on location services and try again.`,
+            meta: { mode: workMode, locationError: true },
+          });
+          return;
+        } else {
+          setSuccessModal({
+            message: `📍 Turn On Location
+
+❌ Unable to access location services.
+
+🔧 Please ensure:
+1. **Location services are ON** in your device settings
+2. **Browser has location permission** for this site
+3. **Try refreshing** the page and allow location access
+
+Turn on location services to mark attendance.`,
+            meta: { mode: workMode, locationError: true },
+          });
+          return;
+        }
+      }
+
       // Get current location using geolocation API
       const getCurrentLocation = (): Promise<{
         latitude: number;
@@ -466,7 +767,11 @@ export function EmployeeDashboard() {
       }> => {
         return new Promise((resolve, reject) => {
           if (!navigator.geolocation) {
-            reject(new Error("Geolocation is not supported by this browser"));
+            reject(
+              new Error(
+                "LOCATION_NOT_SUPPORTED: Geolocation is not supported by this browser. Please use a modern browser with location support."
+              )
+            );
             return;
           }
 
@@ -479,11 +784,33 @@ export function EmployeeDashboard() {
             },
             (error) => {
               console.warn("Geolocation error:", error);
-              // Provide fallback coordinates (optional)
-              resolve({
-                latitude: 0,
-                longitude: 0,
-              });
+
+              // Handle specific geolocation errors
+              if (error.code === error.PERMISSION_DENIED) {
+                reject(
+                  new Error(
+                    "LOCATION_PERMISSION_DENIED: Location access was denied. Please turn on location services and allow location access for this site."
+                  )
+                );
+              } else if (error.code === error.POSITION_UNAVAILABLE) {
+                reject(
+                  new Error(
+                    "LOCATION_UNAVAILABLE: Location information is unavailable. Please turn on location services on your device."
+                  )
+                );
+              } else if (error.code === error.TIMEOUT) {
+                reject(
+                  new Error(
+                    "LOCATION_TIMEOUT: Location request timed out. Please check if location services are enabled and try again."
+                  )
+                );
+              } else {
+                reject(
+                  new Error(
+                    "LOCATION_ERROR: Unable to retrieve your location. Please turn on location services."
+                  )
+                );
+              }
             },
             {
               enableHighAccuracy: true,
@@ -494,9 +821,12 @@ export function EmployeeDashboard() {
         });
       };
 
-      // Get current location
-      const location = await getCurrentLocation();
-      console.log("Current location:", location);
+      // Get current location - this will throw an error if location is not available
+      const rawLocation = await getCurrentLocation();
+      console.log(
+        "✅ Location services are working - Got coordinates:",
+        rawLocation
+      );
 
       // Determine location type based on work mode and selection
       let locationType = "office"; // default
@@ -513,6 +843,24 @@ export function EmployeeDashboard() {
       }
 
       console.log("Location type:", locationType);
+
+      // Use the actual device coordinates (no normalization/clustering)
+      const location = {
+        latitude: rawLocation.latitude,
+        longitude: rawLocation.longitude,
+      };
+
+      console.log("=== Current Location Information ===");
+      console.log(
+        "📍 Current Device Location:",
+        location.latitude.toFixed(6),
+        location.longitude.toFixed(6)
+      );
+      console.log("🏢 Work Mode:", workMode);
+      console.log("📋 Location Type:", locationType);
+      console.log(
+        "✅ Using real device coordinates (no clustering/normalization)"
+      );
 
       // Convert base64 to blob for image
       const blob = base64ToBlob(imageData, "image/jpeg");
@@ -552,10 +900,7 @@ export function EmployeeDashboard() {
         console.warn("⚠️ Image size very large, may cause upload issues");
       }
 
-      console.log(
-        "Making request to:",
-        `${BACKEND_URL}/api/attendance/mark/`
-      );
+      console.log("Making request to:", `${BACKEND_URL}/api/attendance/mark/`);
 
       // Get access token from localStorage or wherever it's stored
       const accessToken =
@@ -563,18 +908,15 @@ export function EmployeeDashboard() {
         sessionStorage.getItem("accessToken") ||
         ""; // Add your token retrieval logic here
 
-      const apiResponse = await fetch(
-        `${BACKEND_URL}/api/attendance/mark/`,
-        {
-          method: "POST",
-          headers: {
-            // Add authentication headers
-            ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
-            // Note: Don't set Content-Type for FormData, let browser set it with boundary
-          },
-          body: formData,
-        }
-      );
+      const apiResponse = await fetch(`${BACKEND_URL}/api/attendance/mark/`, {
+        method: "POST",
+        headers: {
+          // Add authentication headers
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+          // Note: Don't set Content-Type for FormData, let browser set it with boundary
+        },
+        body: formData,
+      });
 
       console.log("Attendance API response status:", apiResponse.status);
       console.log("Attendance API response headers:", apiResponse.headers);
@@ -636,14 +978,13 @@ export function EmployeeDashboard() {
           (parsedError.error?.includes("Not within office location") ||
             parsedError.error?.includes("location"))
         ) {
-          // Create detailed location error with current coordinates
+          // Create detailed location error with current device coordinates
           const locationErrorDetails = {
             error: parsedError.error || "Location validation failed",
-            currentLocation: location,
-            officeLocation: OFFICE_COORDS,
-            distance: haversineDistanceMeters(location, OFFICE_COORDS),
+            currentLocation: location, // Current device coordinates
             workMode: workMode,
             locationType: locationType,
+            timestamp: new Date().toISOString(),
           };
 
           throw new Error(
@@ -663,13 +1004,22 @@ export function EmployeeDashboard() {
       const iso = formatISO(new Date());
       setAttendanceMarkers((m) => ({ ...m, [iso]: "present" }));
       setSuccessModal({
-        message: result.message || "Attendance Marked Successfully!",
+        message: `${result.message || "Attendance Marked Successfully!"}
+
+📍 Location Details:
+• Latitude: ${location.latitude.toFixed(6)}
+• Longitude: ${location.longitude.toFixed(6)}
+• Work Mode: ${workMode}
+• Location Type: ${locationType}
+
+✅ Your attendance has been recorded with current location coordinates.`,
         meta: {
           mode: workMode,
           locationType: locationType,
           latitude: location.latitude,
           longitude: location.longitude,
           photo: imageData,
+          currentLocation: true,
         },
       });
     } catch (error) {
@@ -732,32 +1082,124 @@ export function EmployeeDashboard() {
           );
           locationDetails = locationData;
 
-          errorMessage = `❌ ${locationData.error}
+          let locationMessage = `❌ ${locationData.error}
 
-📍 Location Details:
-• Current Location: ${locationData.currentLocation.latitude.toFixed(
-            6
-          )}, ${locationData.currentLocation.longitude.toFixed(6)}
-• Office Location: ${locationData.officeLocation.lat.toFixed(
-            6
-          )}, ${locationData.officeLocation.lon.toFixed(6)}
-• Distance from Office: ${Math.round(locationData.distance)} meters
+📍 Current Location:`;
+
+          // Show current device coordinates
+          if (locationData.currentLocation) {
+            locationMessage += `
+• Latitude: ${locationData.currentLocation.latitude.toFixed(6)}
+• Longitude: ${locationData.currentLocation.longitude.toFixed(6)}
 • Work Mode: ${locationData.workMode}
 • Location Type: ${locationData.locationType}
 
-💡 Solutions:
-${
-  locationData.workMode === "Office"
-    ? "• Move closer to the office (within 500m radius)\n• Switch to Remote mode if working from outside\n• Contact HR if you believe this is an error"
-    : "• Your location validation failed for remote work\n• Try switching work mode if needed\n• Contact IT support if this persists"
-}`;
+🔧 Your location was detected but may not be within the allowed area for attendance marking.`;
+          }
+
+          errorMessage = locationMessage;
+        }
+        // Check for location service errors
+        else if (error.message.startsWith("LOCATION_PERMISSION_DENIED:")) {
+          errorMessage = `📍 Turn On Location Access
+
+❌ Location access was denied by your browser.
+
+🔧 To enable location access:
+1. **Chrome/Edge:**
+   • Click the location icon in the address bar
+   • Select "Always allow" for this site
+   • Or go to Settings > Privacy > Site Settings > Location
+
+2. **Firefox:**
+   • Click the shield icon in the address bar  
+   • Select "Allow Location Access"
+   • Or go to Settings > Privacy > Permissions > Location
+
+3. **Safari:**
+   • Go to Safari > Settings > Websites > Location
+   • Set this site to "Allow"
+
+4. **Mobile:**
+   • Enable location services in device settings
+   • Allow location access for your browser
+
+After enabling location access, please refresh the page and try again.`;
+        } else if (error.message.startsWith("LOCATION_UNAVAILABLE:")) {
+          errorMessage = `📍 Turn On Location Services
+
+❌ Location services are not available or turned off.
+
+🔧 Please turn on location services:
+1. **Android:**
+   • Go to Settings > Location
+   • Turn on "Use location"
+   • Ensure "High accuracy" mode is selected
+
+2. **iPhone:**
+   • Go to Settings > Privacy & Security > Location Services
+   • Turn on "Location Services"
+
+3. **Windows:**
+   • Go to Settings > Privacy > Location
+   • Turn on "Location service"
+
+4. **Mac:**
+   • Go to System Preferences > Security & Privacy > Privacy > Location Services
+   • Enable "Location Services"
+
+After turning on location services, please try again.`;
+        } else if (error.message.startsWith("LOCATION_TIMEOUT:")) {
+          errorMessage = `📍 Location Request Timed Out
+
+❌ Unable to get your location - request timed out.
+
+🔧 Please check:
+1. **Location Services:**
+   • Make sure location services are turned ON
+   • Check if GPS is enabled (for mobile devices)
+
+2. **Network Connection:**
+   • Ensure you have a stable internet connection
+   • WiFi location services may be needed
+
+3. **Try Again:**
+   • Move to an area with better signal
+   • Wait a moment and try again
+
+If the problem persists, please turn on location services and refresh the page.`;
+        } else if (error.message.startsWith("LOCATION_ERROR:")) {
+          errorMessage = `📍 Turn On Location
+
+❌ Unable to access your location.
+
+🔧 Please ensure:
+1. **Location services are turned ON** on your device
+2. **Browser has location permission** for this site
+3. **GPS is enabled** (for mobile devices)
+4. You have a **stable internet connection**
+
+💡 Quick fix: Turn on location services in your device settings and refresh this page.`;
+        } else if (error.message.startsWith("LOCATION_NOT_SUPPORTED:")) {
+          errorMessage = `📍 Location Not Supported
+
+❌ Your browser doesn't support location services.
+
+🔧 Please try:
+1. **Update your browser** to the latest version
+2. **Use a modern browser** like:
+   • Chrome (recommended)
+   • Firefox
+   • Safari
+   • Microsoft Edge
+
+3. **Check if location is disabled** in browser settings
+
+If using an older device, location services may not be available.`;
         } else if (error.message.includes("HTTP")) {
           errorMessage += error.message;
         } else if (error.message.includes("endpoint not found")) {
           errorMessage += error.message;
-        } else if (error.message.includes("Geolocation")) {
-          errorMessage +=
-            "Could not get your location. Please enable location services.";
         } else {
           errorMessage += "Please check your connection and try again.";
         }
@@ -968,6 +1410,126 @@ ${
       });
     } finally {
       setRegistrationLoading(false);
+    }
+  }
+
+  // Check location before opening camera for attendance
+  async function handleAttendanceCapture() {
+    try {
+      console.log(
+        "🔍 Checking location before opening camera for attendance..."
+      );
+
+      // First check if geolocation is supported
+      if (!navigator.geolocation) {
+        setSuccessModal({
+          message: `📍 Location Services Not Supported
+
+❌ Your browser doesn't support location services.
+
+🔧 Please try:
+1. **Update your browser** to the latest version
+2. **Use a modern browser** like Chrome, Firefox, Safari, or Edge
+3. **Enable location services** in your browser settings
+
+Turn on location services to mark attendance.`,
+          meta: { mode: workMode, locationError: true },
+        });
+        return;
+      }
+
+      // Quick location test before opening camera
+      const position = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          const timeoutId = setTimeout(() => {
+            reject(new Error("LOCATION_TIMEOUT"));
+          }, 5000);
+
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              clearTimeout(timeoutId);
+              resolve(position);
+            },
+            (error) => {
+              clearTimeout(timeoutId);
+              console.log("❌ Location check failed:", error);
+              if (error.code === error.PERMISSION_DENIED) {
+                reject(new Error("LOCATION_PERMISSION_DENIED"));
+              } else if (error.code === error.POSITION_UNAVAILABLE) {
+                reject(new Error("LOCATION_UNAVAILABLE"));
+              } else {
+                reject(new Error("LOCATION_ERROR"));
+              }
+            },
+            {
+              enableHighAccuracy: false,
+              timeout: 3000,
+              maximumAge: 60000,
+            }
+          );
+        }
+      );
+
+      console.log("✅ Location check passed, opening camera for attendance");
+      // If we get here, location is working - open camera
+      openCamera(false);
+    } catch (locationError) {
+      console.log("❌ Location check failed before camera:", locationError);
+
+      const errorMessage =
+        locationError instanceof Error
+          ? locationError.message
+          : "LOCATION_ERROR";
+
+      if (errorMessage === "LOCATION_PERMISSION_DENIED") {
+        setSuccessModal({
+          message: `📍 Location Services: OFF
+
+❌ Location access was denied by your browser.
+
+🔧 To enable location and mark attendance:
+1. **Click the location icon** in your browser address bar
+2. **Select "Allow"** for location access
+3. **Or go to browser settings** and enable location for this site
+4. **Refresh the page** and try again
+
+📍 Location services must be ON to mark attendance.`,
+          meta: { mode: workMode, locationError: true },
+        });
+      } else if (errorMessage === "LOCATION_UNAVAILABLE") {
+        setSuccessModal({
+          message: `📍 Location Services: OFF
+
+❌ Location services are turned off on your device.
+
+🔧 Please turn on location services:
+1. **Android:** Settings > Location > Turn ON
+2. **iPhone:** Settings > Privacy > Location Services > Turn ON  
+3. **Windows:** Settings > Privacy > Location > Turn ON
+4. **Mac:** System Preferences > Privacy > Location Services > Turn ON
+
+📍 Location services must be ON to mark attendance.`,
+          meta: { mode: workMode, locationError: true },
+        });
+      } else {
+        setSuccessModal({
+          message: `📍 Location Services: OFF
+
+❌ Unable to access location services.
+
+🔧 Please ensure:
+1. **Location services are ON** in your device settings
+2. **Browser has location permission** for this site
+3. **Try refreshing** the page and allow location access
+
+📍 Turn on location services to mark attendance.`,
+          meta: { mode: workMode, locationError: true },
+        });
+      }
+
+      // Also update the location status display
+      setLocationStatus("unavailable");
+      setCurrentLocation(null);
     }
   }
 
@@ -1457,21 +2019,80 @@ Error details: ${error.name} - ${error.message}`);
             </div>
           )}
 
-          <div className="mt-3 text-sm text-gray-600 inline-flex items-center gap-2">
-            <MapPin className="w-4 h-4" />
-            {workMode === "Office" && (
-              <span>Location verification within 500m of office</span>
-            )}
-            {workMode === "Remote" && (
-              <span>
-                {remoteLocation === "home" &&
-                  "Working from home - no geo validation"}
-                {remoteLocation === "vels-university" &&
-                  "Working from Vels University"}
-                {remoteLocation === "others" && "Working from other location"}
-                {!remoteLocation && "Please select location type"}
-              </span>
-            )}
+          <div className="mt-3 space-y-3">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <MapPin className="w-4 h-4" />
+              {workMode === "Office" && (
+                <span>Location verification within 500m of office</span>
+              )}
+              {workMode === "Remote" && (
+                <span>
+                  {remoteLocation === "home" &&
+                    "Working from home - no geo validation"}
+                  {remoteLocation === "vels-university" &&
+                    "Working from Vels University"}
+                  {remoteLocation === "others" && "Working from other location"}
+                  {!remoteLocation && "Please select location type"}
+                </span>
+              )}
+            </div>
+
+            {/* Current Location Display */}
+            <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-gray-700">
+                  Current Location Status
+                </span>
+                <button
+                  onClick={getCurrentLocationForDisplay}
+                  className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                  disabled={locationStatus === "checking"}
+                >
+                  🔄 {locationStatus === "checking" ? "Checking..." : "Refresh"}
+                </button>
+              </div>
+
+              {locationStatus === "checking" && (
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                  Detecting location...
+                </div>
+              )}
+
+              {locationStatus === "available" && currentLocation && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1 text-xs">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span className="text-green-700 font-medium">
+                      Location Services: ON
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-600 font-mono bg-white rounded px-2 py-1">
+                    📍 Lat: {currentLocation.latitude.toFixed(6)}
+                    <br />
+                    📍 Lng: {currentLocation.longitude.toFixed(6)}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Last updated:{" "}
+                    {new Date(currentLocation.timestamp).toLocaleTimeString()}
+                  </div>
+                </div>
+              )}
+
+              {locationStatus === "unavailable" && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1 text-xs">
+                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                    <span className="text-red-700 font-medium">
+                      Location Services: OFF
+                    </span>
+                  </div>
+                  <div className="text-xs text-red-600 bg-red-50 rounded px-2 py-1">
+                    ⚠️ Turn on location services to mark attendance
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1500,7 +2121,7 @@ Error details: ${error.name} - ${error.message}`);
               // Employee has face data - show attendance capture button
               <div className="flex flex-col gap-2">
                 <button
-                  onClick={() => openCamera(false)}
+                  onClick={handleAttendanceCapture}
                   disabled={showCapture}
                   className={`inline-flex items-center gap-2 px-4 py-3 rounded-xl text-white text-sm font-medium shadow-lg ${
                     showCapture
