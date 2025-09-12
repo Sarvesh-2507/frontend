@@ -77,22 +77,7 @@ export const menuItems: MenuItem[] = [
     path: '/home',
   },
 
- {
-   id: 'recruitment',
-    label: 'Recruitment',
-    icon: Search,
-    path: '/recruitment',
-    hasSubmenu: true,
-    children: [
-      { id: 'job-requisition', label: 'Job Requisition Management', icon: FileText, path: '/recruitment/job-requisition' },
-      { id: 'job-posting', label: 'Job Posting & Advertisement', icon: Plus, path: '/recruitment/job-posting' },
-      { id: 'application-tracking', label: 'Application Tracking System', icon: Search, path: '/recruitment/ats' },
-      { id: 'interview-management', label: 'Interview Management', icon: Calendar, path: '/recruitment/interviews' },
-      { id: 'candidate-registration', label: 'Candidate Registration', icon: UserPlus, path: '/recruitment/candidates' },
-      { id: 'hiring-analytics', label: 'Hiring Analytics Dashboard', icon: BarChart3, path: '/recruitment/analytics' },
-      { id: 'recruitment-budget', label: 'Recruitment Budget Tracker', icon: DollarSign, path: '/recruitment/budget' },
-    ]
-  },
+
   
   {
     id: 'employee',
@@ -127,6 +112,22 @@ export const menuItems: MenuItem[] = [
   { id: 'joining-formalities', label: 'Joining Formalities', icon: CheckCircle, path: '/onboarding/joining-formalities' },
   { id: 'task-checklist', label: 'Task & Checklist Tracking', icon: ClipboardList, path: '/onboarding/tasks' },
   { id: 'asset-allocation', label: 'Asset Allocation', icon: Package, path: '/onboarding/asset-allocation' },
+    ]
+  },
+   {
+   id: 'recruitment',
+    label: 'Recruitment',
+    icon: Search,
+    path: '/recruitment',
+    hasSubmenu: true,
+    children: [
+      { id: 'job-requisition', label: 'Job Requisition Management', icon: FileText, path: '/recruitment/job-requisition' },
+      { id: 'job-posting', label: 'Job Posting & Advertisement', icon: Plus, path: '/recruitment/job-posting' },
+      { id: 'application-tracking', label: 'Application Tracking System', icon: Search, path: '/recruitment/ats' },
+      { id: 'interview-management', label: 'Interview Management', icon: Calendar, path: '/recruitment/interviews' },
+      { id: 'candidate-registration', label: 'Candidate Registration', icon: UserPlus, path: '/recruitment/candidates' },
+      { id: 'hiring-analytics', label: 'Hiring Analytics Dashboard', icon: BarChart3, path: '/recruitment/analytics' },
+      { id: 'recruitment-budget', label: 'Recruitment Budget Tracker', icon: DollarSign, path: '/recruitment/budget' },
     ]
   },
   {
@@ -352,6 +353,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
+
+
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
   };
@@ -393,15 +396,47 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
     );
   };
 
+
   // Show onboarding for all users if user is missing or role is not set (for dev/demo)
   // Force Onboarding menu to always appear for all users (dev/demo)
-  const filteredMenuItems = menuItems.filter(item => {
-    if (item.id === 'onboarding') return true;
-    if (!item.roles) return true;
-    if (!user || !(user as any).role) return false;
-    const userRole = String((user as any).role).toLowerCase();
-    return item.roles.some(r => String(r).toLowerCase() === userRole);
-  });
+  const filteredMenuItems = React.useMemo(() =>
+    menuItems.filter(item => {
+      if (item.id === 'onboarding') return true;
+      if (!item.roles) return true;
+      if (!user || !(user as any).role) return false;
+      const userRole = String((user as any).role).toLowerCase();
+      return item.roles.some(r => String(r).toLowerCase() === userRole);
+    })
+  , [user]);
+
+  // --- Search state and logic (must be after filteredMenuItems) ---
+  const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<{label: string, path: string, icon: React.ComponentType<any>}[]>([]);
+  // Flatten all menu and submenu items for search
+  function flattenMenu(items: MenuItem[]): {label: string, path: string, icon: React.ComponentType<any>}[] {
+    let result: {label: string, path: string, icon: React.ComponentType<any>}[] = [];
+    for (const item of items) {
+      if (item.path) result.push({ label: item.label, path: item.path, icon: item.icon });
+      if (item.children) {
+        for (const child of item.children) {
+          if (child.path) result.push({ label: child.label, path: child.path, icon: child.icon });
+        }
+      }
+    }
+    return result;
+  }
+
+  React.useEffect(() => {
+    if (!search) {
+      setSearchResults([]);
+      return;
+    }
+    const allItems = flattenMenu(filteredMenuItems);
+    const q = search.toLowerCase();
+    setSearchResults(
+      allItems.filter(item => item.label.toLowerCase().includes(q))
+    );
+  }, [search, filteredMenuItems]);
 
   const isActiveRoute = (path?: string) => {
     if (!path) return false;
@@ -428,7 +463,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
   minWidth: isCollapsed ? '90px' : '300px'
       }}
     >
-      {/* Header */}
+
+      {/* Header (no search bar) */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <AnimatePresence mode="wait">
@@ -458,7 +494,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
               </motion.div>
             )}
           </AnimatePresence>
-          
           <button
             type="button"
             onClick={onToggle}
@@ -521,6 +556,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
                   if (hasChildren) {
                     toggleMenu(item.id);
                   } else if (item.path) {
+                    console.log('[Sidebar] Navigating to:', item.path);
                     navigate(item.path);
                   }
                 }}
@@ -582,7 +618,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
                           key={child.id}
                           whileHover={{ scale: 1.01 }}
                           whileTap={{ scale: 0.99 }}
-                          onClick={() => child.path && navigate(child.path)}
+                          onClick={() => {
+                            if (child.path) {
+                              console.log('[Sidebar] Navigating to (submenu):', child.path);
+                              navigate(child.path);
+                            }
+                          }}
                           className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sm text-left ${
                             childIsActive
                               ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'

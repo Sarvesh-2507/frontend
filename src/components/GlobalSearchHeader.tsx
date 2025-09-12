@@ -2,14 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useThemeStore } from '../context/themeStore';
 import { Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Clock, Users, Calendar, FileText, Building2, X, BarChart3, Bell } from 'lucide-react';
+import { Search, Clock, X, Bell } from 'lucide-react';
+import { menuItems } from './Sidebar';
 import { createPortal } from 'react-dom';
 
+
 interface SearchResult {
-  id: string;
-  title: string;
-  type: 'employee' | 'document' | 'leave' | 'organization' | 'feature';
-  description: string;
+  label: string;
   path: string;
   icon: React.ComponentType<any>;
 }
@@ -26,76 +25,40 @@ const GlobalSearchHeader: React.FC<GlobalSearchHeaderProps> = ({ onNavigate }) =
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
-  // Mock search data - in real app, this would come from API
-  const searchData: SearchResult[] = [
-    {
-      id: '1',
-      title: 'Employee Directory',
-      type: 'feature',
-      description: 'View and manage all employees',
-      path: '/employee-profile',
-      icon: Users
-    },
-    {
-      id: '2',
-      title: 'Leave Management',
-      type: 'feature',
-      description: 'Apply and manage leave requests',
-      path: '/leave',
-      icon: Calendar
-    },
-    {
-      id: '3',
-      title: 'Organizations',
-      type: 'feature',
-      description: 'Manage company organizations',
-      path: '/organizations',
-      icon: Building2
-    },
-    {
-      id: '4',
-      title: 'Attendance',
-      type: 'feature',
-      description: 'View attendance records',
-      path: '/attendance',
-      icon: Clock
-    },
-    {
-      id: '5',
-      title: 'Payroll',
-      type: 'feature',
-      description: 'Manage payroll and compensation',
-      path: '/payroll',
-      icon: FileText
-    },
-    {
-      id: '6',
-      title: 'Performance Reviews',
-      type: 'feature',
-      description: 'Employee performance management',
-      path: '/performance',
-      icon: BarChart3
+
+  // Flatten sidebar menuItems to get all features and subfeatures
+  function flattenMenu(items: typeof menuItems): SearchResult[] {
+    let result: SearchResult[] = [];
+    for (const item of items) {
+      if (item.path) result.push({ label: item.label, path: item.path, icon: item.icon });
+      if (item.children) {
+        for (const child of item.children) {
+          if (child.path) result.push({ label: child.label, path: child.path, icon: child.icon });
+        }
+      }
     }
-  ];
+    return result;
+  }
+  const searchData: SearchResult[] = React.useMemo(() => flattenMenu(menuItems), []);
 
   useEffect(() => {
     if (searchQuery.trim()) {
       const filtered = searchData.filter(item =>
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+        item.label.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setSearchResults(filtered);
     } else {
       setSearchResults([]);
     }
-  }, [searchQuery]);
+  }, [searchQuery, searchData]);
 
   const handleSearch = (result: SearchResult) => {
     // Add to recent searches
-    const newRecentSearches = [result.title, ...recentSearches.filter(s => s !== result.title)].slice(0, 5);
+    const newRecentSearches = [result.label, ...recentSearches.filter(s => s !== result.label)].slice(0, 5);
     setRecentSearches(newRecentSearches);
     localStorage.setItem('recentSearches', JSON.stringify(newRecentSearches));
-    
+    // Debug log before navigation
+    console.log('[GlobalSearchHeader] Navigating to:', result.path);
     // Navigate to result
     onNavigate(result.path);
     setSearchQuery('');
@@ -225,11 +188,11 @@ const GlobalSearchHeader: React.FC<GlobalSearchHeaderProps> = ({ onNavigate }) =
                 <div className="text-xs font-medium text-gray-500 dark:text-gray-400 px-3 py-2 uppercase tracking-wide">
                   Search Results
                 </div>
-                {searchResults.map((result) => {
+                {searchResults.map((result, idx) => {
                   const IconComponent = result.icon;
                   return (
                     <button
-                      key={result.id}
+                      key={result.path + idx}
                       onClick={() => handleSearch(result)}
                       className="w-full flex items-center space-x-3 px-3 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors text-left"
                     >
@@ -238,10 +201,7 @@ const GlobalSearchHeader: React.FC<GlobalSearchHeaderProps> = ({ onNavigate }) =
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                          {result.title}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                          {result.description}
+                          {result.label}
                         </div>
                       </div>
                     </button>
