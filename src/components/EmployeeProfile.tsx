@@ -39,13 +39,55 @@ type PersonalInfoField = keyof Pick<Profile,
   'identification_marks'
 >;
 
-type WorkInfoField = keyof Pick<Profile, 
-  'emp_id' | 'designation' | 'employment_type' | 'work_location' | 
-  'date_of_joining' | 'reporting_manager' | 'department_ref' | 'highest_qualification' |
-  'previous_company_name' | 'years_of_experience' | 'college_university_name' |
-  'graduation_year' | 'is_reporting_manager' | 'probation_period_months' |
-  'confirmation_date'
->;
+type WorkInfoField =
+  | 'emp_id'
+  | 'designation'
+  | 'employment_type'
+  | 'work_location'
+  | 'date_of_joining'
+  | 'reporting_manager'
+  | 'department_ref'
+  | 'highest_qualification'
+  | 'previous_company_name'
+  | 'years_of_experience'
+  | 'college_university_name'
+  | 'graduation_year'
+  | 'is_reporting_manager'
+  | 'probation_period_months'
+  | 'confirmation_date'
+  // Extra fields for renderWorkInfoField
+  | 'department'
+  | 'location'
+  | 'division'
+  | 'salary'
+  | 'total_experience'
+  | 'grade'
+  | 'sub_department'
+  | 'office_location'
+  | 'job_status'
+  | 'hire_date'
+  | 'termination_date'
+  | 'cost_center'
+  | 'notice_period_days'
+  | 'increment_month'
+  | 'previous_company_designation'
+  | 'previous_experience_years'
+  | 'previous_company_salary'
+  | 'graduation_college'
+  | 'graduation_university'
+  | 'graduation_percentage'
+  | 'post_graduation_year'
+  | 'post_graduation_college'
+  | 'post_graduation_university'
+  | 'post_graduation_percentage'
+  | 'twelfth_year'
+  | 'twelfth_school'
+  | 'twelfth_board'
+  | 'twelfth_percentage'
+  | 'tenth_year'
+  | 'tenth_school'
+  | 'tenth_board'
+  | 'tenth_percentage';
 
 const EmployeeProfile: React.FC = () => {
   const navigate = useNavigate();
@@ -112,6 +154,39 @@ const EmployeeProfile: React.FC = () => {
     is_reporting_manager: false,
     probation_period_months: "",
     confirmation_date: "",
+    // Add all extra fields used in setTempWorkInfo below
+    department: "",
+    location: "",
+    division: "",
+    salary: "",
+    total_experience: "",
+    grade: "",
+    sub_department: "",
+    office_location: "",
+    job_status: "",
+    hire_date: "",
+    termination_date: "",
+    cost_center: "",
+    notice_period_days: "",
+    increment_month: "",
+    previous_company_designation: "",
+    previous_experience_years: "",
+    previous_company_salary: "",
+    graduation_college: "",
+    graduation_university: "",
+    graduation_percentage: "",
+    post_graduation_year: "",
+    post_graduation_college: "",
+    post_graduation_university: "",
+    post_graduation_percentage: "",
+    twelfth_year: "",
+    twelfth_school: "",
+    twelfth_board: "",
+    twelfth_percentage: "",
+    tenth_year: "",
+    tenth_school: "",
+    tenth_board: "",
+    tenth_percentage: "",
   });
 
   const [tempBasicInfo, setTempBasicInfo] = useState({
@@ -201,7 +276,7 @@ const EmployeeProfile: React.FC = () => {
           department: workExp?.employer_name || "",
           location: profile.work_location || "",
           division: "",
-          salary: workExp?.lastdrawn_salary || "",
+          salary: (profile.salary?.toString()) || workExp?.lastdrawn_salary || "",
           total_experience: profile.years_of_experience || "",
           grade: "",
           sub_department: "",
@@ -210,27 +285,27 @@ const EmployeeProfile: React.FC = () => {
           hire_date: profile.date_of_joining || "",
           termination_date: "",
           cost_center: "",
-          notice_period_days: "",
+          notice_period_days: profile.notice_period_days?.toString() || "",
           increment_month: "",
           previous_company_designation: workExp?.designation || "",
-          previous_experience_years: workExp?.duration || "",
-          previous_company_salary: workExp?.salary_at_join || "",
+          previous_experience_years: (profile.previous_experience_years?.toString()) || workExp?.duration || "",
+          previous_company_salary: (profile.previous_company_salary?.toString()) || workExp?.salary_at_join || "",
           // Education fields from education_details array
-          graduation_college: education?.institution || "",
-          graduation_university: education?.university_board || "",
-          graduation_percentage: education?.grade_or_percentage || "",
-          post_graduation_year: "",
+          graduation_college: profile.graduation_college || education?.institution || "",
+          graduation_university: profile.graduation_university || education?.university_board || "",
+          graduation_percentage: (profile.graduation_percentage?.toString()) || education?.grade_or_percentage || "",
+          post_graduation_year: profile.post_graduation_year?.toString() || "",
           post_graduation_college: "",
           post_graduation_university: "",
-          post_graduation_percentage: "",
-          twelfth_year: "",
-          twelfth_school: "",
-          twelfth_board: "",
-          twelfth_percentage: "",
-          tenth_year: "",
-          tenth_school: "",
-          tenth_board: "",
-          tenth_percentage: "",
+          post_graduation_percentage: profile.post_graduation_percentage?.toString() || "",
+          twelfth_year: profile.twelfth_year?.toString() || "",
+          twelfth_school: profile.twelfth_school || "",
+          twelfth_board: profile.twelfth_board || "",
+          twelfth_percentage: profile.twelfth_percentage?.toString() || "",
+          tenth_year: profile.tenth_year?.toString() || "",
+          tenth_school: profile.tenth_school || "",
+          tenth_board: profile.tenth_board || "",
+          tenth_percentage: profile.tenth_percentage?.toString() || "",
         });
 
         setTempBasicInfo({
@@ -484,6 +559,39 @@ const EmployeeProfile: React.FC = () => {
       is_reporting_manager: profileData.is_reporting_manager || false,
       probation_period_months: profileData.probation_period_months?.toString() || "",
       confirmation_date: profileData.confirmation_date || "",
+      // Add all extra fields
+      department: profileData.department || "",
+      location: profileData.location || "",
+      division: profileData.division || "",
+      salary: profileData.salary?.toString() || "",
+      total_experience: profileData.total_experience || "",
+      grade: profileData.grade || "",
+      sub_department: profileData.sub_department || "",
+      office_location: profileData.office_location || "",
+      job_status: profileData.job_status || "",
+      hire_date: profileData.hire_date || "",
+      termination_date: profileData.termination_date || "",
+      cost_center: profileData.cost_center || "",
+      notice_period_days: profileData.notice_period_days?.toString() || "",
+      increment_month: profileData.increment_month || "",
+      previous_company_designation: profileData.previous_company_designation || "",
+      previous_experience_years: profileData.previous_experience_years?.toString() || "",
+      previous_company_salary: profileData.previous_company_salary?.toString() || "",
+      graduation_college: profileData.graduation_college || "",
+      graduation_university: profileData.graduation_university || "",
+      graduation_percentage: profileData.graduation_percentage?.toString() || "",
+      post_graduation_year: profileData.post_graduation_year?.toString() || "",
+      post_graduation_college: profileData.post_graduation_college || "",
+      post_graduation_university: profileData.post_graduation_university || "",
+      post_graduation_percentage: profileData.post_graduation_percentage?.toString() || "",
+      twelfth_year: profileData.twelfth_year?.toString() || "",
+      twelfth_school: profileData.twelfth_school || "",
+      twelfth_board: profileData.twelfth_board || "",
+      twelfth_percentage: profileData.twelfth_percentage?.toString() || "",
+      tenth_year: profileData.tenth_year?.toString() || "",
+      tenth_school: profileData.tenth_school || "",
+      tenth_board: profileData.tenth_board || "",
+      tenth_percentage: profileData.tenth_percentage?.toString() || "",
     });
     setEditingWork(false);
   };

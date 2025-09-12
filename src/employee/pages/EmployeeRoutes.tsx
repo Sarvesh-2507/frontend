@@ -13,6 +13,11 @@ import EmployeeHelpDeskPage from './EmployeeHelpDeskPage';
 import EmployeeSettingsPage from './EmployeeSettingsPage';
 import EmployeeAnnouncementsPage from './EmployeeAnnouncementsPage';
 
+// Import Leave-related components
+import EmployeeLeaveApplication from '../features/EmployeeLeaveApplication.tsx';
+import EmployeeLeaveHistory from '../features/EmployeeLeaveHistory.tsx';
+import EmployeeLeaveBalance from '../features/EmployeeLeaveBalance.tsx';
+
 
 
 const EmployeeRoutes: React.FC = () => (
@@ -21,6 +26,9 @@ const EmployeeRoutes: React.FC = () => (
 			<Route index element={<EmployeeHomePage />} />
 			<Route path="attendance" element={<AttendancePage />} />
 			<Route path="leave" element={<LeavePage />} />
+			<Route path="leave/application" element={<EmployeeLeaveApplication />} />
+			<Route path="leave/history" element={<EmployeeLeaveHistory />} />
+			<Route path="leave/balance" element={<EmployeeLeaveBalance />} />
 			<Route path="payroll" element={<PayrollPage />} />
 			<Route path="profile" element={<ProfilePage />} />
 			<Route path="policies" element={<PoliciesPage />} />

@@ -22,10 +22,12 @@ export interface EmployeeProfile {
   joiningDate: string;
 }
 
+import { getApiUrl } from "../config";
+
 export const employeeApi = {
   fetchEmployeeProfile: async (employeeId: string): Promise<EmployeeProfile> => {
     try {
-      const response = await fetch(`http://192.168.1.132:8000/api/employees/${employeeId}/`);
+      const response = await fetch(getApiUrl(`employees/${employeeId}/`));
       if (!response.ok) {
         throw new Error('Failed to fetch employee profile');
       }

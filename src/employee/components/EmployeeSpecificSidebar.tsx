@@ -11,7 +11,12 @@ import {
   Inbox as InboxIcon,
   HelpCircle,
   Settings as SettingsIcon,
-  Bell
+  Bell,
+  ChevronDown,
+  ChevronRight,
+  Plus,
+  Clock,
+  BarChart3
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "../../components/ui/Logo";
@@ -21,7 +26,17 @@ const sidebarItems = [
   { label: "Home", icon: User, path: "/emp-home" },
   { label: "Profile", icon: Users, path: "/emp-home/profile" },
   { label: "Attendance", icon: Calendar, path: "/emp-home/attendance" },
-  { label: "Leave", icon: FileText, path: "/emp-home/leave" },
+  { 
+    label: "Leave", 
+    icon: FileText, 
+    path: "/emp-home/leave",
+    hasDropdown: true,
+    subItems: [
+      { label: "Apply for Leave", icon: Plus, path: "/emp-home/leave/application" },
+      { label: "Leave History", icon: Clock, path: "/emp-home/leave/history" },
+      { label: "Leave Balance", icon: BarChart3, path: "/emp-home/leave/balance" },
+    ]
+  },
   { label: "Payroll", icon: DollarSign, path: "/emp-home/payroll" },
   { label: "Policies", icon: BookOpen, path: "/emp-home/policies" },
   { label: "Inbox", icon: InboxIcon, path: "/emp-home/inbox" },
@@ -34,6 +49,24 @@ const EmployeeSidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { profile, loading, error } = useEmployeeProfile();
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
+
+  const toggleMenu = (menuLabel: string) => {
+    setExpandedMenus(prev =>
+      prev.includes(menuLabel)
+        ? prev.filter(label => label !== menuLabel)
+        : [...prev, menuLabel]
+    );
+  };
+
+  const isActiveRoute = (path: string) => {
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
+
+  const hasActiveChild = (subItems?: any[]) => {
+    if (!subItems) return false;
+    return subItems.some(child => isActiveRoute(child.path));
+  };
   return (
     <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 min-h-screen p-4 flex flex-col items-center relative">
       {/* Logo */}
@@ -60,20 +93,73 @@ const EmployeeSidebar: React.FC = () => {
       </button>
       {/* Sidebar Navigation */}
       <nav className="space-y-2 w-full">
-        {sidebarItems.map((item) => (
-          <Link
-            key={item.label}
-            to={item.path}
-            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors font-medium text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900 ${
-              location.pathname === item.path
-                ? "bg-blue-100 dark:bg-blue-700 text-blue-700 dark:text-white"
-                : ""
-            }`}
-          >
-            <item.icon className="w-5 h-5" />
-            <span>{item.label}</span>
-          </Link>
-        ))}
+        {sidebarItems.map((item) => {
+          const isActive = isActiveRoute(item.path);
+          const isExpanded = expandedMenus.includes(item.label);
+          const hasChildren = item.hasDropdown && item.subItems;
+          const childActive = hasActiveChild(item.subItems);
+
+          return (
+            <div key={item.label}>
+              {/* Main Menu Item */}
+              {hasChildren ? (
+                <button
+                  onClick={() => toggleMenu(item.label)}
+                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-colors font-medium text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900 ${
+                    isActive || childActive
+                      ? "bg-blue-100 dark:bg-blue-700 text-blue-700 dark:text-white"
+                      : ""
+                  }`}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span className="flex-1 text-left">{item.label}</span>
+                  {isExpanded ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                </button>
+              ) : (
+                <Link
+                  to={item.path}
+                  className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors font-medium text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900 ${
+                    isActive
+                      ? "bg-blue-100 dark:bg-blue-700 text-blue-700 dark:text-white"
+                      : ""
+                  }`}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span>{item.label}</span>
+                </Link>
+              )}
+
+              {/* Submenu Items */}
+              {hasChildren && isExpanded && (
+                <div className="ml-8 mt-1 space-y-1">
+                  {item.subItems?.map((subItem) => {
+                    const SubIcon = subItem.icon;
+                    const subIsActive = isActiveRoute(subItem.path);
+
+                    return (
+                      <Link
+                        key={subItem.label}
+                        to={subItem.path}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm ${
+                          subIsActive
+                            ? "bg-blue-50 dark:bg-blue-800 text-blue-700 dark:text-blue-200"
+                            : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        }`}
+                      >
+                        <SubIcon className="w-4 h-4" />
+                        <span>{subItem.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </nav>
       {/* Profile Popup (reuse HR logic, but for employee fields) */}
       {/* Footer with Change Password and Logout */}

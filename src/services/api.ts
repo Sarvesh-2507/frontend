@@ -162,8 +162,8 @@ export const authAPI = {
       }>
     >
   > => {
-    // Try different backend URLs - update this to match your actual backend
-    const registerUrl = "http://127.0.0.1:8000/api/register/"; // Try localhost first
+    // Use environment-based URL from config
+    const registerUrl = getApiUrl('register/');
     console.log("📝 API - Making register request to:", registerUrl);
     console.log(
       "📝 API - Register credentials:",
@@ -236,13 +236,14 @@ export const authAPI = {
   },
 
   logout: async (refreshToken: string): Promise<AxiosResponse<ApiResponse>> => {
+    const logoutUrl = getApiUrl('logout/');
     console.log(
       "🚪 API - Making logout request to:",
-      `http://192.168.1.132:8000/api/logout/`
+      logoutUrl
     );
-    // Use the specific logout endpoint
+    // Use the environment-based logout endpoint
     return axios.post(
-      "http://192.168.1.132:8000/api/logout/",
+      logoutUrl,
       { refresh: refreshToken },
       {
         headers: {

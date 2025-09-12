@@ -1,5 +1,4 @@
-// User API service for fetching user information
-const USER_API_BASE_URL = 'http://192.168.1.132:8000';
+import { getApiUrl } from "../config";
 
 // User information interface based on the API response
 export interface UserInfo {
@@ -35,7 +34,7 @@ export const userAPI = {
   getCurrentUser: async (): Promise<UserInfo> => {
     console.log('🔄 Fetching current user information...');
     try {
-      const response = await fetch(`${USER_API_BASE_URL}/api/users/me/`, {
+      const response = await fetch(getApiUrl('users/me/'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

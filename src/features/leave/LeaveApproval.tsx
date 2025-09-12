@@ -15,11 +15,14 @@ import {
   AlertCircle,
   Download,
   RefreshCw,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import apiClient from "../../services/api";
 import { apiService } from "../../services/leaveApi";
+import { getApiUrl } from "../../config";
 import Sidebar from "../../components/Sidebar";
 
 interface Employee {
@@ -55,12 +58,19 @@ interface HRDashboardResponse {
   requests: LeaveRequest[];
 }
 
+type SortField = 'id' | 'full_name' | 'department' | 'start_date' | 'end_date' | 'total_days' | 'status';
+type SortOrder = 'asc' | 'desc';
+
 const LeaveApproval: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [filteredRequests, setFilteredRequests] = useState<LeaveRequest[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("TL_APPROVED");
+  
+  // Sorting state
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
   const [loading, setLoading] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(
@@ -77,7 +87,6 @@ const LeaveApproval: React.FC = () => {
 
   const statusOptions = [
     { value: "all", label: "All Status" },
-    { value: "PENDING", label: "Pending" },
     { value: "TL_APPROVED", label: "Team Lead Approved - Pending HR" },
     { value: "APPROVED", label: "Approved" },
     { value: "REJECTED", label: "Rejected" },
@@ -92,7 +101,7 @@ const LeaveApproval: React.FC = () => {
 
   useEffect(() => {
     filterRequests();
-  }, [leaveRequests, searchTerm, statusFilter]);
+  }, [leaveRequests, searchTerm, statusFilter, sortField, sortOrder]);
 
   const fetchLeaveRequests = async () => {
     setLoading(true);
@@ -184,7 +193,89 @@ const LeaveApproval: React.FC = () => {
       filtered = filtered.filter((request) => request.status === statusFilter);
     }
 
+    // Apply sorting
+    filtered = sortRequests(filtered);
+
     setFilteredRequests(filtered);
+  };
+
+  // Sorting functions
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // If clicking the same field, toggle order
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // If clicking a new field, set it as sort field with ascending order
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const sortRequests = (requests: LeaveRequest[]): LeaveRequest[] => {
+    if (!sortField) return requests;
+
+    return [...requests].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortField) {
+        case 'id':
+          aValue = a.employee.id;
+          bValue = b.employee.id;
+          break;
+        case 'full_name':
+          aValue = a.employee.full_name.toLowerCase();
+          bValue = b.employee.full_name.toLowerCase();
+          break;
+        case 'department':
+          aValue = (a.employee.department || '').toLowerCase();
+          bValue = (b.employee.department || '').toLowerCase();
+          break;
+        case 'start_date':
+          aValue = new Date(a.start_date);
+          bValue = new Date(b.start_date);
+          break;
+        case 'end_date':
+          aValue = new Date(a.end_date);
+          bValue = new Date(b.end_date);
+          break;
+        case 'total_days':
+          aValue = parseFloat(a.total_days);
+          bValue = parseFloat(b.total_days);
+          break;
+        case 'status':
+          aValue = a.status.toLowerCase();
+          bValue = b.status.toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) {
+        return sortOrder === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortOrder === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return null;
+    }
+    return sortOrder === 'asc' ? (
+      <ChevronUp className="w-4 h-4 ml-1" />
+    ) : (
+      <ChevronDown className="w-4 h-4 ml-1" />
+    );
+  };
+
+  const getSortableHeaderClass = (field: SortField) => {
+    const baseClass = "px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors select-none";
+    const activeClass = sortField === field ? "bg-gray-100 dark:bg-gray-600" : "";
+    return `${baseClass} ${activeClass}`;
   };
 
   const getStatusColor = (status: string) => {
@@ -245,22 +336,41 @@ const LeaveApproval: React.FC = () => {
     try {
       console.log(`🔄 ${approvalAction}ing leave request:`, selectedRequest.id);
       
-      // Determine the correct endpoint and request body based on action
-      const endpoint = approvalAction === "approve" 
-        ? `/leave/leave-requests/${selectedRequest.id}/hr_approve/`
-        : `/leave/leave-requests/${selectedRequest.id}/hr_reject/`;
-      
-      const requestBody = approvalAction === "approve"
-        ? { status: "APPROVED" }
-        : { 
-            status: "REJECTED",
-            rejection_reason: approvalComments || "No reason provided"
-          };
-      
-      // Make the actual API call to approve/reject using PATCH
-      const response = await apiClient.patch(endpoint, requestBody);
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        toast.error("Authentication token not found");
+        return;
+      }
 
-      console.log(`✅ Leave request ${approvalAction}ed successfully:`, response.data);
+      let responseData;
+      
+      if (approvalAction === "approve") {
+        // Handle approval using apiClient
+        const endpoint = `/leave/leave-requests/${selectedRequest.id}/hr_approve/`;
+        const requestBody = { status: "APPROVED" };
+        const response = await apiClient.patch(endpoint, requestBody);
+        responseData = response.data;
+      } else {
+        // Handle rejection using fetch API as requested
+        const response = await fetch(getApiUrl(`leave/leave-requests/${selectedRequest.id}/hr_reject/`), {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',  // Essential!
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            rejection_reason: approvalComments.trim()  // Remove any leading/trailing spaces
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        responseData = await response.json();
+      }
+
+      console.log(`✅ Leave request ${approvalAction}ed successfully:`, responseData);
 
       // Update the request status in local state
       setLeaveRequests((prev) =>
@@ -476,6 +586,8 @@ ${filteredRequests
                     onClick={() => {
                       setSearchTerm("");
                       setStatusFilter("TL_APPROVED");
+                      setSortField(null);
+                      setSortOrder('asc');
                     }}
                     className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
@@ -498,26 +610,68 @@ ${filteredRequests
                 <table className="w-full">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Emp ID
+                      <th 
+                        className={getSortableHeaderClass('id')}
+                        onClick={() => handleSort('id')}
+                      >
+                        <div className="flex items-center">
+                          Emp ID
+                          {getSortIcon('id')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Name
+                      <th 
+                        className={getSortableHeaderClass('full_name')}
+                        onClick={() => handleSort('full_name')}
+                      >
+                        <div className="flex items-center">
+                          Name
+                          {getSortIcon('full_name')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Department
+                      <th 
+                        className={getSortableHeaderClass('department')}
+                        onClick={() => handleSort('department')}
+                      >
+                        <div className="flex items-center">
+                          Department
+                          {getSortIcon('department')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Start Date
+                      <th 
+                        className={getSortableHeaderClass('start_date')}
+                        onClick={() => handleSort('start_date')}
+                      >
+                        <div className="flex items-center">
+                          Start Date
+                          {getSortIcon('start_date')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        End Date
+                      <th 
+                        className={getSortableHeaderClass('end_date')}
+                        onClick={() => handleSort('end_date')}
+                      >
+                        <div className="flex items-center">
+                          End Date
+                          {getSortIcon('end_date')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Total Days
+                      <th 
+                        className={getSortableHeaderClass('total_days')}
+                        onClick={() => handleSort('total_days')}
+                      >
+                        <div className="flex items-center">
+                          Total Days
+                          {getSortIcon('total_days')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Status
+                      <th 
+                        className={getSortableHeaderClass('status')}
+                        onClick={() => handleSort('status')}
+                      >
+                        <div className="flex items-center">
+                          Status
+                          {getSortIcon('status')}
+                        </div>
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         Approved By

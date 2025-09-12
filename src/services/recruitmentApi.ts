@@ -1,9 +1,8 @@
-// Recruitment API base URL
-const RECRUITMENT_API_BASE_URL = 'http://192.168.1.97:8000';
+import { getApiUrl } from "../config";
 
 // Helper function for making API calls
 const makeApiCall = async (endpoint: string, options: RequestInit = {}): Promise<any> => {
-  const url = `${RECRUITMENT_API_BASE_URL}${endpoint}`;
+  const url = getApiUrl(endpoint);
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`,
@@ -163,7 +162,7 @@ export const jobPostingAPI = {
   }): Promise<JobPosting[]> => {
     console.log('🔄 Fetching job postings...');
     try {
-      const url = new URL(`${RECRUITMENT_API_BASE_URL}/vacancy/tl-only/`);
+      const url = new URL(getApiUrl('vacancy/tl-only/'));
       if (params) {
         Object.entries(params).forEach(([key, value]) => {
           if (value) url.searchParams.append(key, String(value));
@@ -208,7 +207,7 @@ export const jobPostingAPI = {
   create: async (data: CreateJobPostingData): Promise<JobPosting> => {
     console.log('🔄 Creating new job posting:', data);
     try {
-      const response = await fetch(`${RECRUITMENT_API_BASE_URL}/vacancy/job-postings/`, {
+      const response = await fetch(getApiUrl('vacancy/job-postings/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -250,7 +249,7 @@ export const jobPostingAPI = {
   delete: async (id: number): Promise<void> => {
     console.log(`🔄 Deleting job posting ${id}`);
     try {
-      const response = await fetch(`${RECRUITMENT_API_BASE_URL}/vacancy/tl-only/${id}/`, {
+      const response = await fetch(`getApiUrl("vacancy/tl-only/${id}/`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -303,7 +302,7 @@ export const jobPostingAPI = {
   fillHRDetails: async (id: number, data: HRDetailsData): Promise<JobPosting> => {
     console.log(`🔄 Filling HR details for job posting ${id}:`, data);
     try {
-      const response = await fetch(`${RECRUITMENT_API_BASE_URL}/vacancy/tl-hr-post/${id}/`, {
+      const response = await fetch(`getApiUrl("vacancy/tl-hr-post/${id}/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -329,7 +328,7 @@ export const jobPostingAPI = {
   hrRejectRequest: async (id: number, status: string, remarks: string): Promise<JobPosting> => {
     console.log(`🔄 HR rejecting TL request for job posting ${id}:`, { status, remarks });
     try {
-      const response = await fetch(`${RECRUITMENT_API_BASE_URL}/vacancy/hr/tl_vacancy_status/${id}/`, {
+      const response = await fetch(`getApiUrl("vacancy/hr/tl_vacancy_status/${id}/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -553,7 +552,7 @@ export const referralsAPI = {
   }): Promise<Referral[]> => {
     console.log('🔄 Fetching referrals...');
     try {
-      const url = new URL(`${RECRUITMENT_API_BASE_URL}/vacancy/hr/referrals/`);
+      const url = new URL(`getApiUrl("vacancy/hr/referrals/`);
       if (params) {
         Object.entries(params).forEach(([key, value]) => {
           if (value !== undefined) url.searchParams.append(key, String(value));
@@ -585,7 +584,7 @@ export const referralsAPI = {
   getByJobPosting: async (jobPostingId: number): Promise<Referral[]> => {
     console.log(`🔄 Fetching referrals for job posting ${jobPostingId}`);
     try {
-      const response = await fetch(`${RECRUITMENT_API_BASE_URL}/vacancy/hr/referrals/?job_posting_id=${jobPostingId}`, {
+      const response = await fetch(`getApiUrl("vacancy/hr/referrals/?job_posting_id=${jobPostingId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -623,7 +622,7 @@ export const referralsAPI = {
   updateStatus: async (id: number, status: Referral['status'], remarks?: string): Promise<Referral> => {
     console.log(`🔄 Updating referral ${id} status to: ${status}`);
     try {
-      const response = await fetch(`${RECRUITMENT_API_BASE_URL}/vacancy/hr/referrals/`, {
+      const response = await fetch(`getApiUrl("vacancy/hr/referrals/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

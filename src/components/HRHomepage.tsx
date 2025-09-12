@@ -242,7 +242,7 @@ const HRHomepage: React.FC = () => {
         try {
           const token = localStorage.getItem("accessToken") || localStorage.getItem("authToken");
           if (!token) return;
-          const res = await fetch("http://192.168.1.132:8000/api/profiles/profiles/me/", {
+          const res = await fetch("http://192.168.1.132:8000/api/profiles/api/profiles/me/", {
             headers: { "Authorization": `Token ${token}` }
           });
           if (!res.ok) return;

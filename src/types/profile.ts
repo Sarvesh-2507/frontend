@@ -208,6 +208,40 @@ export interface Profile {
   probation_period_months?: number;
   confirmation_date?: string;
   
+  // Additional Work Information Fields
+  department?: string;
+  location?: string;
+  division?: string;
+  salary?: number;
+  total_experience?: string;
+  grade?: string;
+  sub_department?: string;
+  office_location?: string;
+  job_status?: string;
+  hire_date?: string;
+  termination_date?: string;
+  cost_center?: string;
+  notice_period_days?: number;
+  increment_month?: string;
+  previous_company_designation?: string;
+  previous_experience_years?: number;
+  previous_company_salary?: number;
+  graduation_college?: string;
+  graduation_university?: string;
+  graduation_percentage?: number;
+  post_graduation_year?: number;
+  post_graduation_college?: string;
+  post_graduation_university?: string;
+  post_graduation_percentage?: number;
+  twelfth_year?: number;
+  twelfth_school?: string;
+  twelfth_board?: string;
+  twelfth_percentage?: number;
+  tenth_year?: number;
+  tenth_school?: string;
+  tenth_board?: string;
+  tenth_percentage?: number;
+  
   // System Information
   created_at?: string;
   updated_at?: string;

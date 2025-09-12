@@ -40,7 +40,7 @@ class Config {
       return import.meta.env.VITE_MOCK_API_URL || 'http://localhost:3002/api';
     }
 
-    // Use environment-specific URL or fallback to default
+    // Use primary API base URL from environment
     return import.meta.env.VITE_API_BASE_URL || 
            import.meta.env.VITE_BACKEND_API_URL || 
            'http://192.168.1.132:8000/api';
