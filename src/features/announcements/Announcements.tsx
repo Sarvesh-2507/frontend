@@ -37,7 +37,11 @@ interface Announcement {
   totalEmployees: number;
 }
 
-const Announcements: React.FC = () => {
+interface AnnouncementsProps {
+  canCreate?: boolean;
+}
+
+const Announcements: React.FC<AnnouncementsProps> = ({ canCreate = true }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -193,15 +197,17 @@ const Announcements: React.FC = () => {
                 </p>
               </div>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>New Announcement</span>
-            </motion.button>
+            {canCreate && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span>New Announcement</span>
+              </motion.button>
+            )}
           </div>
         </header>
 
@@ -364,7 +370,7 @@ const Announcements: React.FC = () => {
 
       {/* Announcement Create Modal */}
       <AnimatePresence>
-        {showCreateModal && (
+  {canCreate && showCreateModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

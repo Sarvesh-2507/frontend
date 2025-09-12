@@ -554,7 +554,7 @@ export function EmployeeDashboard() {
 
       console.log(
         "Making request to:",
-        `${BACKEND_URL}/api/attendance/mark-attendance/`
+        `${BACKEND_URL}/api/attendance/mark/`
       );
 
       // Get access token from localStorage or wherever it's stored
@@ -564,7 +564,7 @@ export function EmployeeDashboard() {
         ""; // Add your token retrieval logic here
 
       const apiResponse = await fetch(
-        `${BACKEND_URL}/api/attendance/mark-attendance/`,
+        `${BACKEND_URL}/api/attendance/mark/`,
         {
           method: "POST",
           headers: {

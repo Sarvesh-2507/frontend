@@ -8,6 +8,10 @@ import {
   Users,
   BookOpen,
   UserCircle,
+  Inbox as InboxIcon,
+  HelpCircle,
+  Settings as SettingsIcon,
+  Bell
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "../../components/ui/Logo";
@@ -15,11 +19,15 @@ import { useEmployeeProfile } from "./useEmployeeProfile";
 
 const sidebarItems = [
   { label: "Home", icon: User, path: "/emp-home" },
-  { label: "Profile", icon: Users, path: "profile" },
-  { label: "Attendance", icon: Calendar, path: "attendance" },
-  { label: "Leave", icon: FileText, path: "leave" },
-  { label: "Payroll", icon: DollarSign, path: "payroll" },
-  { label: "Policies", icon: BookOpen, path: "policies" },
+  { label: "Profile", icon: Users, path: "/emp-home/profile" },
+  { label: "Attendance", icon: Calendar, path: "/emp-home/attendance" },
+  { label: "Leave", icon: FileText, path: "/emp-home/leave" },
+  { label: "Payroll", icon: DollarSign, path: "/emp-home/payroll" },
+  { label: "Policies", icon: BookOpen, path: "/emp-home/policies" },
+  { label: "Inbox", icon: InboxIcon, path: "/emp-home/inbox" },
+  { label: "Help Desk", icon: HelpCircle, path: "/emp-home/help-desk" },
+  { label: "Settings", icon: SettingsIcon, path: "/emp-home/settings" },
+  { label: "Announcements", icon: Bell, path: "/emp-home/announcements" },
 ];
 
 const EmployeeSidebar: React.FC = () => {

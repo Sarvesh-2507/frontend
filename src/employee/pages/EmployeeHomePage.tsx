@@ -48,9 +48,6 @@ const EmployeeHomePage: React.FC = () => {
   return (
     <BaseLayout>
       <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-        {/* Sidebar */}
-        <EmployeeSpecificSidebar />
-
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto">
           {/* Show outlet content for sub-routes, otherwise show dashboard */}
