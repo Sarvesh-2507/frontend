@@ -142,7 +142,7 @@ const allQuickActions: SidebarQuickAction[] = getSidebarQuickActions().filter(a 
 
 const QUICK_ACTIONS_KEY = 'customQuickActionsV2';
 
-const HomePage: React.FC = () => {
+const HRHomepage: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showEmployeeDirectory, setShowEmployeeDirectory] = useState(false);
   const [profilePic, setProfilePic] = useState<string | null>(null);
@@ -566,4 +566,4 @@ const HomePage: React.FC = () => {
   );
 };
 
-export default HomePage;
+export default HRHomepage;

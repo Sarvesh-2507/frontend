@@ -1,9 +1,11 @@
+import { UserInfo } from "../services/userApi";
+
 export interface User {
   id: string;
   email: string;
   username: string;
   name: string;
-  role: "admin" | "employee" | "hr";
+  role: "admin" | "employee" | "hr" | "HR" | "Employee";
   firstName?: string;
   lastName?: string;
   avatar?: string;
@@ -71,6 +73,7 @@ export interface ResetPasswordRequest {
 
 export interface AuthState {
   user: User | null;
+  userInfo: UserInfo | null;
   tokens: AuthTokens | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -88,7 +91,9 @@ export interface AuthActions {
   setLoading: (loading: boolean) => void;
   checkSession: () => Promise<boolean>;
   getCurrentUser: () => User | null;
+  getUserInfo: () => Promise<UserInfo | null>;
   initializeFromStorage: () => void;
+  getHomeRoute: () => string;
 }
 
 export type AuthStore = AuthState & AuthActions;

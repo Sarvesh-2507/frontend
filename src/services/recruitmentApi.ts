@@ -25,6 +25,7 @@ const makeApiCall = async (endpoint: string, options: RequestInit = {}): Promise
 // Job Posting interface
 export interface JobPosting {
   id: number;
+  job_role_id: number;
   Tl_Name: string;
   job_title: string;
   department: string;
@@ -40,10 +41,16 @@ export interface JobPosting {
   status?: 'active' | 'inactive' | 'closed';
   created_at?: string;
   updated_at?: string;
+  // HR Details fields
+  key_responsibilities?: string;
+  work_shift?: string;
+  referral_bonus?: string;
+  perks?: string;
 }
 
 // Create Job Posting interface
 export interface CreateJobPostingData {
+  job_role_id?: number;
   job_title: string;
   department: string;
   vacancies: number;
@@ -60,6 +67,16 @@ export interface CreateJobPostingData {
 // Update Job Posting interface
 export interface UpdateJobPostingData extends Partial<CreateJobPostingData> {
   status?: 'active' | 'inactive' | 'closed';
+}
+
+// HR Details interface
+export interface HRDetailsData {
+  key_responsibilities: string;
+  salary_range: string;
+  location: string;
+  work_shift: string;
+  referral_bonus?: string;
+  perks?: string;
 }
 
 // Candidate interface
@@ -105,6 +122,22 @@ export interface RecruitmentStats {
   hired_this_month: number;
   applications_this_week: number;
   interview_completion_rate: number;
+}
+
+// Referral interface
+export interface Referral {
+  id: number;
+  job_role_id: string;
+  job_title: string;
+  employee_name: string;
+  friend_name: string;
+  friend_email: string;
+  friend_phone: string;
+  friend_resume: string;
+  linkedin_url: string | null;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'UNDER_REVIEW' | 'INTERVIEWED';
+  remarks: string | null;
+  submitted_at: string;
 }
 
 // API Response interface
@@ -217,7 +250,7 @@ export const jobPostingAPI = {
   delete: async (id: number): Promise<void> => {
     console.log(`🔄 Deleting job posting ${id}`);
     try {
-      const response = await fetch(`${RECRUITMENT_API_BASE_URL}/vacancy/job-postings/${id}/`, {
+      const response = await fetch(`${RECRUITMENT_API_BASE_URL}/vacancy/tl-only/${id}/`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -262,6 +295,61 @@ export const jobPostingAPI = {
       return result;
     } catch (error) {
       console.error(`❌ Error closing job posting ${id}:`, error);
+      throw error;
+    }
+  },
+
+  // Fill HR Details
+  fillHRDetails: async (id: number, data: HRDetailsData): Promise<JobPosting> => {
+    console.log(`🔄 Filling HR details for job posting ${id}:`, data);
+    try {
+      const response = await fetch(`${RECRUITMENT_API_BASE_URL}/vacancy/tl-hr-post/${id}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`,
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ HR details filled successfully:', result);
+      return result;
+    } catch (error) {
+      console.error(`❌ Error filling HR details for job posting ${id}:`, error);
+      throw error;
+    }
+  },
+
+  // HR Reject Team Lead Request
+  hrRejectRequest: async (id: number, status: string, remarks: string): Promise<JobPosting> => {
+    console.log(`🔄 HR rejecting TL request for job posting ${id}:`, { status, remarks });
+    try {
+      const response = await fetch(`${RECRUITMENT_API_BASE_URL}/vacancy/hr/tl_vacancy_status/${id}/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`,
+        },
+        body: JSON.stringify({
+          status,
+          remarks,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ HR rejection processed successfully:', result);
+      return result;
+    } catch (error) {
+      console.error(`❌ Error rejecting TL request for job posting ${id}:`, error);
       throw error;
     }
   },
@@ -453,6 +541,115 @@ export const interviewAPI = {
   },
 };
 
+// Referrals API functions
+export const referralsAPI = {
+  // Get all referrals for HR view
+  getAll: async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    job_posting_id?: number;
+  }): Promise<Referral[]> => {
+    console.log('🔄 Fetching referrals...');
+    try {
+      const url = new URL(`${RECRUITMENT_API_BASE_URL}/vacancy/hr/referrals/`);
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined) url.searchParams.append(key, String(value));
+        });
+      }
+      
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ Referrals fetched successfully:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Error fetching referrals:', error);
+      throw error;
+    }
+  },
+
+  // Get referrals for a specific job posting
+  getByJobPosting: async (jobPostingId: number): Promise<Referral[]> => {
+    console.log(`🔄 Fetching referrals for job posting ${jobPostingId}`);
+    try {
+      const response = await fetch(`${RECRUITMENT_API_BASE_URL}/vacancy/hr/referrals/?job_posting_id=${jobPostingId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ Job posting referrals fetched successfully:', data);
+      return data;
+    } catch (error) {
+      console.error(`❌ Error fetching referrals for job posting ${jobPostingId}:`, error);
+      throw error;
+    }
+  },
+
+  // Get single referral by ID
+  getById: async (id: number): Promise<Referral> => {
+    console.log(`🔄 Fetching referral with ID: ${id}`);
+    try {
+      const result = await makeApiCall(`/vacancy/hr/referrals/${id}/`);
+      console.log('✅ Referral fetched successfully:', result);
+      return result;
+    } catch (error) {
+      console.error(`❌ Error fetching referral ${id}:`, error);
+      throw error;
+    }
+  },
+
+  // Update referral status
+  updateStatus: async (id: number, status: Referral['status'], remarks?: string): Promise<Referral> => {
+    console.log(`🔄 Updating referral ${id} status to: ${status}`);
+    try {
+      const response = await fetch(`${RECRUITMENT_API_BASE_URL}/vacancy/hr/referrals/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`,
+        },
+        body: JSON.stringify({
+          id,
+          status,
+          remarks: remarks || null,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ Referral status updated successfully:', result);
+      return result;
+    } catch (error) {
+      console.error(`❌ Error updating referral ${id} status:`, error);
+      throw error;
+    }
+  },
+};
+
 // Recruitment Analytics API functions
 export const recruitmentAnalyticsAPI = {
   // Get recruitment statistics
@@ -551,6 +748,7 @@ export const recruitmentAPI = {
   jobPostings: jobPostingAPI,
   candidates: candidateAPI,
   interviews: interviewAPI,
+  referrals: referralsAPI,
   analytics: recruitmentAnalyticsAPI,
 };
 

@@ -262,24 +262,24 @@ export function EmployeeDashboard({ RequestRegularizationComponent }) {
   // Temporary flag to enable mock mode for testing (set to false when backend is ready)
   const MOCK_MODE = false;
 
-  // Predefined location clusters for consistent coordinate mapping
+  // Predefined location clusters for consistent coordinate mapping across devices
   const LOCATION_CLUSTERS = [
     {
       name: "office",
       center: { latitude: 12.9716, longitude: 77.5946 }, // Example office coordinates
-      radius: 100, // 100 meters radius
+      radius: 150, // 150 meters radius to handle GPS variations
       snapTo: { latitude: 12.9716, longitude: 77.5946 }, // Exact coordinates to use
     },
     {
       name: "home_area",
       center: { latitude: 12.9352, longitude: 77.6245 }, // Example home area
-      radius: 200, // 200 meters radius
+      radius: 200, // 200 meters radius for residential area
       snapTo: { latitude: 12.9352, longitude: 77.6245 },
     },
     {
       name: "vels_university",
       center: { latitude: 12.8205, longitude: 80.0507 }, // Example university coordinates
-      radius: 150, // 150 meters radius
+      radius: 300, // 300 meters radius for large campus area
       snapTo: { latitude: 12.8205, longitude: 80.0507 },
     },
   ];
@@ -367,8 +367,9 @@ export function EmployeeDashboard({ RequestRegularizationComponent }) {
         typeBasedCluster.center.longitude
       );
 
-      // Use a larger radius for type-based matching (500m)
-      if (distance <= 500) {
+      // Use a larger radius for type-based matching (800m) to handle cases where
+      // devices might be slightly outside the primary cluster radius
+      if (distance <= 800) {
         console.log(`✅ Location matched by type: ${typeBasedCluster.name}`);
         console.log(
           `📍 Normalized coordinates: ${typeBasedCluster.snapTo.latitude}, ${typeBasedCluster.snapTo.longitude}`
@@ -844,22 +845,35 @@ Turn on location services to mark attendance.`,
 
       console.log("Location type:", locationType);
 
-      // Use the actual device coordinates (no normalization/clustering)
+      // Normalize location coordinates to ensure consistency across devices at same location
+      const normalizedLocation = normalizeLocation(
+        rawLocation.latitude,
+        rawLocation.longitude,
+        locationType
+      );
+
       const location = {
-        latitude: rawLocation.latitude,
-        longitude: rawLocation.longitude,
+        latitude: normalizedLocation.latitude,
+        longitude: normalizedLocation.longitude,
       };
 
       console.log("=== Current Location Information ===");
       console.log(
-        "📍 Current Device Location:",
+        "📍 Raw Device Location:",
+        rawLocation.latitude.toFixed(6),
+        rawLocation.longitude.toFixed(6)
+      );
+      console.log(
+        "📍 Normalized Location:",
         location.latitude.toFixed(6),
         location.longitude.toFixed(6)
       );
       console.log("🏢 Work Mode:", workMode);
       console.log("📋 Location Type:", locationType);
       console.log(
-        "✅ Using real device coordinates (no clustering/normalization)"
+        normalizedLocation.isNormalized
+          ? "✅ Using normalized coordinates (clustered for consistency)"
+          : "⚠️ Using raw coordinates (no cluster match found)"
       );
 
       // Convert base64 to blob for image
@@ -1007,17 +1021,37 @@ Turn on location services to mark attendance.`,
         message: `${result.message || "Attendance Marked Successfully!"}
 
 📍 Location Details:
-• Latitude: ${location.latitude.toFixed(6)}
-• Longitude: ${location.longitude.toFixed(6)}
+${
+  normalizedLocation.isNormalized
+    ? `• Raw Device Location: ${rawLocation.latitude.toFixed(
+        6
+      )}, ${rawLocation.longitude.toFixed(6)}
+• Normalized Location: ${location.latitude.toFixed(
+        6
+      )}, ${location.longitude.toFixed(6)}
+• Distance from center: ${Math.round(
+        normalizedLocation.originalDistance || 0
+      )}m`
+    : `• Device Location: ${location.latitude.toFixed(
+        6
+      )}, ${location.longitude.toFixed(6)}`
+}
 • Work Mode: ${workMode}
 • Location Type: ${locationType}
 
-✅ Your attendance has been recorded with current location coordinates.`,
+✅ ${
+          normalizedLocation.isNormalized
+            ? "Your attendance has been recorded with normalized coordinates for consistency across devices."
+            : "Your attendance has been recorded with actual device coordinates."
+        }`,
         meta: {
           mode: workMode,
           locationType: locationType,
           latitude: location.latitude,
           longitude: location.longitude,
+          rawLatitude: rawLocation.latitude,
+          rawLongitude: rawLocation.longitude,
+          isNormalized: normalizedLocation.isNormalized,
           photo: imageData,
           currentLocation: true,
         },

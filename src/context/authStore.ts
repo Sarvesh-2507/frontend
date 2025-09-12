@@ -8,6 +8,7 @@ import type {
   ResetPasswordRequest,
 } from "../types/auth";
 import { authApi } from "../utils/api";
+import { userAPI, UserInfo } from "../services/userApi";
 
 // JWT token validation helper
 const isTokenValid = (token: string): boolean => {
@@ -68,10 +69,77 @@ export const useAuthStore = create<AuthStore>()(
     (set, get) => ({
       // State
       user: null,
+      userInfo: null,
       tokens: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
+
+      // Get home route based on user role
+      getHomeRoute: () => {
+        const { userInfo } = get();
+        if (!userInfo || !userInfo.role) {
+          console.log('⚠️ Auth Store - No userInfo or role, defaulting to /login');
+          return "/login";
+        }
+        
+        const roleName = userInfo.role.name.toLowerCase().trim();
+        console.log('🏠 Auth Store - Determining home route for role:', `"${roleName}"`);
+        console.log('🏠 Auth Store - Full role object:', userInfo.role);
+        
+        // Check for HR roles (multiple variations)
+        if (roleName === "hr" || roleName === "human resources" || roleName === "admin") {
+          console.log('✅ Auth Store - HR user detected, redirecting to /home');
+          return "/home";
+        } 
+        // Check for Employee roles (multiple variations)
+        else if (roleName === "employee" || roleName === "emp" || roleName === "staff") {
+          console.log('✅ Auth Store - Employee user detected, redirecting to /emp-home');
+          return "/emp-home";
+        }
+        
+        // Default: if role contains "hr" or similar admin terms, treat as HR
+        if (roleName.includes("hr") || roleName.includes("admin") || roleName.includes("manager")) {
+          console.log('✅ Auth Store - Admin-like role detected, defaulting to /home');
+          return "/home";
+        }
+        
+        // Default: if role contains "emp" or similar, treat as employee
+        if (roleName.includes("emp") || roleName.includes("user")) {
+          console.log('✅ Auth Store - Employee-like role detected, defaulting to /emp-home');
+          return "/emp-home";
+        }
+        
+        // Final fallback for unknown roles - default to HR dashboard
+        console.log('⚠️ Auth Store - Unknown role, defaulting to /home');
+        return "/home";
+      },
+
+      // Get user information from API
+      getUserInfo: async () => {
+        try {
+          const { tokens } = get();
+          if (!tokens?.access) {
+            throw new Error("No access token available");
+          }
+
+          console.log('🔄 Auth Store - Fetching user info from API...');
+          const userInfo = await userAPI.getCurrentUser();
+          console.log('✅ Auth Store - User info received:', userInfo);
+          console.log('🏷️ Auth Store - User role:', userInfo.role);
+          
+          set({ userInfo });
+          
+          // Store user info in localStorage
+          localStorage.setItem("userInfo", JSON.stringify(userInfo));
+          
+          return userInfo;
+        } catch (error) {
+          console.error("❌ Auth Store - Error fetching user info:", error);
+          set({ userInfo: null });
+          return null;
+        }
+      },
 
       // Session check function to validate token on route change
       checkSession: async () => {
@@ -215,6 +283,13 @@ export const useAuthStore = create<AuthStore>()(
             }
             localStorage.setItem("currentUser", JSON.stringify(user));
 
+            // Fetch user info for role-based routing
+            try {
+              await get().getUserInfo();
+            } catch (userInfoError) {
+              console.warn("Failed to fetch user info, continuing with login:", userInfoError);
+            }
+
             toast.success("Login successful!");
           } else {
             throw new Error(response.message || "Login failed");
@@ -316,6 +391,7 @@ export const useAuthStore = create<AuthStore>()(
 
           set({
             user: null,
+            userInfo: null,
             tokens: null,
             isAuthenticated: false,
             isLoading: false,
@@ -324,6 +400,7 @@ export const useAuthStore = create<AuthStore>()(
 
           // Clear all auth-related localStorage
           clearStoredTokens();
+          localStorage.removeItem("userInfo");
           
           // Clear Zustand persist storage
           localStorage.removeItem("auth-store");
@@ -496,10 +573,24 @@ export const useAuthStore = create<AuthStore>()(
         const { accessToken, refreshToken } = getStoredTokens();
         const user = getCurrentUser();
         
+        // Get stored user info
+        const getStoredUserInfo = () => {
+          try {
+            const userInfoStr = localStorage.getItem("userInfo");
+            return userInfoStr ? JSON.parse(userInfoStr) : null;
+          } catch (error) {
+            console.error("Error parsing user info from localStorage:", error);
+            return null;
+          }
+        };
+        
+        const userInfo = getStoredUserInfo();
+        
         if (accessToken && user) {
           console.log("Auth Store - Initializing from localStorage");
           set({
             user,
+            userInfo,
             tokens: { access: accessToken, refresh: refreshToken || "" },
             isAuthenticated: true,
             isLoading: false,
@@ -509,6 +600,7 @@ export const useAuthStore = create<AuthStore>()(
           console.log("Auth Store - No valid localStorage data found");
           set({
             user: null,
+            userInfo: null,
             tokens: null,
             isAuthenticated: false,
             isLoading: false,
@@ -521,6 +613,7 @@ export const useAuthStore = create<AuthStore>()(
       name: "auth-storage",
       partialize: (state) => ({
         user: state.user,
+        userInfo: state.userInfo,
         tokens: state.tokens,
         isAuthenticated: state.isAuthenticated,
       }),
