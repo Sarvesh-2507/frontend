@@ -194,7 +194,7 @@ export function Modal({ open, onClose, title, children, actions }) {
 
 // ---- Employee Dashboard -----------------------------------------------------
 // Mount this in the employee-side Attendance route only. Do NOT use HRDashboard here.
-export function EmployeeDashboard() {
+export function EmployeeDashboard({ RequestRegularizationComponent }) {
   const [workMode, setWorkMode] = useState("Office"); // Office | Remote
   const [remoteLocation, setRemoteLocation] = useState(""); // For remote work location type
   const [attendanceMarkers, setAttendanceMarkers] = useState(() => {
@@ -2331,80 +2331,7 @@ Error details: ${error.name} - ${error.message}`);
         </div>
 
         <div className="rounded-2xl border bg-white shadow-sm p-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-medium">Request Regularization</h3>
-            <button
-              onClick={() => setRegOpen((v) => !v)}
-              className="text-xs px-2 py-1 rounded-full border hover:bg-gray-50"
-            >
-              {regOpen ? "Hide" : "Request"}
-            </button>
-          </div>
-
-          {regOpen && (
-            <div className="space-y-2">
-              <label className="text-xs text-gray-600">Reason</label>
-              <select
-                className="w-full border rounded-lg px-3 py-2 text-sm"
-                value={regReason}
-                onChange={(e) => setRegReason(e.target.value)}
-              >
-                <option value="">Select reason</option>
-                <option>Forgot to punch</option>
-                <option>System error</option>
-                <option>Traffic delay</option>
-              </select>
-              <label className="text-xs text-gray-600">Explanation</label>
-              <textarea
-                className="w-full border rounded-lg px-3 py-2 text-sm min-h-[80px]"
-                value={regNote}
-                onChange={(e) => setRegNote(e.target.value)}
-                placeholder="Provide brief details..."
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={submitRegularization}
-                  className="px-3 py-2 rounded-xl bg-blue-600 text-white text-sm hover:bg-blue-700"
-                >
-                  Submit
-                </button>
-                <button
-                  onClick={() => {
-                    setRegReason("");
-                    setRegNote("");
-                  }}
-                  className="px-3 py-2 rounded-xl border text-sm hover:bg-gray-50"
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div className="mt-4">
-            <h4 className="text-sm font-medium mb-2">Pending Requests</h4>
-            <div className="space-y-2">
-              {pending.length === 0 && (
-                <div className="text-xs text-gray-500">No pending requests</div>
-              )}
-              {pending.map((r) => (
-                <div key={r.id} className="p-3 rounded-xl border text-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{r.reason}</div>
-                      <div className="text-xs text-gray-500">{r.date}</div>
-                    </div>
-                    <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
-                      {r.status}
-                    </span>
-                  </div>
-                  {r.note && (
-                    <div className="text-xs text-gray-600 mt-1">{r.note}</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+          {RequestRegularizationComponent ? <RequestRegularizationComponent /> : null}
         </div>
       </div>
 
