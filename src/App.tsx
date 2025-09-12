@@ -26,7 +26,7 @@ import ResetPassword from "./features/authentication/ResetPassword";
 import ChangePassword from "./features/authentication/ChangePassword";
 
 // Main Components
-import HomePage from "./components/HomePage";
+import HRHomepage from "./components/HRHomepage";
 
 
 // HR Modules
@@ -105,6 +105,11 @@ import Inbox from "./features/inbox/Inbox";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
+import HRProtectedRoute from "./components/HRProtectedRoute";
+import EmployeeProtectedRoute from "./components/EmployeeProtectedRoute";
+import RoleBasedRedirect from "./components/RoleBasedRedirect";
+import RoleBasedRoute from "./components/RoleBasedRoute";
+import RoleDebug from "./debug/RoleDebug";
 import { AuthProvider } from "./auth/AuthProvider";
 
 // Auth Store
@@ -171,131 +176,129 @@ const App: React.FC = () => {
           <Route
             path="/home"
             element={
-              <ProtectedRoute>
-                <HomePage />
-              </ProtectedRoute>
+              <HRProtectedRoute>
+                <HRHomepage />
+              </HRProtectedRoute>
             }
           />
 
-
-
-          {/* Core HR Modules */}
+          {/* Core HR Modules - Only accessible by HR */}
           <Route
             path="/organizations"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <Organizations />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/organizations/create"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <CreateOrganization />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/organizations/:id"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <Organizations />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/organizations/:id/companies"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <Organizations />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/recruitment"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <Recruitment />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
-          {/* Recruitment Sub-routes */}
+          {/* Recruitment Sub-routes - HR only */}
           <Route
             path="/recruitment/job-posting"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <JobPostingDashboard />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
           
           <Route
             path="/recruitment/job-posting/create"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <JobPostingForm />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/recruitment/job-posting/hr-details/:id"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <HRDetailsForm />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/onboarding"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <Onboarding />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
-          {/* Onboarding Sub-routes */}
+          {/* Onboarding Sub-routes - HR only */}
           <Route
             path="/onboarding/offer-letter"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <OfferLetter />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
           
           <Route
             path="/onboarding/pre-boarding"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <PreBoarding />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
           
           <Route
             path="/onboarding/background-verification"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <BackgroundVerification />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
           
           <Route
             path="/onboarding/joining-formalities"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <JoiningFormalities />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
           
@@ -307,327 +310,327 @@ const App: React.FC = () => {
           <Route
             path="/onboarding/tasks"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <TaskChecklist />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
           
           <Route
             path="/onboarding/candidate-invite"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <CandidateInvite />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
           
           <Route
             path="/onboarding/candidate-invites"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <CandidateInvites />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
           
           <Route
             path="/onboarding/asset-allocation"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <AssetAllocation />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/employee-profile"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <EmployeeProfile />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/employee/directory"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <EmployeeDirectory />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
           <Route
             path="/employee/view/:empId"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <EmployeeView />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/employee/profile-management"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <ProfileManagement />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/employee/documents"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <DocumentManagement />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/employee/access-control"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <AccessControl />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/attendance"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <Attendance />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/attendance/daily"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <AttendanceDailyView />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/attendance/monthly"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <MonthlyAttendanceCalendar />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/attendance/summary"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <AttendanceSummaryReport />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/attendance/manual-update"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <ManualAttendanceUpdate />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/attendance/import"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <ImportAttendance />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/attendance/holidays"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <HolidayCalendar />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/attendance/metrics"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <AttendanceMetricsDashboard />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/leave"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <Leave />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/leave/application"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <LeaveApplication />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/leave/history"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <LeaveApplicationHistory />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/leave/balance"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <LeaveBalance />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/leave/approval"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <LeaveApproval />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/payroll"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <Payroll />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/payroll/salary-structure"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <SalaryStructure />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/payroll/run"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <PayrollRun />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/payroll/payslips"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <Payslips />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
-          {/* Payroll Subfeatures */}
+          {/* Payroll Subfeatures - HR only */}
           <Route
             path="/payroll/attendance-integration"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <AttendanceIntegration />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
           <Route
             path="/payroll/tax-management"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <TaxManagement />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
           <Route
             path="/payroll/bank-processing"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <BankProcessing />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
           <Route
             path="/payroll/compliance"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <PayrollCompliance />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
           <Route
             path="/payroll/reports"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <PayrollReports />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
           <Route
             path="/payroll/audit"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <PayrollAudit />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
           <Route
             path="/payroll/self-service"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <PayrollSelfService />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/performance"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <Performance />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/offboarding"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <Offboarding />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
           <Route
             path="/assets"
             element={
-              <ProtectedRoute>
+              <HRProtectedRoute>
                 <Assets />
-              </ProtectedRoute>
+              </HRProtectedRoute>
             }
           />
 
@@ -797,15 +800,25 @@ const App: React.FC = () => {
           {/* Test Announcements Route - No Auth */}
           <Route path="/test-announcements" element={<Announcements />} />
 
-          {/* Employee Routes - No Auth */}
-          <Route path="/emp-home/*" element={<EmployeeRoutes />} />
+          {/* Employee Routes - Protected and role-checked */}
+          <Route 
+            path="/emp-home/*" 
+            element={
+              <EmployeeProtectedRoute>
+                <EmployeeRoutes />
+              </EmployeeProtectedRoute>
+            } 
+          />
           <Route path="/emp-login" element={<EmployeeLoginPage />} />
           <Route path="/emp-logout" element={<EmployeeLogoutPage />} />
+
+          {/* Debug Routes */}
+          <Route path="/debug/role" element={<RoleDebug />} />
 
           {/* Default Routes */}
           <Route
             path="/"
-            element={<Navigate to="/login" replace />}
+            element={<RoleBasedRedirect />}
           />
 
           <Route
