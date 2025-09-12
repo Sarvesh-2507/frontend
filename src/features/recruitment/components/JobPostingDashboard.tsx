@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Plus, Eye, Edit, Trash2, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, FileText, Users, XCircle } from 'lucide-react';
 import MainLayout from '../../../layouts/MainLayout';
 import { toast } from 'react-hot-toast';
 import { recruitmentAPI, JobPosting } from '../../../services/recruitmentApi';
+import ReferralsModal from './ReferralsModal';
+import HRRejectModal from './HRRejectModal';
 
 const JobPostingDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +14,22 @@ const JobPostingDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [referralsModal, setReferralsModal] = useState<{
+    isOpen: boolean;
+    jobPostingId: number | null;
+    jobTitle: string;
+  }>({
+    isOpen: false,
+    jobPostingId: null,
+    jobTitle: '',
+  });
+  const [rejectModal, setRejectModal] = useState<{
+    isOpen: boolean;
+    jobPosting: JobPosting | null;
+  }>({
+    isOpen: false,
+    jobPosting: null,
+  });
 
   useEffect(() => {
     fetchJobPostings();
@@ -50,20 +68,45 @@ const JobPostingDashboard: React.FC = () => {
     return matchesSearch && matchesType;
   });
 
-  const handleDeletePosting = async (id: number, title: string) => {
-    if (!confirm(`Are you sure you want to delete the job posting "${title}"? This action cannot be undone.`)) {
-      return;
-    }
+  const handleFillHRDetails = (posting: JobPosting) => {
+    // Navigate to HR details form
+    console.log('Fill HR Details for posting:', posting);
+    navigate(`/recruitment/job-posting/hr-details/${posting.id}`);
+  };
 
-    try {
-      await recruitmentAPI.jobPostings.delete(id);
-      toast.success('Job posting deleted successfully');
-      // Refresh the list
-      fetchJobPostings();
-    } catch (error) {
-      console.error('Error deleting job posting:', error);
-      toast.error('Failed to delete job posting');
-    }
+  const handleViewReferrals = (posting: JobPosting) => {
+    setReferralsModal({
+      isOpen: true,
+      jobPostingId: posting.id,
+      jobTitle: posting.job_title,
+    });
+  };
+
+  const handleCloseReferralsModal = () => {
+    setReferralsModal({
+      isOpen: false,
+      jobPostingId: null,
+      jobTitle: '',
+    });
+  };
+
+  const handleRejectRequest = (posting: JobPosting) => {
+    setRejectModal({
+      isOpen: true,
+      jobPosting: posting,
+    });
+  };
+
+  const handleCloseRejectModal = () => {
+    setRejectModal({
+      isOpen: false,
+      jobPosting: null,
+    });
+  };
+
+  const handleRejectSuccess = () => {
+    // Refresh the job postings list
+    fetchJobPostings();
   };
 
   const getTypeColor = (type: string) => {
@@ -112,8 +155,8 @@ const JobPostingDashboard: React.FC = () => {
               <div className="overflow-x-auto">
                 {/* Table header skeleton */}
                 <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3">
-                  <div className="grid grid-cols-8 gap-4">
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                  <div className="grid grid-cols-9 gap-4">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => (
                       <div key={i} className="h-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
                     ))}
                   </div>
@@ -123,7 +166,8 @@ const JobPostingDashboard: React.FC = () => {
                 <div className="divide-y divide-gray-200 dark:divide-gray-700">
                   {[1, 2, 3, 4, 5].map(i => (
                     <div key={i} className="px-6 py-4">
-                      <div className="grid grid-cols-8 gap-4 items-center">
+                      <div className="grid grid-cols-9 gap-4 items-center">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12"></div>
                         <div className="space-y-2">
                           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
                           <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
@@ -134,11 +178,7 @@ const JobPostingDashboard: React.FC = () => {
                         <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
                         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12"></div>
                         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                        <div className="flex space-x-2">
-                          <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                          <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                          <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                        </div>
+                        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
                       </div>
                     </div>
                   ))}
@@ -173,11 +213,15 @@ const JobPostingDashboard: React.FC = () => {
             </p>
           </div>
           <button
-            onClick={() => navigate('/recruitment/job-posting/create')}
+            onClick={() => setReferralsModal({
+              isOpen: true,
+              jobPostingId: null,
+              jobTitle: 'All Job Postings',
+            })}
             className="btn-primary flex items-center space-x-2"
           >
-            <Plus className="w-5 h-5" />
-            <span>Create New Posting</span>
+            <Users className="w-5 h-5" />
+            <span>View Referrals</span>
           </button>
         </div>
 
@@ -218,6 +262,9 @@ const JobPostingDashboard: React.FC = () => {
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Job Role ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Job Title
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -247,6 +294,9 @@ const JobPostingDashboard: React.FC = () => {
               {filteredPostings.length > 0 ? (
                 filteredPostings.map((posting) => (
                   <tr key={posting.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      {posting.job_role_id || 'N/A'}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
                         {posting.job_title}
@@ -276,27 +326,22 @@ const JobPostingDashboard: React.FC = () => {
                       {posting.education}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex space-x-2">
+                      <div className="flex items-center space-x-2">
                         <button
-                          onClick={() => navigate(`/recruitment/job-posting/view/${posting.id}`)}
-                          className="text-blue-600 hover:text-blue-800 transition-colors"
-                          title="View"
+                          onClick={() => handleFillHRDetails(posting)}
+                          className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                          title="Fill HR Details"
                         >
-                          <Eye className="w-4 h-4" />
+                          <FileText className="w-4 h-4 mr-2" />
+                          Fill HR Details
                         </button>
                         <button
-                          onClick={() => navigate(`/recruitment/job-posting/edit/${posting.id}`)}
-                          className="text-gray-600 hover:text-gray-800 transition-colors"
-                          title="Edit"
+                          onClick={() => handleRejectRequest(posting)}
+                          className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                          title="Reject Job Posting Request"
                         >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeletePosting(posting.id, posting.job_title)}
-                          className="text-red-600 hover:text-red-800 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Reject Request
                         </button>
                       </div>
                     </td>
@@ -304,7 +349,7 @@ const JobPostingDashboard: React.FC = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center">
+                  <td colSpan={9} className="px-6 py-12 text-center">
                     <div className="text-gray-500 dark:text-gray-400">
                       <div className="text-lg font-medium">No job postings found</div>
                       <div className="mt-2">
@@ -330,6 +375,22 @@ const JobPostingDashboard: React.FC = () => {
         </div>
       </div>
       </div>
+
+      {/* Referrals Modal */}
+      <ReferralsModal
+        isOpen={referralsModal.isOpen}
+        onClose={handleCloseReferralsModal}
+        jobPostingId={referralsModal.jobPostingId}
+        jobTitle={referralsModal.jobTitle}
+      />
+
+      {/* HR Reject Modal */}
+      <HRRejectModal
+        isOpen={rejectModal.isOpen}
+        onClose={handleCloseRejectModal}
+        jobPosting={rejectModal.jobPosting}
+        onRejectSuccess={handleRejectSuccess}
+      />
     </MainLayout>
   );
 };
