@@ -4,12 +4,12 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import CreateOrganizationForm from "../../components/CreateOrganizationForm";
 import Sidebar from "../../components/Sidebar";
-import { Organization } from "../types/organization";
+// import { Organization } from "../types/organization";
 
 const CreateOrganization: React.FC = () => {
   const navigate = useNavigate();
 
-  const handleSuccess = (organization: Organization) => {
+  const handleSuccess = (organization: any) => {
     console.log("✅ Organization created successfully:", organization);
     // Navigate back to organizations list or dashboard
     navigate("/organizations", {
@@ -26,7 +26,7 @@ const CreateOrganization: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar />
+  <div />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}

@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Search, Plus, Download, Eye } from 'lucide-react';
-import Sidebar from '../../components/Sidebar';
-import BackButton from '../../components/ui/BackButton';
+
 
 interface Policy {
   id: string;
@@ -30,11 +29,11 @@ const Policies: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+  <div />
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-6 py-4">
           <div className="flex items-center space-x-4">
-            <BackButton variant="home" />
+            <div />
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center space-x-3">
                 <FileText className="w-8 h-8 text-blue-600" />

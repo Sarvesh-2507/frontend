@@ -152,14 +152,24 @@ const Attendance: React.FC = () => {
       setLoading(true);
       // Fetch attendance data from backend
       const response = await dashboardAPI.getStats();
-      if (response.data) {
+      if (
+        response.data &&
+        typeof response.data === 'object' &&
+        'totalEmployees' in response.data &&
+        'presentToday' in response.data &&
+        'absentToday' in response.data &&
+        'lateToday' in response.data &&
+        'averageHours' in response.data &&
+        'overtimeHours' in response.data
+      ) {
+        const statsData = response.data as AttendanceStats;
         setStats({
-          totalEmployees: response.data.totalEmployees || attendanceRecords.length,
-          presentToday: response.data.presentToday || attendanceRecords.filter(r => r.status === 'present').length,
-          absentToday: response.data.absentToday || attendanceRecords.filter(r => r.status === 'absent').length,
-          lateToday: response.data.lateToday || attendanceRecords.filter(r => r.status === 'late').length,
-          averageHours: response.data.averageHours || 8.2,
-          overtimeHours: response.data.overtimeHours || attendanceRecords.filter(r => r.status === 'overtime').length,
+          totalEmployees: statsData.totalEmployees || attendanceRecords.length,
+          presentToday: statsData.presentToday || attendanceRecords.filter(r => r.status === 'present').length,
+          absentToday: statsData.absentToday || attendanceRecords.filter(r => r.status === 'absent').length,
+          lateToday: statsData.lateToday || attendanceRecords.filter(r => r.status === 'late').length,
+          averageHours: statsData.averageHours || 8.2,
+          overtimeHours: statsData.overtimeHours || attendanceRecords.filter(r => r.status === 'overtime').length,
         });
       }
       toast.success("Attendance data loaded successfully");

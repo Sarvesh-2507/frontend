@@ -41,20 +41,20 @@ function classNames(...c: any[]) {
 }
 
 // ---- Simple Calendar --------------------------------------------------------
-function startOfMonth(date) {
+function startOfMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
-function endOfMonth(date) {
+function endOfMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 }
-function isSameDay(a, b) {
+function isSameDay(a: Date, b: Date) {
   return (
     a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate()
   );
 }
-function formatISO(d) {
+function formatISO(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
@@ -63,8 +63,13 @@ export function Calendar({
   onSelect,
   markers = {}, // {"YYYY-MM-DD": "present"|"absent"}
   className,
+}: {
+  value: Date;
+  onSelect: (date: Date) => void;
+  markers?: { [key: string]: string };
+  className?: string;
 }) {
-  const [cursor, setCursor] = useState(startOfMonth(value || new Date()));
+  const [cursor, setCursor] = useState<Date>(startOfMonth(value || new Date()));
   const today = new Date();
 
   const grid = useMemo(() => {
@@ -164,7 +169,14 @@ export function Calendar({
   );
 }
 
-export function Modal({ open, onClose, title, children, actions }) {
+interface ModalProps {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+  actions?: React.ReactNode;
+}
+export function Modal({ open, onClose, title, children, actions }: ModalProps) {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50">
@@ -194,7 +206,10 @@ export function Modal({ open, onClose, title, children, actions }) {
 
 // ---- Employee Dashboard -----------------------------------------------------
 // Mount this in the employee-side Attendance route only. Do NOT use HRDashboard here.
-export function EmployeeDashboard({ RequestRegularizationComponent }) {
+interface EmployeeDashboardProps {
+  RequestRegularizationComponent: React.ComponentType<any>;
+}
+export function EmployeeDashboard({ RequestRegularizationComponent }: EmployeeDashboardProps) {
   const [workMode, setWorkMode] = useState("Office"); // Office | Remote
   const [remoteLocation, setRemoteLocation] = useState(""); // For remote work location type
   const [attendanceMarkers, setAttendanceMarkers] = useState(() => {
@@ -600,9 +615,14 @@ export function EmployeeDashboard({ RequestRegularizationComponent }) {
     } catch (error) {
       console.error("❌ Face Data API Network Error:", error);
 
+      let errorMessage = "Unknown error";
+      if (error && typeof error === "object" && "message" in error) {
+        errorMessage = (error as any).message;
+      }
+
       // Show popup with network error
       setApiResponseData({
-        error: error.message,
+        error: errorMessage,
         errorType: "Network Error",
         url: `${BACKEND_URL}/api/profiles/profile/face_data-status/`,
         timestamp: new Date().toISOString(),
@@ -611,7 +631,7 @@ export function EmployeeDashboard({ RequestRegularizationComponent }) {
       setShowApiResponsePopup(true);
 
       // Handle network errors
-      if (error instanceof TypeError && error.message.includes("fetch")) {
+      if (error instanceof TypeError && errorMessage.includes("fetch")) {
         console.error("❌ Network connection failed to backend API");
       }
 
@@ -2651,7 +2671,7 @@ export function AttendanceLeaveModuleLayout() {
     {
       id: "daily",
       label: "Daily View",
-      icon: Calendar,
+      icon: CalendarIcon,
       path: "/attendance/daily",
     },
     {
@@ -2681,7 +2701,7 @@ export function AttendanceLeaveModuleLayout() {
     {
       id: "holidays",
       label: "Holidays",
-      icon: Calendar,
+      icon: CalendarIcon,
       path: "/attendance/holidays",
     },
     {
@@ -2734,7 +2754,7 @@ export function AttendanceLeaveModuleLayout() {
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                   )}
                 >
-                  <Icon className="w-4 h-4" />
+                  {Icon && typeof Icon === 'function' ? <Icon className="w-4 h-4" /> : null}
                   {item.label}
                 </button>
               );
@@ -2754,8 +2774,9 @@ export function AttendanceLeaveModuleLayout() {
 }
 
 // ---- Standalone Attendance Dashboard (for use within sidebar layout) -------
+import RequestRegularizationForm from "../../employee/features/RequestRegularizationForm";
 export function AttendanceContent() {
-  return <EmployeeDashboard />;
+  return <EmployeeDashboard RequestRegularizationComponent={RequestRegularizationForm} />;
 }
 
 // ---- Attendance Sub-Pages ---------------------------------------------------

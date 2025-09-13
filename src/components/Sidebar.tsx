@@ -608,7 +608,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
                   >
                     {item.children?.filter(child => {
                       if (!child.roles) return true;
-                      return user && child.roles.includes(user.role);
+                      if (!user || !user.role) return false;
+                      const userRole = String(user.role).toLowerCase();
+                      return child.roles.map(r => String(r).toLowerCase()).includes(userRole);
                     }).map((child) => {
                       const ChildIcon = child.icon;
                       const childIsActive = isActiveRoute(child.path);

@@ -10,7 +10,7 @@ const EmployeeDashboard: React.FC<{ user: User; onNavigate: (page: string) => vo
   useEffect(() => {
     const fetchBalances = async () => {
       try {
-        const balances = await apiService.getLeaveBalances();
+        const balances = await apiService.getLeaveBalances(user.id);
         setLeaveBalances(balances);
       } catch (error) {
         console.error('Error fetching leave balances:', error);
@@ -19,7 +19,7 @@ const EmployeeDashboard: React.FC<{ user: User; onNavigate: (page: string) => vo
       }
     };
     fetchBalances();
-  }, []);
+  }, [user.id]);
 
   if (loading) {
     return <div className="flex justify-center items-center h-64">Loading...</div>;
@@ -36,14 +36,14 @@ const EmployeeDashboard: React.FC<{ user: User; onNavigate: (page: string) => vo
           <div key={balance.leave_type} className="bg-white p-6 rounded-lg shadow-md border">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">{balance.leave_type}</h3>
             <div className="text-3xl font-bold text-blue-600 mb-2">
-              {balance.remaining}/{balance.total}
+              {balance.available}/{balance.total_allocated}
             </div>
-            <p className="text-sm text-gray-600">Days remaining</p>
+            <p className="text-sm text-gray-600">Days available</p>
             <div className="mt-4">
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full"
-                  style={{ width: `${(balance.remaining / balance.total) * 100}%` }}
+                  style={{ width: `${(Number(balance.available) / Number(balance.total_allocated)) * 100}%` }}
                 ></div>
               </div>
             </div>

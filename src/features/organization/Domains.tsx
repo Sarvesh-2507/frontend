@@ -16,13 +16,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import Logo from "../../components/ui/Logo";
 import { organizationAPI } from "../../services/organizationApi";
-import { Company, Domain, Organization } from "../types/organization";
+// import { Company, Domain, Organization } from "../types/organization";
 
 const Domains: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [organization, setOrganization] = useState<Organization | null>(null);
-  const [company, setCompany] = useState<Company | null>(null);
-  const [domains, setDomains] = useState<Domain[]>([]);
+  const [organization, setOrganization] = useState<any>(null);
+  const [company, setCompany] = useState<any>(null);
+  const [domains, setDomains] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();

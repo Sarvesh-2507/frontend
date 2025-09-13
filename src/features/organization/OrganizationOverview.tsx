@@ -14,11 +14,11 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import Logo from "../../components/ui/Logo";
 import { organizationAPI } from "../../services/organizationApi";
-import { Organization } from "../types/organization";
+// import { Organization } from "../types/organization";
 
 const OrganizationOverview: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [organizations, setOrganizations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalOrganizations: 0,

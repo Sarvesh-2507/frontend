@@ -171,7 +171,7 @@ const Recruitment: React.FC = () => {
       // Fetch recruitment statistics from backend
       const response = await dashboardAPI.getStats();
       // Assuming the actual stats are inside response.data.stats
-      const statsData = response.data?.stats ?? response.data;
+  const statsData = (response.data as any)?.stats ?? response.data;
       if (statsData) {
         setStats({
           totalJobs: statsData?.totalJobs ?? jobPostings.length,

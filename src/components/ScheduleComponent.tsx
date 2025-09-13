@@ -24,7 +24,7 @@ const ScheduleComponent: React.FC = () => {
       time: '9:00 AM',
       type: 'meeting',
       attendees: 8,
-      location: 'Conference Room A',
+      location: 'Room A',
       color: 'bg-blue-500'
     },
     {
@@ -33,16 +33,16 @@ const ScheduleComponent: React.FC = () => {
       time: '2:00 PM',
       type: 'meeting',
       attendees: 5,
-      location: 'Meeting Room 2',
+      location: 'Room 2',
       color: 'bg-green-500'
     },
     {
       id: '3',
-      title: 'Marketing Strategy Session',
+      title: 'Strategy Session',
       time: '4:00 PM',
       type: 'meeting',
       attendees: 12,
-      location: 'Main Hall',
+      location: 'Hall',
       color: 'bg-purple-500'
     }
   ];

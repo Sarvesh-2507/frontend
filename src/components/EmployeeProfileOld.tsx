@@ -1,3 +1,26 @@
+// Define types for personal and work info fields
+type PersonalInfo = {
+  date_of_birth: string;
+  gender: string;
+  marital_status: string;
+  religion: string;
+  nationality: string;
+  present_address: string;
+  permanent_address: string;
+  emergency_contact_number: string;
+  emergency_contact_relationship: string;
+  city: string;
+};
+type WorkInfo = {
+  emp_id: string;
+  designation: string;
+  employment_type: string;
+  work_location: string;
+  date_of_joining: string;
+  reporting_manager: string;
+  department_ref: string;
+  highest_qualification: string;
+};
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Briefcase,
@@ -322,7 +345,7 @@ const EmployeeProfile: React.FC = () => {
           )
         ) : (
           <p className="text-gray-900 dark:text-white">
-            {employeeData.personalInfo[field]}
+            {profileData ? profileData[field] : ""}
           </p>
         )}
       </div>
@@ -376,7 +399,7 @@ const EmployeeProfile: React.FC = () => {
           )
         ) : (
           <p className="text-gray-900 dark:text-white">
-            {employeeData.workInfo[field]}
+            {profileData ? profileData[field] : ""}
           </p>
         )}
       </div>
@@ -385,10 +408,11 @@ const EmployeeProfile: React.FC = () => {
 
   // Example: Calculate profile completion percentage (replace with real logic)
   const profileCompletion = (() => {
+    if (!profileData) return 0;
     // Example: count filled fields in personalInfo and workInfo
-    const personalFields = Object.values(employeeData.personalInfo).filter(Boolean).length;
-    const workFields = Object.values(employeeData.workInfo).filter(Boolean).length;
-    const totalFields = Object.keys(employeeData.personalInfo).length + Object.keys(employeeData.workInfo).length;
+    const personalFields = Object.values(tempPersonalInfo).filter(Boolean).length;
+    const workFields = Object.values(tempWorkInfo).filter(Boolean).length;
+    const totalFields = Object.keys(tempPersonalInfo).length + Object.keys(tempWorkInfo).length;
     return Math.round(((personalFields + workFields) / totalFields) * 100);
   })();
 
@@ -407,20 +431,16 @@ const EmployeeProfile: React.FC = () => {
             {/* Profile Photo */}
             <div className="relative">
               <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 p-1">
-                {employeeData.avatar &&
-                employeeData.avatar !== "/api/placeholder/150/150" ? (
+                {profileData?.passport_photo ? (
                   <img
-                    src={employeeData.avatar}
-                    alt={employeeData.name}
+                    src={profileData.passport_photo}
+                    alt={profileData.first_name + ' ' + profileData.last_name}
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 flex items-center justify-center">
                     <span className="text-3xl font-bold text-gray-600 dark:text-gray-300">
-                      {employeeData.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
+                      {profileData ? (profileData.first_name[0] + (profileData.last_name ? profileData.last_name[0] : "")) : ""}
                     </span>
                   </div>
                 )}
@@ -442,45 +462,18 @@ const EmployeeProfile: React.FC = () => {
               </label>
 
               {/* Status Indicator - Clickable */}
-              <button
-                type="button"
-                onClick={handleStatusToggle}
-                className="absolute top-2 right-2 group"
-                title={`Click to change status to ${
-                  employeeData.status === "online" ? "offline" : "online"
-                }`}
-              >
-                {employeeData.status === "online" ? (
-                  <div className="w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800 group-hover:scale-110 transition-transform"></div>
-                ) : (
-                  <div className="w-4 h-4 bg-gray-400 rounded-full border-2 border-white dark:border-gray-800 group-hover:scale-110 transition-transform"></div>
-                )}
-              </button>
+              {/* Status indicator removed for now (no status in profileData) */}
             </div>
 
             {/* Profile Info */}
             <div className="flex-1 text-center md:text-left">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  {editingBasic ? (
-                    <input
-                      type="text"
-                      value={tempBasicInfo.name}
-                      onChange={(e) =>
-                        setTempBasicInfo((prev) => ({
-                          ...prev,
-                          name: e.target.value,
-                        }))
-                      }
-                      className="text-3xl font-bold text-gray-900 dark:text-white bg-transparent border-b-2 border-blue-500 focus:outline-none"
-                    />
-                  ) : (
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                      {employeeData.name}
-                    </h1>
-                  )}
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                    {profileData ? profileData.first_name + ' ' + profileData.last_name : ''}
+                  </h1>
                   <p className="text-lg text-gray-600 dark:text-gray-400 mt-2">
-                    Employee ID: {employeeData.id}
+                    Employee ID: {profileData?.emp_id || ''}
                   </p>
                 </div>
                 <button
@@ -498,54 +491,26 @@ const EmployeeProfile: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center justify-center md:justify-start space-x-2">
                   <Mail className="w-5 h-5 text-gray-500" />
-                  {editingBasic ? (
-                    <input
-                      type="email"
-                      value={tempBasicInfo.email}
-                      onChange={(e) =>
-                        setTempBasicInfo((prev) => ({
-                          ...prev,
-                          email: e.target.value,
-                        }))
-                      }
-                      className="text-gray-700 dark:text-gray-300 bg-transparent border-b border-gray-300 focus:border-blue-500 focus:outline-none"
-                    />
-                  ) : (
-                    <span className="text-gray-700 dark:text-gray-300">
-                      {employeeData.email}
-                    </span>
-                  )}
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {profileData?.email_id || ''}
+                  </span>
                 </div>
                 <div className="flex items-center justify-center md:justify-start space-x-2">
                   <Phone className="w-5 h-5 text-gray-500" />
-                  {editingBasic ? (
-                    <input
-                      type="tel"
-                      value={tempBasicInfo.phone}
-                      onChange={(e) =>
-                        setTempBasicInfo((prev) => ({
-                          ...prev,
-                          phone: e.target.value,
-                        }))
-                      }
-                      className="text-gray-700 dark:text-gray-300 bg-transparent border-b border-gray-300 focus:border-blue-500 focus:outline-none"
-                    />
-                  ) : (
-                    <span className="text-gray-700 dark:text-gray-300">
-                      {employeeData.phone}
-                    </span>
-                  )}
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {profileData?.phone_number || ''}
+                  </span>
                 </div>
                 <div className="flex items-center justify-center md:justify-start space-x-2">
                   <Building className="w-5 h-5 text-gray-500" />
                   <span className="text-gray-700 dark:text-gray-300">
-                    {employeeData.workInfo.department}
+                    {profileData?.department || ''}
                   </span>
                 </div>
                 <div className="flex items-center justify-center md:justify-start space-x-2">
                   <Briefcase className="w-5 h-5 text-gray-500" />
                   <span className="text-gray-700 dark:text-gray-300">
-                    {employeeData.workInfo.jobPosition}
+                    {profileData?.designation || ''}
                   </span>
                 </div>
               </div>
@@ -637,11 +602,7 @@ const EmployeeProfile: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {renderPersonalInfoField(
-                        "Date of Birth",
-                        "dateOfBirth",
-                        Calendar
-                      )}
+                      {/* Removed invalid key 'dateOfBirth' */}
                       {renderPersonalInfoField(
                         "Gender",
                         "gender",
@@ -649,22 +610,20 @@ const EmployeeProfile: React.FC = () => {
                         "select",
                         ["Male", "Female", "Other"]
                       )}
-                      {renderPersonalInfoField("Address", "address", MapPin)}
-                      {renderPersonalInfoField("Country", "country", Globe)}
-                      {renderPersonalInfoField("State", "state", MapPin)}
+                      {/* Removed invalid keys 'address', 'country', 'state' */}
                       {renderPersonalInfoField("City", "city", Building)}
-                      {renderPersonalInfoField(
-                        "Postal Code",
-                        "postalCode",
-                        MapPin
-                      )}
-                      {renderPersonalInfoField(
-                        "Nationality",
-                        "nationality",
-                        Globe
-                      )}
+                      {/* Removed invalid key 'postalCode' */}
+                      {renderPersonalInfoField("Date of Birth", "date_of_birth", Calendar)}
+                      {renderPersonalInfoField("Gender", "gender", User, "select", ["Male", "Female", "Other"])}
+                      {renderPersonalInfoField("Present Address", "present_address", MapPin)}
+                      {renderPersonalInfoField("Permanent Address", "permanent_address", MapPin)}
+                      {renderPersonalInfoField("City", "city", Building)}
+                      {renderPersonalInfoField("Nationality", "nationality", Globe)}
+                      {renderPersonalInfoField("Marital Status", "marital_status", User)}
+                      {renderPersonalInfoField("Religion", "religion", Globe)}
+                      {renderPersonalInfoField("Emergency Contact Number", "emergency_contact_number", Phone)}
+                      {renderPersonalInfoField("Emergency Contact Relationship", "emergency_contact_relationship", User)}
                     </div>
-
                     <AnimatePresence>
                       {editingPersonal && (
                         <motion.div
@@ -673,14 +632,6 @@ const EmployeeProfile: React.FC = () => {
                           exit={{ opacity: 0, height: 0 }}
                           className="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-600"
                         >
-                          <button
-                            type="button"
-                            onClick={handlePersonalCancel}
-                            className="flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
-                          >
-                            <X className="w-4 h-4" />
-                            <span>Cancel</span>
-                          </button>
                           <button
                             type="button"
                             onClick={handlePersonalSave}
@@ -712,53 +663,14 @@ const EmployeeProfile: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {renderWorkInfoField(
-                        "Department",
-                        "department",
-                        Building,
-                        "select",
-                        ["Finance", "HR", "IT", "Marketing", "Operations"]
-                      )}
-                      {renderWorkInfoField(
-                        "Job Position",
-                        "jobPosition",
-                        Briefcase
-                      )}
-                      {renderWorkInfoField("Shift", "shift", Clock, "select", [
-                        "Day Shift",
-                        "Night Shift",
-                        "Flexible",
-                      ])}
-                      {renderWorkInfoField(
-                        "Work Type",
-                        "workType",
-                        Users,
-                        "select",
-                        ["Work From Office", "Work From Home", "Hybrid"]
-                      )}
-                      {renderWorkInfoField("Salary", "salary", DollarSign)}
-                      {renderWorkInfoField(
-                        "Joining Date",
-                        "joiningDate",
-                        Calendar
-                      )}
-                      {renderWorkInfoField(
-                        "Reporting Manager",
-                        "reportingManager",
-                        User
-                      )}
-                      {renderWorkInfoField(
-                        "Employee Type",
-                        "employeeType",
-                        Briefcase,
-                        "select",
-                        ["Permanent", "Contract", "Intern"]
-                      )}
-                      {renderWorkInfoField(
-                        "Work Location",
-                        "workLocation",
-                        MapPin
-                      )}
+                      {renderWorkInfoField("Employee ID", "emp_id", User)}
+                      {renderWorkInfoField("Designation", "designation", Briefcase)}
+                      {renderWorkInfoField("Employment Type", "employment_type", Briefcase)}
+                      {renderWorkInfoField("Work Location", "work_location", MapPin)}
+                      {renderWorkInfoField("Date of Joining", "date_of_joining", Calendar)}
+                      {renderWorkInfoField("Reporting Manager", "reporting_manager", User)}
+                      {renderWorkInfoField("Department Ref", "department_ref", Building)}
+                      {renderWorkInfoField("Highest Qualification", "highest_qualification", Briefcase)}
                     </div>
 
                     <AnimatePresence>

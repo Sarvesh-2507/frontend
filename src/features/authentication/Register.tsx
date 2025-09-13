@@ -180,12 +180,12 @@ const Register: React.FC = () => {
 
       // Include reporting_manager if selected
       if (data.reporting_manager) {
-        data.reporting_manager = parseInt(String(data.reporting_manager));
+        data.reporting_manager = String(data.reporting_manager);
       }
 
-      // Ensure access_level is a number
+      // Ensure access_level is a string
       if (data.access_level) {
-        data.access_level = parseInt(String(data.access_level));
+        data.access_level = String(data.access_level);
       }
 
       // Clean up empty optional fields

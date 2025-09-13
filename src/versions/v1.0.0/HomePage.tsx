@@ -13,9 +13,10 @@ import {
   Target,
   ChevronRight
 } from 'lucide-react';
-import Sidebar from './Sidebar';
+// import Sidebar from './Sidebar';
 
 interface QuickStatsCardProps {
+  // import Sidebar from './Sidebar';
   title: string;
   value: string | number;
   icon: React.ComponentType<any>;
@@ -27,7 +28,6 @@ const QuickStatsCard: React.FC<QuickStatsCardProps> = ({ title, value, icon: Ico
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
       className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
     >
       <div className="flex items-center justify-between">
@@ -147,7 +147,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       {/* Sidebar */}
-      <Sidebar isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+  <div />
 
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">

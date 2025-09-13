@@ -1,15 +1,13 @@
 import { Key } from "lucide-react";
 import React from "react";
-import ModulePage from "../components/ModulePage";
+// import ModulePage from "../components/ModulePage";
 
 const UserAuthRoles: React.FC = () => {
   return (
-    <ModulePage
-      title="User Authentication & Roles"
-      description="Manage user accounts, permissions, and role-based access control"
-      icon={Key}
-      comingSoon={true}
-    />
+    <div>
+      <h1>User Auth Roles</h1>
+      {/* ...existing code... */}
+    </div>
   );
 };
 

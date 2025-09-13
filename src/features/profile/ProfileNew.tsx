@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "../components/Sidebar";
+// import Sidebar from "../components/Sidebar";
 
 const Profile: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -431,10 +431,7 @@ const Profile: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar
-        isCollapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-      />
+      <div />
 
       <div className="flex-1 overflow-y-auto">
         {/* Header */}

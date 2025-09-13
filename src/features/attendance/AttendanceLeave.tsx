@@ -11,7 +11,7 @@ import {
   XCircle,
 } from "lucide-react";
 import React, { useState } from "react";
-import Sidebar from "../components/Sidebar";
+// import Sidebar from "../components/Sidebar";
 
 interface LeaveRequest {
   id: string;
@@ -161,10 +161,7 @@ const AttendanceLeave: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       {/* Sidebar */}
-      <Sidebar
-        isCollapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-      />
+      <div className="w-64 bg-gray-100 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 min-h-screen"></div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
